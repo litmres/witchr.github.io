@@ -27,6 +27,9 @@
 	let rotX = 0;
 	let rotY = 0;
 
+	let moveForward = 0;
+	let clickTimer = 0;
+
 	let windowHalfX = window.innerWidth / 2;
 	let windowHalfY = window.innerHeight / 2;
 	
@@ -101,6 +104,7 @@
 
 		document.addEventListener( 'touchstart', onDocumentTouchStart, false );
 		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
 
 	}
 
@@ -124,7 +128,8 @@
 
 		requestAnimationFrame( render );
 
-		// rotate camera in x & y offsets (about y & x axis respectively)
+		// rotate camera in x and y offsets (about y and x axis respectively)
+		// 	based of mousedown and mousemove
 		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED_DAMP;
 		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED_DAMP;
 		// reset camera rotation on each render and set it according to our
@@ -133,6 +138,16 @@
 		// order makes a huge difference here!! rotate on y first, then x!!
 		camera.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
 		camera.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+
+		// handle moveforward input from click or tap
+		if ( moveForward ) {
+			let step = moveForward * Player.MOVE_SPEED;
+			let y = camera.position.y;
+			camera.translateZ( -step );
+			camera.position.y = y;
+			moveForward -= step;
+		}
+
 
 		// handle keyboard input
 		handleKeyboard( Keyboard.keys );
@@ -201,6 +216,8 @@
 		mouseYOnMouseDown = e.clientY - windowHalfY;
 		targetRotationOnMouseDownY = targetRotationY;
 
+		clickTimer = ( new Date() ).getTime();
+
 	}
 
 	function onDocumentMouseMove( e ) {
@@ -228,6 +245,10 @@
 		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
 		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 		
+		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
+			moveForward += Player.STEP;
+		}
+		
 	}
 
 	function onDocumentMouseOut( e ) {
@@ -236,6 +257,10 @@
 		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
 		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 		
+		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
+			moveForward += Player.STEP;
+		}
+
 	}
 
 	function onDocumentTouchStart( e ) {
@@ -249,6 +274,8 @@
 
 			mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
 			targetRotationOnMouseDownY = targetRotationY;
+
+			clickTimer = ( new Date() ).getTime();
 			
 		}
 
@@ -279,6 +306,15 @@
 
 	}
 
+	function onDocumentTouchEnd( e ) {
+
+		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
+			moveForward += Player.STEP;
+		}
+
+	}
+
+
 	/*********************************************************
 	 * initialize all enumerated types
 	 *********************************************************
@@ -293,6 +329,8 @@
 		// init player properties
 		Player = {
 			MOVE_SPEED: 0.05,
+			STEP: 1,
+			STEP_TIMER: 200,
 			ROTATE_SPEED_DAMP: 0.2,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
 		};
