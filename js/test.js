@@ -16,6 +16,8 @@
 
 	let targetRotationX = 0;
 	let targetRotationOnMouseDownX = 0;
+	let targetRotationY = 0;
+	let targetRotationOnMouseDownY = 0;
 
 	let mouseX = 0;
 	let mouseXOnMouseDown = 0;
@@ -82,8 +84,9 @@
 
 		requestAnimationFrame( render );
 
-		// rotate camera in target x rotation
+		// rotate camera in x & y offsets (about y & x axis respectively)
 		camera.rotation.y += ( targetRotationX - camera.rotation.y ) * Player.ROTATE_SPEED_DAMP;
+		camera.rotation.x += ( targetRotationY - camera.rotation.x ) * Player.ROTATE_SPEED_DAMP;
 
 		// handle keyboard input
 		handleKeyboard( Keyboard.keys );
@@ -133,6 +136,9 @@
 		mouseXOnMouseDown = e.clientX - windowHalfX;
 		targetRotationOnMouseDownX = targetRotationX;
 
+		mouseYOnMouseDown = e.clientY - windowHalfY;
+		targetRotationOnMouseDownY = targetRotationY;
+
 	}
 
 	function onDocumentMouseMove( e ) {
@@ -140,6 +146,10 @@
 		mouseX = e.clientX - windowHalfX;
 
 		targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+
+		mouseY = e.clientY - windowHalfY;
+
+		targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
 	}
 
