@@ -81,7 +81,7 @@
 		requestAnimationFrame( render );
 
 		// spin the cube
-		cube.rotation.y += ( targetRotation - cube.rotation.y ) * Player.ROTATE_DAMP;
+		camera.rotation.y += ( targetRotation - camera.rotation.y ) * Player.ROTATE_SPEED_DAMP;
 
 		// handle keyboard input
 		handleKeyboard( Keyboard.keys );
@@ -139,7 +139,7 @@
 
 		mouseX = e.clientX - windowHalfX;
 
-		targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * Player.TARGET_DAMP;
+		targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
 		de&&bug.log( 'mouseX:', mouseX, 'mouseXOnMouseDown:', mouseXOnMouseDown, 'targetRotation:', targetRotation, 'targetRotationOnMouseDown:', targetRotationOnMouseDown );
 
@@ -175,8 +175,8 @@
 		// init player properties
 		Player = {
 			MOVE_SPEED: 0.05,
-			ROTATE_DAMP: 0.05,
-			TARGET_DAMP: 0.02
+			ROTATE_SPEED_DAMP: 0.2,		// speed to reach desired rotation
+			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
 		};
 
 		// init keyboard input keycodes
