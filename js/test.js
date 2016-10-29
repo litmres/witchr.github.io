@@ -19,16 +19,21 @@
 		W: 87,
 		D: 68,
 		S: 83,
-		SPACE: 32
+		SPACE: 32,
+		CTRL: 17
 	};
 	let Keyboard = {
 		keys: {},
 		keyPress: function(e) {
+			//e.preventDefault();
 			if ( this.keys[e.keyCode] > 0 ) { return; }
 			this.keys[e.keyCode] = e.timeStamp || (new Date()).getTime();
+			e.stopPropagation();
 		},
 		keyRelease: function(e) {
+			//e.preventDefault();
 			this.keys[e.keyCode] = 0;
+			e.stopPropagation();
 		}
 	}
 	window.addEventListener('keydown', Keyboard.keyPress.bind(Keyboard));
@@ -48,6 +53,9 @@
 		}
 		if ( keys[Key.SPACE] ) {
 			de&&bug.log('spacebar pressed.');
+		}
+		if ( keys[Key.CTRL] ) {
+			de&&bug.log('ctrl pressed.');
 		}
 	};
 
