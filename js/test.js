@@ -24,6 +24,9 @@
 	let mouseY = 0;
 	let mouseYOnMouseDown = 0;
 
+	let rotX = 0;
+	let rotY = 0;
+
 	let windowHalfX = window.innerWidth / 2;
 	let windowHalfY = window.innerHeight / 2;
 	
@@ -85,7 +88,6 @@
 
 		
 		
-		
 		// setup the scene, move the camera 5 units back in z so we can see cube
 		camera.position.z = 5;
 
@@ -117,8 +119,14 @@
 		requestAnimationFrame( render );
 
 		// rotate camera in x & y offsets (about y & x axis respectively)
-		camera.rotation.y += ( targetRotationX - camera.rotation.y ) * Player.ROTATE_SPEED_DAMP;
-		camera.rotation.x += ( targetRotationY - camera.rotation.x ) * Player.ROTATE_SPEED_DAMP;
+		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED_DAMP;
+		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED_DAMP;
+		// reset camera rotation on each render and set it according to our
+		// 	player's rotX and rotY values
+		camera.rotation.set( 0, 0, 0 );
+		// order makes a huge difference here!! rotate on y first, then x!!
+		camera.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
+		camera.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
 
 		// handle keyboard input
 		handleKeyboard( Keyboard.keys );
@@ -126,6 +134,7 @@
 		renderer.render( scene, camera );
 
 	}
+
 	
 
 	/*********************************************************
@@ -135,20 +144,35 @@
 	// handle keyboard input
 	function handleKeyboard( keys ) {
 
+		// translate only in x,z and make sure to keep y position static
 		if ( keys[Key.LEFT] || keys[Key.A] ) {
-			camera.position.x -= Player.MOVE_SPEED;
+			let y = camera.position.y;
+			camera.translateX( -Player.MOVE_SPEED );
+			camera.position.y = y;
 		}
 		if ( keys[Key.UP] || keys[Key.W] ) {
-			camera.position.z -= Player.MOVE_SPEED;
+			let y = camera.position.y;
+			camera.translateZ( -Player.MOVE_SPEED );
+			camera.position.y = y;
 		}
 		if ( keys[Key.RIGHT] || keys[Key.D] ) {
-			camera.position.x += Player.MOVE_SPEED;
+			let y = camera.position.y;
+			camera.translateX( Player.MOVE_SPEED );
+			camera.position.y = y;
 		}
 		if ( keys[Key.DOWN] || keys[Key.S] ) {
-			camera.position.z += Player.MOVE_SPEED;
+			let y = camera.position.y;
+			camera.translateZ( Player.MOVE_SPEED );
+			camera.position.y = y;
+		}
+		if ( keys[Key.R] ) {
+			de&&bug.log( 'r pressed.' );
+		}
+		if ( keys[Key.F] ) {
+			de&&bug.log( 'f pressed.' );
 		}
 		if ( keys[Key.SPACE] ) {
-			de&&bug.log( 'spacebar pressed.' );
+			de&&bug.log( 'space pressed.' );
 		}
 		if ( keys[Key.CTRL] ) {
 			de&&bug.log( 'ctrl pressed.' );
@@ -182,6 +206,13 @@
 		mouseY = e.clientY - windowHalfY;
 
 		targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+		// targetRotationY (rotX looking up/down) from should be max 90 deg
+		if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
+			targetRotationY = 90 * THREE.Math.DEG2RAD;
+		}
+		if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
+			targetRotationY = -90 * THREE.Math.DEG2RAD;
+		}
 
 	}
 
@@ -229,6 +260,8 @@
 			W: 87,
 			D: 68,
 			S: 83,
+			R: 82,
+			F: 70,
 			SPACE: 32,
 			CTRL: 17
 		};
