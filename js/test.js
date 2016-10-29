@@ -37,7 +37,7 @@
 	let Canvas, Player, Key, Keyboard;
 
 	init();
-	render();
+	gameloop();
 
 	/*********************************************************
 	 * initialize scene 
@@ -128,13 +128,20 @@
 
 
 	/*********************************************************
-	 * render gameloop 
+	 * gameloop 
 	 *********************************************************
 	 */
-	function render() {
+	function gameloop() {
 
-		requestAnimationFrame( render );
+		requestAnimationFrame( gameloop );
+		handleKeyboard( Keyboard.keys );
+		update();
+		render();
 
+	}
+
+	function update() {
+		
 		// rotate camera in x and y offsets (about y and x axis respectively)
 		// 	based of mousedown and mousemove
 		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED_DAMP;
@@ -175,14 +182,14 @@
 
 		}
 
-		// handle keyboard input
-		handleKeyboard( Keyboard.keys );
+	}
+
+	function render() {
 
 		// render next scene
 		renderer.render( scene, camera );
-
+		
 	}
-
 	
 
 	/*********************************************************
