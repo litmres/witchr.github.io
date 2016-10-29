@@ -14,11 +14,13 @@
 
 	let geometry, material, cube;
 
-	let targetRotation = 0;
-	let targetRotationOnMouseDown = 0;
+	let targetRotationX = 0;
+	let targetRotationOnMouseDownX = 0;
 
 	let mouseX = 0;
 	let mouseXOnMouseDown = 0;
+	let mouseY = 0;
+	let mouseYOnMouseDown = 0;
 
 	let windowHalfX = window.innerWidth / 2;
 	let windowHalfY = window.innerHeight / 2;
@@ -81,7 +83,7 @@
 		requestAnimationFrame( render );
 
 		// rotate camera in target x rotation
-		camera.rotation.y += ( targetRotation - camera.rotation.y ) * Player.ROTATE_SPEED_DAMP;
+		camera.rotation.y += ( targetRotationX - camera.rotation.y ) * Player.ROTATE_SPEED_DAMP;
 
 		// handle keyboard input
 		handleKeyboard( Keyboard.keys );
@@ -129,9 +131,7 @@
 		document.addEventListener( 'mouseout', onDocumentMouseOut, false);
 		
 		mouseXOnMouseDown = e.clientX - windowHalfX;
-		targetRotationOnMouseDown = targetRotation;
-
-		de&&bug.log('e.clientX:', e.clientX, 'windowHalfX:', windowHalfX, 'mouseXOnMouseDown:', mouseXOnMouseDown, 'targetRotationOnMouseDown:', targetRotationOnMouseDown, 'targetRotation:', targetRotation);
+		targetRotationOnMouseDownX = targetRotationX;
 
 	}
 
@@ -139,9 +139,7 @@
 
 		mouseX = e.clientX - windowHalfX;
 
-		targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-
-		de&&bug.log( 'mouseX:', mouseX, 'mouseXOnMouseDown:', mouseXOnMouseDown, 'targetRotation:', targetRotation, 'targetRotationOnMouseDown:', targetRotationOnMouseDown );
+		targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
 	}
 
