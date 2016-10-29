@@ -46,7 +46,7 @@
 		initEnums();
 
 		scene = new THREE.Scene();
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100);
+		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
 		renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth*Canvas.SIZE, window.innerHeight*Canvas.SIZE );
 		document.body.appendChild( renderer.domElement );
@@ -99,10 +99,16 @@
 
 		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
+		document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+
 	}
 
 	function onWindowResize() {
 
+		// reset camera position and re-render scene
+		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
+		camera.position.z = 5;
 		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
 		windowHalfX = window.innerWidth / 2;
 		windowHalfY = window.innerHeight / 2;
@@ -230,6 +236,47 @@
 		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
 		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 		
+	}
+
+	function onDocumentTouchStart( e ) {
+
+		if ( e.touches.length === 1 ) {
+
+			e.preventDefault();
+
+			mouseXOnMouseDown = e.touches[ 0 ].pageX - windowHalfX;
+			targetRotationOnMouseDownX = targetRotationX;
+
+			mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
+			targetRotationOnMouseDownY = targetRotationY;
+			
+		}
+
+	}
+
+	function onDocumentTouchMove( e ) {
+
+		if ( e.touches.length === 1 ) {
+
+			e.preventDefault();
+
+			mouseX = e.touches[ 0 ].pageX - windowHalfX;
+
+			targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+
+			mouseY = e.touches[ 0 ].pageY - windowHalfY;
+
+			targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+			// targetRotationY (rotX looking up/down) from should be max 90 deg
+			if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
+				targetRotationY = 90 * THREE.Math.DEG2RAD;
+			}
+			if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
+				targetRotationY = -90 * THREE.Math.DEG2RAD;
+			}
+
+		}
+
 	}
 
 	/*********************************************************
