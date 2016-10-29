@@ -136,6 +136,7 @@
 		requestAnimationFrame( gameloop );
 		handleKeyboard( Keyboard.keys );
 		update();
+		collide();
 		render();
 
 	}
@@ -182,6 +183,10 @@
 
 		}
 
+	}
+
+	function collide() {
+		
 	}
 
 	function render() {
