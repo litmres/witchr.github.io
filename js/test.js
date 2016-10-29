@@ -6,12 +6,22 @@
 'use strict';
 
 (function( witchr, undefined ) {
+
 	let de = true;
 	let bug = console;
 
 	let scene, camera, renderer;
 
 	let geometry, material, cube;
+
+	let targetRotation = 0;
+	let targetRotationOnMouseDown = 0;
+
+	let mouseX = 0;
+	let mouseXOnMouseDown = 0;
+
+	let windowHalfX = window.innerWidth / 2;
+	let windowHalfY = window.innerHeight / 2;
 	
 	let Canvas, Player, Key, Keyboard;
 
@@ -48,12 +58,17 @@
 
 		window.addEventListener( 'keydown', Keyboard.keyPress.bind(Keyboard), false );
 		window.addEventListener( 'keyup', Keyboard.keyRelease.bind(Keyboard), false );
-		
+
 		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+
 	}
 
 	function onWindowResize() {
-		renderer.setSize( window.innerWidth*Canvas.SIZE, window.innerHeight*Canvas.SIZE );
+
+		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
+		windowHalfX = window.innerWidth / 2;
+		windowHalfY = window.innerHeight / 2;
+
 	}
 
 
@@ -62,16 +77,17 @@
 	 *********************************************************
 	 */
 	function render() {
+
 		requestAnimationFrame( render );
 
 		// spin the cube
-		cube.rotation.x += 0.01;
-		cube.rotation.y += 0.01;
+		cube.rotation.y += ( targetRotation - cube.rotation.y ) * Player.ROTATE_DAMP;
 
 		// handle keyboard input
-		handleKeyboard(Keyboard.keys);
+		handleKeyboard( Keyboard.keys );
 
 		renderer.render( scene, camera );
+
 	}
 	
 
@@ -79,7 +95,9 @@
 	 * handle keyboard, mouse, touch inputs
 	 *********************************************************
 	 */
-	function handleKeyboard(keys) {
+	// handle keyboard input
+	function handleKeyboard( keys ) {
+
 		if ( keys[Key.LEFT] || keys[Key.A] ) {
 			camera.position.x -= Player.MOVE_SPEED;
 		}
@@ -93,21 +111,60 @@
 			camera.position.z += Player.MOVE_SPEED;
 		}
 		if ( keys[Key.SPACE] ) {
-			de&&bug.log('spacebar pressed.');
+			de&&bug.log( 'spacebar pressed.' );
 		}
 		if ( keys[Key.CTRL] ) {
-			de&&bug.log('ctrl pressed.');
+			de&&bug.log( 'ctrl pressed.' );
 		}
+
 	}
 
 	// handle mouse input
-	function onDocumentMouseDown(e) {
+	function onDocumentMouseDown( e ) {
+
 		e.preventDefault();
-		// document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		document.addEventListener( 'mouseup', onDocumentMouseUp, false);
+		document.addEventListener( 'mouseout', onDocumentMouseOut, false);
 		
+		mouseXOnMouseDown = e.clientX - windowHalfX;
+		targetRotationOnMouseDown = targetRotation;
+
+		de&&bug.log('e.clientX:', e.clientX, 'windowHalfX:', windowHalfX, 'mouseXOnMouseDown:', mouseXOnMouseDown, 'targetRotationOnMouseDown:', targetRotationOnMouseDown, 'targetRotation:', targetRotation);
 
 	}
 
+	function onDocumentMouseMove( e ) {
+
+		mouseX = e.clientX - windowHalfX;
+
+		targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * Player.TARGET_DAMP;
+
+		de&&bug.log( 'mouseX:', mouseX, 'mouseXOnMouseDown:', mouseXOnMouseDown, 'targetRotation:', targetRotation, 'targetRotationOnMouseDown:', targetRotationOnMouseDown );
+
+	}
+
+	function onDocumentMouseUp( e ) {
+		
+		document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
+		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
+		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+		
+	}
+
+	function onDocumentMouseOut( e ) {
+		
+		document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
+		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
+		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+		
+	}
+
+	/*********************************************************
+	 * initialize all enumerated types
+	 *********************************************************
+	 */
 	function initEnums() {
 		
 		// init canvas to not take up so much space (scrollbars appear) 
@@ -118,7 +175,8 @@
 		// init player properties
 		Player = {
 			MOVE_SPEED: 0.05,
-			ROTATE_SPEED: 0.01
+			ROTATE_DAMP: 0.05,
+			TARGET_DAMP: 0.02
 		};
 
 		// init keyboard input keycodes
@@ -138,18 +196,19 @@
 		// init handle keyboard input
 		Keyboard = {
 			keys: {},
-			keyPress: function(e) {
+			keyPress: function( e ) {
 				//e.preventDefault();
 				if ( this.keys[e.keyCode] > 0 ) { return; }
-				this.keys[e.keyCode] = e.timeStamp || (new Date()).getTime();
+				this.keys[e.keyCode] = e.timeStamp || ( new Date() ).getTime();
 				e.stopPropagation();
 			},
-			keyRelease: function(e) {
+			keyRelease: function( e ) {
 				//e.preventDefault();
 				this.keys[e.keyCode] = 0;
 				e.stopPropagation();
 			}
 		};
+
 	}
 
 }( window.witchr = window.witchr || {} ));
