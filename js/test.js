@@ -12,7 +12,7 @@
 
 	let scene, camera, renderer;
 
-	let geometry, material, cube;
+	let cubes = [];
 
 	let targetRotationX = 0;
 	let targetRotationOnMouseDownX = 0;
@@ -43,17 +43,49 @@
 		initEnums();
 
 		scene = new THREE.Scene();
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100);
 		renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth*Canvas.SIZE, window.innerHeight*Canvas.SIZE );
 		document.body.appendChild( renderer.domElement );
 
-		// init objects in scene, in this case just the cube
-		geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		cube = new THREE.Mesh( geometry, material );
-		scene.add( cube );
 
+
+		// init objects in scene, in this case just the cube
+		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		cubes.push( new THREE.Mesh( geometry, material ) );
+		cubes.push( new THREE.Mesh( geometry, material ) );
+		cubes.push( new THREE.Mesh( geometry, material ) );
+
+		material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+		cubes.push( new THREE.Mesh( geometry, material ) );
+		
+		for ( let i = 0; i < cubes.length; ++i ) {
+			cubes[i].position.x -= 2 * i;
+			scene.add( cubes[i] );
+		}
+
+		// add blue cube behind you
+		material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
+		cubes.push( new THREE.Mesh( geometry, material ) );
+		cubes[4].position.z += 10;
+		scene.add( cubes[4] );
+
+		// add ground
+		geometry = new THREE.BoxGeometry( 10, 0.1, 10 );
+		material = new THREE.MeshBasicMaterial( { color: 0x660000, wireframe: true } );
+		cubes.push( new THREE.Mesh( geometry, material ) );
+		cubes[5].position.y -= 0.55;
+		scene.add( cubes[5] );
+
+		cubes.push( new THREE.Mesh( geometry, material ) );
+		cubes[6].position.y -= 0.55;
+		cubes[6].position.z += 10;
+		scene.add( cubes[6] );
+
+		
+		
+		
 		// setup the scene, move the camera 5 units back in z so we can see cube
 		camera.position.z = 5;
 
