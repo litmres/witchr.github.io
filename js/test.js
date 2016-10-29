@@ -13,6 +13,7 @@
 	let scene, camera, renderer;
 
 	let cubes = [];
+	let circle;
 
 	let targetRotationX = 0;
 	let targetRotationOnMouseDownX = 0;
@@ -48,13 +49,12 @@
 		// init all enums that will be used from here on out
 		initEnums();
 
+		// init the scene, camera, and renderer
 		scene = new THREE.Scene();
 		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
 		renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth*Canvas.SIZE, window.innerHeight*Canvas.SIZE );
 		document.body.appendChild( renderer.domElement );
-
-
 
 		// init objects in scene, in this case just the cube
 		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -81,18 +81,25 @@
 		geometry = new THREE.BoxGeometry( 10, 0.1, 10 );
 		material = new THREE.MeshBasicMaterial( { color: 0x660000, wireframe: true } );
 		cubes.push( new THREE.Mesh( geometry, material ) );
-		cubes[5].position.y -= 0.55;
+		cubes[5].position.y -= 1;
 		scene.add( cubes[5] );
 
 		cubes.push( new THREE.Mesh( geometry, material ) );
-		cubes[6].position.y -= 0.55;
+		cubes[6].position.y -= 1;
 		cubes[6].position.z += 10;
 		scene.add( cubes[6] );
 
-		
-		
-		// setup the scene, move the camera 5 units back in z so we can see cube
+		geometry = new THREE.CircleGeometry( 2, 6 );
+		material = new THREE.MeshBasicMaterial( { color: 0xffff0 } );
+		material.side = THREE.DoubleSide;
+		circle = new THREE.Mesh( geometry, material );
+		scene.add( circle );
+
+		// move the camera 5 units back in z so we can see cube and place the
+		// 	circle hit underneath it
 		camera.position.z = 5;
+		circle.position.y = -1;
+		circle.position.z = 5;
 
 		// add all event listeners
 		window.addEventListener( 'resize', onWindowResize, false );
@@ -139,19 +146,39 @@
 		camera.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
 		camera.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
 
+		// reset circle rotation on each render and set it to -90 after so
+		//	that it appears underneath player camera without messing around
+		//  with its local coordinate system
+		circle.rotation.set( 0, 0, 0 );
+		circle.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
+		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
+
 		// handle moveforward input from click or tap
 		if ( moveForward ) {
+
 			let step = moveForward * Player.MOVE_SPEED;
+
 			let y = camera.position.y;
 			camera.translateZ( -step );
 			camera.position.y = y;
-			moveForward -= step;
-		}
 
+			circle.rotation.set( 0, 0, 0 );
+			circle.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
+			circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+			let hitY = circle.position.y;
+			circle.translateZ( -step );
+			circle.position.y = hitY;
+			circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
+
+			moveForward -= step;
+
+		}
 
 		// handle keyboard input
 		handleKeyboard( Keyboard.keys );
 
+		// render next scene
 		renderer.render( scene, camera );
 
 	}
@@ -167,24 +194,16 @@
 
 		// translate only in x,z and make sure to keep y position static
 		if ( keys[Key.LEFT] || keys[Key.A] ) {
-			let y = camera.position.y;
-			camera.translateX( -Player.MOVE_SPEED );
-			camera.position.y = y;
+			translatePlayer( camera, circle, 'translateX', -Player.MOVE_SPEED );
 		}
 		if ( keys[Key.UP] || keys[Key.W] ) {
-			let y = camera.position.y;
-			camera.translateZ( -Player.MOVE_SPEED );
-			camera.position.y = y;
+			translatePlayer( camera, circle, 'translateZ', -Player.MOVE_SPEED );
 		}
 		if ( keys[Key.RIGHT] || keys[Key.D] ) {
-			let y = camera.position.y;
-			camera.translateX( Player.MOVE_SPEED );
-			camera.position.y = y;
+			translatePlayer( camera, circle, 'translateX', Player.MOVE_SPEED );
 		}
 		if ( keys[Key.DOWN] || keys[Key.S] ) {
-			let y = camera.position.y;
-			camera.translateZ( Player.MOVE_SPEED );
-			camera.position.y = y;
+			translatePlayer( camera, circle, 'translateZ', Player.MOVE_SPEED );
 		}
 		if ( keys[Key.R] ) {
 			de&&bug.log( 'r pressed.' );
@@ -199,6 +218,23 @@
 			de&&bug.log( 'ctrl pressed.' );
 		}
 
+	}
+
+	function translatePlayer( cam, hit, func, speed ) {
+		let camY = cam.position.y;
+		cam[func]( speed );
+		cam.position.y = camY;
+
+		// reset circle rotation to its y rotation, apply translation in z,
+		// 	and then re-apply rotation in x to show circle underneath player
+		// 	(this way we can maintain circles local coordinate space)
+		circle.rotation.set( 0, 0, 0 );
+		circle.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
+		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+		let hitY = hit.position.y;
+		hit[func]( speed );
+		hit.position.y = hitY;
+		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
 	}
 
 	// handle mouse input
@@ -288,11 +324,9 @@
 			e.preventDefault();
 
 			mouseX = e.touches[ 0 ].pageX - windowHalfX;
-
 			targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
 			mouseY = e.touches[ 0 ].pageY - windowHalfY;
-
 			targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 			// targetRotationY (rotX looking up/down) from should be max 90 deg
 			if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
