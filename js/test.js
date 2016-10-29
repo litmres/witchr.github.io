@@ -80,7 +80,7 @@
 
 		requestAnimationFrame( render );
 
-		// spin the cube
+		// rotate camera in desired x rotation
 		camera.rotation.y += ( targetRotation - camera.rotation.y ) * Player.ROTATE_SPEED_DAMP;
 
 		// handle keyboard input
