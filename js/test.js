@@ -55,6 +55,7 @@
 		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
 		renderer = new THREE.WebGLRenderer();
 		renderer.setSize( window.innerWidth*Canvas.SIZE, window.innerHeight*Canvas.SIZE );
+		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
 		// init floor
@@ -68,6 +69,12 @@
 		floor.rotation.x = 90 * THREE.Math.DEG2RAD;
 		floor.position.y -= 1;
 		scene.add( floor );
+
+		// init sky
+
+		// init fog
+		scene.fog = new THREE.FogExp2( 0x000000, 0.33 );
+
 		
 
 		// init objects in scene, in this case just the cube
