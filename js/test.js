@@ -128,7 +128,6 @@
 		// move capsule +5z to be with camera, -0.5y to be on floor
 		capsule.position.y = -0.5;
 		capsule.position.z = 2;
-		capsule.__dirtyPosition = true;
 
 	}
 
@@ -174,8 +173,11 @@
 		capsule.rotation.set( 0, 0, 0 );
 		capsule.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
 		capsule.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+		// stop any kind of forces acting on capsule (push back forces mostly)
 		capsule.__dirtyRotation = true; // tell physijs rotation dirty
-		capsule.setAngularVelocity(new THREE.Vector3( 0, 0, 0 ) ); // negate torque
+		capsule.setAngularVelocity(new THREE.Vector3( 0, 0, 0 ) );
+		capsule.__dirtyPosition = true; // tell physijs position dirty
+		capsule.setLinearVelocity( new THREE.Vector3( 0, 0, 0 ) );
 
 		// handle moveforward input from click or tap
 		if ( moveForward ) {
@@ -186,7 +188,6 @@
 			// translate capsule keeping y position static
 			let y = capsule.position.y;
 			capsule.translateZ( -step );
-			capsule.__dirtyPosition = true; // tell physijs position dirty
 			capsule.position.y = y;
 
 			// decrement move offset (ease into location)
@@ -240,8 +241,6 @@
 		// translate capsule but keep y static
 		let y = capsule.position.y;
 		capsule[func]( speed );
-		capsule.__dirtyPosition = true; // tell physijs position dirty
-		capsule.setLinearVelocity( new THREE.Vector3( 0, 0, 0 ) ); // negate push back
 		capsule.position.y = y;
 		
 	}
