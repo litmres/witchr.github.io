@@ -180,10 +180,10 @@
 		capsule.setLinearVelocity( new THREE.Vector3( 0, 0, 0 ) );
 
 		// handle moveforward input from click or tap
-		if ( moveForward ) {
+		if ( moveForward > 0 ) {
 
 			// get partial step to move forward (ease into location)
-			let step = moveForward * Player.MOVE_SPEED;
+			let step = moveForward * Player.STEP_DAMP;
 
 			// translate capsule keeping y position static
 			let y = capsule.position.y;
@@ -290,7 +290,7 @@
 		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 		
 		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
-			moveForward += Player.STEP;
+			moveForward = Player.STEP;
 		}
 		
 	}
@@ -302,7 +302,7 @@
 		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 		
 		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
-			moveForward += Player.STEP;
+			moveForward = Player.STEP;
 		}
 
 	}
@@ -351,7 +351,7 @@
 	function onDocumentTouchEnd( e ) {
 
 		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
-			moveForward += Player.STEP;
+			moveForward = Player.STEP;
 		}
 
 	}
@@ -375,8 +375,9 @@
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 0.02,
-			STEP: 1,
+			MOVE_SPEED: 0.01,
+			STEP: 0.3,
+			STEP_DAMP: 0.06,
 			STEP_TIMER: 200,
 			ROTATE_SPEED_DAMP: 0.2,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
