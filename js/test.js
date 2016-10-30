@@ -377,7 +377,7 @@
 		Player = {
 			MOVE_SPEED: 0.01,
 			STEP: 0.3,
-			STEP_DAMP: 0.06,
+			STEP_DAMP: 0.05,
 			STEP_TIMER: 200,
 			ROTATE_SPEED_DAMP: 0.2,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
