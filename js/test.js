@@ -110,8 +110,11 @@
 		// init objects in scene, in this case just the cube
 		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		let darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-		let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true, transparent: true } );
+let friction = 0; // high friction
+let restitution = 0; // low restitution
+		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true, transparent: true } ), friction, restitution );
 		let multiMaterial = [ darkMaterial, wireframeMaterial ];
+
 		cubes.push( new Physijs.BoxMesh( geometry, wireframeMaterial, 0 ) );
 		// cubes.push( new THREE.Mesh( geometry, darkMaterial ) );
 		// cubes.push( new THREE.SceneUtils.createMultiMaterialObject( geometry, multiMaterial ) ); // collision detection stops working for multiMaterialObject
@@ -121,7 +124,7 @@
 		}
 
 		geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } );
+		wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } ), friction, restitution );
 		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial );
 		scene.add( capsule );
 		
