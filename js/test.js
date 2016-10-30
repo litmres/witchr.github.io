@@ -115,7 +115,7 @@
 		requestAnimationFrame( gameloop );
 		handleKeyboard( Keyboard.keys );
 		update();
-		collide( Keyboard.keys );
+		collisions( Keyboard.keys );
 		render();
 
 	}
@@ -164,7 +164,7 @@
 
 	}
 
-	function collide( keys ) {
+	function collisions( keys ) {
 
 		let originPoint = circle.position.clone();
 
