@@ -34,7 +34,7 @@
 	let windowHalfX = window.innerWidth / 2;
 	let windowHalfY = window.innerHeight / 2;
 	
-	let Canvas, Player, Key, Keyboard;
+	let Canvas, Game, Player, Key, Keyboard;
 
 	init();
 	gameloop();
@@ -107,20 +107,23 @@
 
 
 	/*********************************************************
-	 * gameloop 
+	 * main game loop
 	 *********************************************************
 	 */
-	function gameloop() {
+	function gameloop( tFrame ) {
 
-		requestAnimationFrame( gameloop );
+		Game.stopGameLoop = requestAnimationFrame( gameloop );
 		handleKeyboard( Keyboard.keys );
-		update();
+		update( tFrame );
 		collisions( Keyboard.keys );
 		render();
 
+		// let tNow = window.performance.now();	
+		// de&&bug.log( 'Game.stopGameLoop:', Game.stopGameLoop, 'tFrame:', tFrame, 'tNow:', tNow );
+		// cancelAnimationFrame( Game.stopGameLoop );
 	}
 
-	function update() {
+	function update( tFrame ) {
 		
 		// rotate camera in x and y offsets (about y and x axis respectively)
 		// 	based of mousedown and mousemove
@@ -378,7 +381,12 @@
 		// init canvas to not take up so much space (scrollbars appear) 
 		Canvas = {
 			SIZE: 0.99
-		}; 
+		};
+
+		// init game object and properties
+		Game = {
+			stopGameLoop: 0
+		};
 
 		// init player properties
 		Player = {
