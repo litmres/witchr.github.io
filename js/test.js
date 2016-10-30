@@ -56,6 +56,19 @@
 		renderer.setSize( window.innerWidth*Canvas.SIZE, window.innerHeight*Canvas.SIZE );
 		document.body.appendChild( renderer.domElement );
 
+		// init floor
+		let floorTexture = new THREE.TextureLoader().load('img/checkerboard.jpg');
+		floorTexture.wrapS = THREE.RepeatWrapping;
+		floorTexture.wrapT = THREE.RepeatWrapping;
+		floorTexture.repeat.set( 4, 4 );
+		let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+		let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
+		let floor = new THREE.Mesh( floorGeometry, floorMaterial );
+		floor.rotation.x = 90 * THREE.Math.DEG2RAD;
+		floor.position.y -= 1;
+		scene.add( floor );
+		
+
 		// init objects in scene, in this case just the cube
 		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
