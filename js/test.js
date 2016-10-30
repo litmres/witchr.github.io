@@ -108,7 +108,7 @@
 		scene.fog = new THREE.FogExp2( 0x000000, 0.3 );
 
 		// init objects in scene, in this case just the cube
-		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		let geometry = new THREE.BoxGeometry( 4, 4, 0.1 );
 		let friction = 0; // high friction
 		let restitution = 0; // low restitution
 		let darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
@@ -119,7 +119,7 @@
 		// cubes.push( new THREE.Mesh( geometry, darkMaterial ) );
 		// cubes.push( new THREE.SceneUtils.createMultiMaterialObject( geometry, multiMaterial ) ); // collision detection stops working for multiMaterialObject
 		for ( let i = 0; i < cubes.length; ++i ) {
-			// cubes[i].position.y += 2;
+			cubes[i].position.y += 1;
 			scene.add( cubes[i] );
 		}
 
