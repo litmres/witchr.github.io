@@ -87,8 +87,6 @@
 		scene = new Physijs.Scene();
 
 		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
-		// move camera +5z so we are looking at ( 0, 0, 0 );
-		camera.position.z = 5;
 		camera.lookAt( scene.position );
 		scene.add( camera );
 
@@ -99,7 +97,7 @@
 		floorTexture.repeat.set( 4, 4 );
 		let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
 		let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
-		let floor = new Physijs.BoxMesh( floorGeometry, floorMaterial );
+		let floor = new Physijs.BoxMesh( floorGeometry, floorMaterial, 0 );
 		floor.rotation.x = 90 * THREE.Math.DEG2RAD;
 		floor.position.y -= 1;
 		scene.add( floor );
@@ -114,12 +112,11 @@
 		let darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 		let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true, transparent: true } );
 		let multiMaterial = [ darkMaterial, wireframeMaterial ];
-		cubes.push( new Physijs.BoxMesh( geometry, wireframeMaterial ) );
+		cubes.push( new Physijs.BoxMesh( geometry, wireframeMaterial, 0 ) );
 		// cubes.push( new THREE.Mesh( geometry, darkMaterial ) );
 		// cubes.push( new THREE.SceneUtils.createMultiMaterialObject( geometry, multiMaterial ) ); // collision detection stops working for multiMaterialObject
-		
 		for ( let i = 0; i < cubes.length; ++i ) {
-			cubes[i].position.y += 2;
+			// cubes[i].position.y += 2;
 			scene.add( cubes[i] );
 		}
 
@@ -130,7 +127,7 @@
 		
 		// move capsule +5z to be with camera, -0.5y to be on floor
 		capsule.position.y = -0.5;
-		capsule.position.z = 5;
+		capsule.position.z = 2;
 		capsule.__dirtyPosition = true;
 
 	}
@@ -146,9 +143,9 @@
 
 		handleKeyboard( Keyboard.keys );
 
-		scene.simulate(); // run physics
-
 		update( tFrame ); // update scene rotations and translations
+
+		scene.simulate(); // run physics
 
 		renderer.render( scene, camera ); // render the scene
 
@@ -186,22 +183,19 @@
 			// get partial step to move forward (ease into location)
 			let step = moveForward * Player.MOVE_SPEED;
 
-			// translate camera but keep y position static
-			let y = camera.position.y;
-			camera.translateZ( -step );
-			camera.position.y = y;
-
 			// translate capsule keeping y position static
-			y = capsule.position.y;
+			let y = capsule.position.y;
 			capsule.translateZ( -step );
 			capsule.__dirtyPosition = true; // tell physijs position dirty
-			capsule.setLinearVelocity(new THREE.Vector3( 0, 0, 0 ) ); // negate push back
 			capsule.position.y = y;
 
 			// decrement move offset (ease into location)
 			moveForward -= step;
 
 		}
+
+		// update camera position to capsule position
+		camera.position.set( capsule.position.x, capsule.position.y, capsule.position.z );
 
 	}
 
@@ -243,16 +237,11 @@
 
 	function translatePlayer( func, speed ) {
 
-		// translate camera but keep y static
-		let y = camera.position.y;
-		camera[func]( speed );
-		camera.position.y = y;
-
 		// translate capsule but keep y static
-		y = capsule.position.y;
+		let y = capsule.position.y;
 		capsule[func]( speed );
 		capsule.__dirtyPosition = true; // tell physijs position dirty
-		capsule.setLinearVelocity(new THREE.Vector3( 0, 0, 0 ) ); // negate push back
+		capsule.setLinearVelocity( new THREE.Vector3( 0, 0, 0 ) ); // negate push back
 		capsule.position.y = y;
 		
 	}
@@ -387,7 +376,7 @@
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 0.05,
+			MOVE_SPEED: 0.02,
 			STEP: 1,
 			STEP_TIMER: 200,
 			ROTATE_SPEED_DAMP: 0.2,		// speed to reach desired rotation
