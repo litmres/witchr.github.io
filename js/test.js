@@ -96,10 +96,14 @@
 
 	function onWindowResize() {
 
-		// reset camera position and re-render scene
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
-		camera.position.z = 5;
+		// reset camera aspect ratio
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		// reset renderer scene size
 		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
+
+		// reset logic based on window size
 		windowHalfX = window.innerWidth / 2;
 		windowHalfY = window.innerHeight / 2;
 
