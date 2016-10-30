@@ -109,9 +109,9 @@
 
 		// init objects in scene, in this case just the cube
 		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		let friction = 0; // high friction
+		let restitution = 0; // low restitution
 		let darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-let friction = 0; // high friction
-let restitution = 0; // low restitution
 		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true, transparent: true } ), friction, restitution );
 		let multiMaterial = [ darkMaterial, wireframeMaterial ];
 
