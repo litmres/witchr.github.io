@@ -77,20 +77,21 @@
 
 		// init objects in scene, in this case just the cube
 		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		cubes.push( new THREE.Mesh( geometry, material ) );
-		material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-		cubes.push( new THREE.Mesh( geometry, material ) );
+		let darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+		let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true, transparent: true } );
+		let multiMaterial = [ darkMaterial, wireframeMaterial ];
+		cubes.push( new THREE.Mesh( geometry, wireframeMaterial ) );
+		// cubes.push( new THREE.Mesh( geometry, darkMaterial ) );
+		// cubes.push( new THREE.SceneUtils.createMultiMaterialObject( geometry, multiMaterial ) ); // collision detection stops working for multiMaterialObject
 		
 		for ( let i = 0; i < cubes.length; ++i ) {
-			cubes[i].position.x -= 2 * i;
 			scene.add( cubes[i] );
 		}
 
 		geometry = new THREE.CircleGeometry( 1, 4 );
-		material = new THREE.MeshBasicMaterial( { color: 0xffff0 } );
-		material.side = THREE.DoubleSide;
-		circle = new THREE.Mesh( geometry, material );
+		wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } );
+		de&&bug.log( wireframeMaterial );
+		circle = new THREE.Mesh( geometry, wireframeMaterial );
 
 		// move the camera 5 units back in z so we can see cube and place the
 		// 	circle hit underneath it
