@@ -89,17 +89,17 @@
 		cubes[6].position.z += 10;
 		scene.add( cubes[6] );
 
-		geometry = new THREE.CircleGeometry( 2, 6 );
+		geometry = new THREE.CircleGeometry( 1, 4 );
 		material = new THREE.MeshBasicMaterial( { color: 0xffff0 } );
 		material.side = THREE.DoubleSide;
 		circle = new THREE.Mesh( geometry, material );
-		scene.add( circle );
 
 		// move the camera 5 units back in z so we can see cube and place the
 		// 	circle hit underneath it
 		camera.position.z = 5;
-		circle.position.y = -1;
+		circle.position.y = -0.3;
 		circle.position.z = 5;
+		scene.add( circle );
 
 		// add all event listeners
 		window.addEventListener( 'resize', onWindowResize, false );
@@ -136,7 +136,7 @@
 		requestAnimationFrame( gameloop );
 		handleKeyboard( Keyboard.keys );
 		update();
-		collide();
+		collide( Keyboard.keys );
 		render();
 
 	}
@@ -185,8 +185,37 @@
 
 	}
 
-	function collide() {
-		
+	function collide( keys ) {
+
+		let originPoint = circle.position.clone();
+
+		for ( let i = 0; i < circle.geometry.vertices.length; ++i ) {
+			let localVertex = circle.geometry.vertices[i].clone();
+			let globalVertex = localVertex.applyMatrix4( circle.matrix );
+			let directionVector = globalVertex.sub( circle.position );
+
+			let ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize() );
+			let collisionResults = ray.intersectObjects( cubes );
+
+			if ( collisionResults.length > 0 && collisionResults[0].distance < directionVector.length() ) {
+				de&&bug.log( 'collision detected.' );
+				// undo translations for all current keys being pressed
+				if ( keys[Key.LEFT] || keys[Key.A] ) {
+					translatePlayer( camera, circle, 'translateX', +Player.MOVE_SPEED * 2 );
+				}
+				if ( keys[Key.UP] || keys[Key.W] ) {
+					translatePlayer( camera, circle, 'translateZ', +Player.MOVE_SPEED * 2 );
+				}
+				if ( keys[Key.RIGHT] || keys[Key.D] ) {
+					translatePlayer( camera, circle, 'translateX', -Player.MOVE_SPEED * 2 );
+				}
+				if ( keys[Key.DOWN] || keys[Key.S] ) {
+					translatePlayer( camera, circle, 'translateZ', -Player.MOVE_SPEED * 2 );
+				}
+				
+			}
+		}
+
 	}
 
 	function render() {
