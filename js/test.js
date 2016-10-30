@@ -46,9 +46,32 @@
 	 */
 	// init scene, camera, renderer
 	function init() {
-		
+
+		// setup physijs worker & ammo
+		Physijs.scripts.worker = '/js/physijs_worker.js';
+		Physijs.scripts.ammo = '/js/ammo.js';
+
 		// init all enums that will be used from here on out
 		initEnums();
+
+		// init scene
+		initScene();
+
+		// add all event listeners
+		window.addEventListener( 'resize', onWindowResize, false );
+
+		window.addEventListener( 'keydown', Keyboard.keyPress.bind(Keyboard), false );
+		window.addEventListener( 'keyup', Keyboard.keyRelease.bind(Keyboard), false );
+
+		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+
+		document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
+
+	}
+
+	function initScene() {
 
 		// init the scene, camera, and renderer
 		scene = new THREE.Scene();
@@ -98,18 +121,6 @@
 		circle.position.y = -0.3;
 		circle.position.z = 5;
 		scene.add( circle );
-
-		// add all event listeners
-		window.addEventListener( 'resize', onWindowResize, false );
-
-		window.addEventListener( 'keydown', Keyboard.keyPress.bind(Keyboard), false );
-		window.addEventListener( 'keyup', Keyboard.keyRelease.bind(Keyboard), false );
-
-		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-
-		document.addEventListener( 'touchstart', onDocumentTouchStart, false );
-		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
-		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
 
 	}
 
