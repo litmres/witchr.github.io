@@ -380,7 +380,7 @@
 		
 		// init canvas to not take up so much space (scrollbars appear) 
 		Canvas = {
-			SIZE: 0.99
+			SIZE: 1 
 		};
 
 		// init game object and properties
@@ -417,13 +417,13 @@
 		Keyboard = {
 			keys: {},
 			keyPress: function( e ) {
-				//e.preventDefault();
+				// e.preventDefault();
 				if ( this.keys[e.keyCode] > 0 ) { return; }
 				this.keys[e.keyCode] = e.timeStamp || ( new Date() ).getTime();
 				e.stopPropagation();
 			},
 			keyRelease: function( e ) {
-				//e.preventDefault();
+				// e.preventDefault();
 				this.keys[e.keyCode] = 0;
 				e.stopPropagation();
 			}
