@@ -39,6 +39,7 @@
 	init();
 	gameloop();
 
+
 	/*********************************************************
 	 * initialize scene 
 	 *********************************************************
@@ -107,21 +108,6 @@
 
 	}
 
-	function onWindowResize() {
-
-		// reset camera aspect ratio
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-
-		// reset renderer scene size
-		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
-
-		// reset logic based on window size
-		windowHalfX = window.innerWidth / 2;
-		windowHalfY = window.innerHeight / 2;
-
-	}
-
 
 	/*********************************************************
 	 * main game loop
@@ -130,9 +116,14 @@
 	function gameloop( tFrame ) {
 
 		Game.stopGameLoop = requestAnimationFrame( gameloop );
-		handleKeyboard( Keyboard.keys );
-		update( tFrame );
-		collisions( Keyboard.keys );
+
+		// do not start logic until rAF gives us a frame id
+		if ( tFrame ) {
+			handleKeyboard( Keyboard.keys );
+			update( tFrame );
+			collisions( tFrame, Keyboard.keys );
+		}
+
 		render();
 
 		// let tNow = window.performance.now();	
@@ -184,7 +175,8 @@
 
 	}
 
-	function collisions( keys ) {
+	// handle collision detection
+	function collisions( tFrame, keys ) {
 
 		let originPoint = circle.position.clone();
 
@@ -447,5 +439,26 @@
 		};
 
 	}
+
+
+	/*********************************************************
+	 * helper functions
+	 *********************************************************
+	 */
+	function onWindowResize() {
+
+		// reset camera aspect ratio
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		// reset renderer scene size
+		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
+
+		// reset logic based on window size
+		windowHalfX = window.innerWidth / 2;
+		windowHalfY = window.innerHeight / 2;
+
+	}
+
 
 }( window.witchr = window.witchr || {} ));
