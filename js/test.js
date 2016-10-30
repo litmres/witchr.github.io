@@ -14,7 +14,7 @@
 
 	let scene, camera, renderer;
 
-	let cubes = [];
+	let walls = [];
 	let capsule;
 
 	let targetRotationX = 0;
@@ -91,10 +91,10 @@
 		scene.add( camera );
 
 		// init floor
-		let floorTexture = new THREE.TextureLoader().load('img/checkerboard.jpg');
+		let floorTexture = new THREE.TextureLoader().load('img/old_wood.jpg');
 		floorTexture.wrapS = THREE.RepeatWrapping;
 		floorTexture.wrapT = THREE.RepeatWrapping;
-		floorTexture.repeat.set( 4, 4 );
+		floorTexture.repeat.set( 8, 4 );
 		let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
 		let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
 		let floor = new Physijs.BoxMesh( floorGeometry, floorMaterial, 0 );
@@ -104,27 +104,26 @@
 
 		// init sky (not needed for this game)
 		// init fog
-		// scene.fog = new THREE.Fog( 0x000000, 0.1, 7 );
-		scene.fog = new THREE.FogExp2( 0x000000, 0.3 );
+		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
+		scene.fog = new THREE.FogExp2( 0x000000, 0.5 );
 
 		// init objects in scene, in this case just the cube
-		let geometry = new THREE.BoxGeometry( 4, 4, 0.1 );
+		let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
 		let friction = 0; // high friction
 		let restitution = 0; // low restitution
-		let darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true, transparent: true } ), friction, restitution );
-		let multiMaterial = [ darkMaterial, wireframeMaterial ];
-
-		cubes.push( new Physijs.BoxMesh( geometry, wireframeMaterial, 0 ) );
-		// cubes.push( new THREE.Mesh( geometry, darkMaterial ) );
-		// cubes.push( new THREE.SceneUtils.createMultiMaterialObject( geometry, multiMaterial ) ); // collision detection stops working for multiMaterialObject
-		for ( let i = 0; i < cubes.length; ++i ) {
-			cubes[i].position.y += 1;
-			scene.add( cubes[i] );
+		let wallTexture = new THREE.TextureLoader().load('img/paper_pattern.jpg');
+		wallTexture.wrapS = THREE.RepeatWrapping;
+		wallTexture.wrapT = THREE.RepeatWrapping;
+		wallTexture.repeat.set( 2, 1 );
+		let wallMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } ), friction, restitution );
+		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
+		for ( let i = 0; i < walls.length; ++i ) {
+			walls[i].position.y += 0;
+			scene.add( walls[i] );
 		}
 
-		geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } ), friction, restitution );
+		let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
+		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } ), friction, restitution );
 		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial );
 		scene.add( capsule );
 		
