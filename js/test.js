@@ -3,7 +3,9 @@
  * @author @superafable
  */
 
+
 'use strict';
+
 
 (function( witchr, undefined ) {
 
@@ -142,19 +144,18 @@
 
 		Game.stopGameLoop = requestAnimationFrame( gameloop );
 
-		// do not start logic until rAF gives us a frame id
-		// if ( tFrame ) {
-			scene.simulate(); // run physics
-			handleKeyboard( Keyboard.keys );
-			update( tFrame );
-			// collisions( tFrame, Keyboard.keys );
-		// }
+		handleKeyboard( Keyboard.keys );
+
+		scene.simulate(); // run physics
+
+		update( tFrame ); // update scene rotations and translations
 
 		renderer.render( scene, camera ); // render the scene
 
 		// let tNow = window.performance.now();	
 		// de&&bug.log( 'Game.stopGameLoop:', Game.stopGameLoop, 'tFrame:', tFrame, 'tNow:', tNow );
 		// cancelAnimationFrame( Game.stopGameLoop );
+
 	}
 
 	function update( tFrame ) {
@@ -241,7 +242,7 @@
 	}
 
 	function translatePlayer( func, speed ) {
-		
+
 		// translate camera but keep y static
 		let y = camera.position.y;
 		camera[func]( speed );
