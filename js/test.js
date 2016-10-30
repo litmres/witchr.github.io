@@ -90,7 +90,6 @@
 
 		geometry = new THREE.CircleGeometry( 1, 8 );
 		wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } );
-		de&&bug.log( wireframeMaterial );
 		circle = new THREE.Mesh( geometry, wireframeMaterial );
 
 		// move the camera 5 units back in z so we can see cube and place the
