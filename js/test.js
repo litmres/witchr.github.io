@@ -60,9 +60,6 @@
 		let geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 		cubes.push( new THREE.Mesh( geometry, material ) );
-		cubes.push( new THREE.Mesh( geometry, material ) );
-		cubes.push( new THREE.Mesh( geometry, material ) );
-
 		material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 		cubes.push( new THREE.Mesh( geometry, material ) );
 		
@@ -70,24 +67,6 @@
 			cubes[i].position.x -= 2 * i;
 			scene.add( cubes[i] );
 		}
-
-		// add blue cube behind you
-		material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
-		cubes.push( new THREE.Mesh( geometry, material ) );
-		cubes[4].position.z += 10;
-		scene.add( cubes[4] );
-
-		// add ground
-		geometry = new THREE.BoxGeometry( 10, 0.1, 10 );
-		material = new THREE.MeshBasicMaterial( { color: 0x660000, wireframe: true } );
-		cubes.push( new THREE.Mesh( geometry, material ) );
-		cubes[5].position.y -= 1;
-		scene.add( cubes[5] );
-
-		cubes.push( new THREE.Mesh( geometry, material ) );
-		cubes[6].position.y -= 1;
-		cubes[6].position.z += 10;
-		scene.add( cubes[6] );
 
 		geometry = new THREE.CircleGeometry( 1, 4 );
 		material = new THREE.MeshBasicMaterial( { color: 0xffff0 } );
