@@ -13,7 +13,7 @@
 	let scene, camera, renderer;
 
 	let cubes = [];
-	let circle;
+	let capsule;
 
 	let targetRotationX = 0;
 	let targetRotationOnMouseDownX = 0;
@@ -36,8 +36,8 @@
 	
 	let Canvas, Game, Player, Key, Keyboard;
 
-	init();
-	gameloop();
+
+	window.onload = init();
 
 
 	/*********************************************************
@@ -69,17 +69,26 @@
 		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
 		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
 
+		// start an rAF for the gameloop
+		requestAnimationFrame( gameloop );
+
 	}
 
 	function initScene() {
 
-		// init the scene, camera, and renderer
-		scene = new THREE.Scene();
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
-		renderer = new THREE.WebGLRenderer();
-		renderer.setSize( window.innerWidth*Canvas.SIZE, window.innerHeight*Canvas.SIZE );
+		// init the renderer, scene, and camera
+		renderer = new THREE.WebGLRenderer( { antialias: true } );
+		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
+
+		scene = new Physijs.Scene();
+
+		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
+		// move camera +5z so we are looking at ( 0, 0, 0 );
+		camera.position.z = 5;
+		camera.lookAt( scene.position );
+		scene.add( camera );
 
 		// init floor
 		let floorTexture = new THREE.TextureLoader().load('img/checkerboard.jpg');
@@ -88,7 +97,7 @@
 		floorTexture.repeat.set( 4, 4 );
 		let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
 		let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
-		let floor = new THREE.Mesh( floorGeometry, floorMaterial );
+		let floor = new Physijs.BoxMesh( floorGeometry, floorMaterial );
 		floor.rotation.x = 90 * THREE.Math.DEG2RAD;
 		floor.position.y -= 1;
 		scene.add( floor );
@@ -103,24 +112,24 @@
 		let darkMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 		let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true, transparent: true } );
 		let multiMaterial = [ darkMaterial, wireframeMaterial ];
-		cubes.push( new THREE.Mesh( geometry, wireframeMaterial ) );
+		cubes.push( new Physijs.BoxMesh( geometry, wireframeMaterial ) );
 		// cubes.push( new THREE.Mesh( geometry, darkMaterial ) );
 		// cubes.push( new THREE.SceneUtils.createMultiMaterialObject( geometry, multiMaterial ) ); // collision detection stops working for multiMaterialObject
 		
 		for ( let i = 0; i < cubes.length; ++i ) {
+			cubes[i].position.y += 2;
 			scene.add( cubes[i] );
 		}
 
-		geometry = new THREE.CircleGeometry( 1, 8 );
+		geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
 		wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } );
-		circle = new THREE.Mesh( geometry, wireframeMaterial );
-
-		// move the camera 5 units back in z so we can see cube and place the
-		// 	circle hit underneath it
-		camera.position.z = 5;
-		circle.position.y = -0.3;
-		circle.position.z = 5;
-		scene.add( circle );
+		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial );
+		scene.add( capsule );
+		
+		// move capsule +5z to be with camera, -0.5y to be on floor
+		capsule.position.y = -0.5;
+		capsule.position.z = 5;
+		capsule.__dirtyPosition = true;
 
 	}
 
@@ -134,13 +143,14 @@
 		Game.stopGameLoop = requestAnimationFrame( gameloop );
 
 		// do not start logic until rAF gives us a frame id
-		if ( tFrame ) {
+		// if ( tFrame ) {
+			scene.simulate(); // run physics
 			handleKeyboard( Keyboard.keys );
 			update( tFrame );
-			collisions( tFrame, Keyboard.keys );
-		}
+			// collisions( tFrame, Keyboard.keys );
+		// }
 
-		render();
+		renderer.render( scene, camera ); // render the scene
 
 		// let tNow = window.performance.now();	
 		// de&&bug.log( 'Game.stopGameLoop:', Game.stopGameLoop, 'tFrame:', tFrame, 'tNow:', tNow );
@@ -160,78 +170,40 @@
 		camera.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
 		camera.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
 
-		// reset circle rotation on each render and set it to -90 after so
+		// reset capsule rotation on each render and set it to -90 after so
 		//	that it appears underneath player camera without messing around
 		//  with its local coordinate system
-		circle.rotation.set( 0, 0, 0 );
-		circle.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
-		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
-		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
+		capsule.rotation.set( 0, 0, 0 );
+		capsule.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
+		capsule.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+		capsule.__dirtyRotation = true; // tell physijs rotation dirty
+		capsule.setAngularVelocity(new THREE.Vector3( 0, 0, 0 ) ); // negate torque
 
 		// handle moveforward input from click or tap
 		if ( moveForward ) {
 
+			// get partial step to move forward (ease into location)
 			let step = moveForward * Player.MOVE_SPEED;
 
+			// translate camera but keep y position static
 			let y = camera.position.y;
 			camera.translateZ( -step );
 			camera.position.y = y;
 
-			circle.rotation.set( 0, 0, 0 );
-			circle.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
-			circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
-			let hitY = circle.position.y;
-			circle.translateZ( -step );
-			circle.position.y = hitY;
-			circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
+			// translate capsule keeping y position static
+			y = capsule.position.y;
+			capsule.translateZ( -step );
+			capsule.__dirtyPosition = true; // tell physijs position dirty
+			capsule.setLinearVelocity(new THREE.Vector3( 0, 0, 0 ) ); // negate push back
+			capsule.position.y = y;
 
+			// decrement move offset (ease into location)
 			moveForward -= step;
 
 		}
 
 	}
 
-	// handle collision detection
-	function collisions( tFrame, keys ) {
-
-		let originPoint = circle.position.clone();
-
-		for ( let i = 0; i < circle.geometry.vertices.length; ++i ) {
-			let localVertex = circle.geometry.vertices[i].clone();
-			let globalVertex = localVertex.applyMatrix4( circle.matrix );
-			let directionVector = globalVertex.sub( circle.position );
-
-			let ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize() );
-			let collisionResults = ray.intersectObjects( cubes );
-
-			if ( collisionResults.length > 0 && collisionResults[0].distance < directionVector.length() ) {
-				de&&bug.log( 'collision detected.' );
-				// undo translations for all current keys being pressed
-				if ( keys[Key.LEFT] || keys[Key.A] ) {
-					translatePlayer( camera, circle, 'translateX', +Player.MOVE_SPEED * 2 );
-				}
-				if ( keys[Key.UP] || keys[Key.W] ) {
-					translatePlayer( camera, circle, 'translateZ', +Player.MOVE_SPEED * 2 );
-				}
-				if ( keys[Key.RIGHT] || keys[Key.D] ) {
-					translatePlayer( camera, circle, 'translateX', -Player.MOVE_SPEED * 2 );
-				}
-				if ( keys[Key.DOWN] || keys[Key.S] ) {
-					translatePlayer( camera, circle, 'translateZ', -Player.MOVE_SPEED * 2 );
-				}
-				
-			}
-		}
-
-	}
-
-	function render() {
-
-		// render next scene
-		renderer.render( scene, camera );
-		
-	}
-	
 
 	/*********************************************************
 	 * handle keyboard, mouse, touch inputs
@@ -242,16 +214,16 @@
 
 		// translate only in x,z and make sure to keep y position static
 		if ( keys[Key.LEFT] || keys[Key.A] ) {
-			translatePlayer( camera, circle, 'translateX', -Player.MOVE_SPEED );
+			translatePlayer( 'translateX', -Player.MOVE_SPEED );
 		}
 		if ( keys[Key.UP] || keys[Key.W] ) {
-			translatePlayer( camera, circle, 'translateZ', -Player.MOVE_SPEED );
+			translatePlayer( 'translateZ', -Player.MOVE_SPEED );
 		}
 		if ( keys[Key.RIGHT] || keys[Key.D] ) {
-			translatePlayer( camera, circle, 'translateX', Player.MOVE_SPEED );
+			translatePlayer( 'translateX', Player.MOVE_SPEED );
 		}
 		if ( keys[Key.DOWN] || keys[Key.S] ) {
-			translatePlayer( camera, circle, 'translateZ', Player.MOVE_SPEED );
+			translatePlayer( 'translateZ', Player.MOVE_SPEED );
 		}
 		if ( keys[Key.R] ) {
 			de&&bug.log( 'r pressed.' );
@@ -268,21 +240,20 @@
 
 	}
 
-	function translatePlayer( cam, hit, func, speed ) {
-		let camY = cam.position.y;
-		cam[func]( speed );
-		cam.position.y = camY;
+	function translatePlayer( func, speed ) {
+		
+		// translate camera but keep y static
+		let y = camera.position.y;
+		camera[func]( speed );
+		camera.position.y = y;
 
-		// reset circle rotation to its y rotation, apply translation in z,
-		// 	and then re-apply rotation in x to show circle underneath player
-		// 	(this way we can maintain circles local coordinate space)
-		circle.rotation.set( 0, 0, 0 );
-		circle.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
-		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
-		let hitY = hit.position.y;
-		hit[func]( speed );
-		hit.position.y = hitY;
-		circle.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
+		// translate capsule but keep y static
+		y = capsule.position.y;
+		capsule[func]( speed );
+		capsule.__dirtyPosition = true; // tell physijs position dirty
+		capsule.setLinearVelocity(new THREE.Vector3( 0, 0, 0 ) ); // negate push back
+		capsule.position.y = y;
+		
 	}
 
 	// handle mouse input
