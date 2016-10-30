@@ -70,8 +70,7 @@
 		floor.position.y -= 1;
 		scene.add( floor );
 
-		// init sky
-
+		// init sky (not needed for this game)
 		// init fog
 		scene.fog = new THREE.FogExp2( 0x000000, 0.33 );
 
