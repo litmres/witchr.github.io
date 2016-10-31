@@ -111,7 +111,7 @@
 		// init sky (not needed for this game)
 		// init fog
 		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
-		scene.fog = new THREE.FogExp2( 0x000000, 0.5 );
+		scene.fog = new THREE.FogExp2( 0x000000, 0.8 );
 
 		// init objects in scene, in this case just the cube
 		let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
