@@ -114,13 +114,13 @@
 		scene.fog = new THREE.FogExp2( 0x000000, 0.5 );
 
 		// init objects in scene, in this case just the cube
-		let wallGeometry = new THREE.BoxGeometry( 8, 2, 0.1 );
+		let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
 		let friction = 0; // high friction
 		let restitution = 0; // low restitution
 		let wallTexture = new THREE.TextureLoader().load('img/paper_pattern.jpg');
 		wallTexture.wrapS = THREE.RepeatWrapping;
 		wallTexture.wrapT = THREE.RepeatWrapping;
-		wallTexture.repeat.set( 4, 1 );
+		wallTexture.repeat.set( 2, 1 );
 		let wallMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } ), friction, restitution );
 		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
 		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
@@ -129,25 +129,25 @@
 		for ( let i = 0; i < walls.length; ++i ) {
 			scene.add( walls[i] );
 		}
-		walls[1].position.x = 4;
-		walls[1].position.z = 4;
+		walls[1].position.x = 2;
+		walls[1].position.z = 2;
 		walls[1].__dirtyPosition = true;
 		walls[1].rotation.y += 90 * THREE.Math.DEG2RAD;
 		walls[1].__dirtyRotation = true;
 
-		walls[2].position.x = -4;
-		walls[2].position.z = 4;
+		walls[2].position.x = -2;
+		walls[2].position.z = 2;
 		walls[2].__dirtyPosition = true;
 		walls[2].rotation.y += 90 * THREE.Math.DEG2RAD;
 		walls[2].__dirtyRotation = true;
 
 		walls[3].position.x = 0;
-		walls[3].position.z = 8;
+		walls[3].position.z = 4;
 		walls[3].__dirtyPosition = true;
 		
 
 		let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.01 } ), friction, restitution );
+		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0 } ), friction, restitution );
 		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial );
 		scene.add( capsule );
 		
@@ -199,6 +199,8 @@
 				// loader.load("model/chest.json",function ( obj ) {
 				// 	scene.add( obj );
 				// });
+
+		
 
 		
 				// init music playing in the background
