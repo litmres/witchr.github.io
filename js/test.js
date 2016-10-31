@@ -12,6 +12,8 @@
 	let de = true;
 	let bug = console;
 
+	let stats;
+
 	let scene, camera, renderer;
 
 	let walls = [];
@@ -58,6 +60,10 @@
 
 		// init scene
 		initScene();
+
+		// init stats
+		stats = new Stats();
+		document.body.appendChild( stats.dom );
 
 		// add all event listeners
 		window.addEventListener( 'resize', onWindowResize, false );
@@ -219,6 +225,8 @@
 		scene.simulate(); // run physics
 
 		renderer.render( scene, camera ); // render the scene
+
+		stats.update();
 
 		// let tNow = window.performance.now();	
 		// de&&bug.log( 'Game.stopGameLoop:', Game.stopGameLoop, 'tFrame:', tFrame, 'tNow:', tNow );
