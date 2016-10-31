@@ -108,30 +108,100 @@
 		scene.fog = new THREE.FogExp2( 0x000000, 0.5 );
 
 		// init objects in scene, in this case just the cube
-		let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
+		let wallGeometry = new THREE.BoxGeometry( 8, 2, 0.1 );
 		let friction = 0; // high friction
 		let restitution = 0; // low restitution
 		let wallTexture = new THREE.TextureLoader().load('img/paper_pattern.jpg');
 		wallTexture.wrapS = THREE.RepeatWrapping;
 		wallTexture.wrapT = THREE.RepeatWrapping;
-		wallTexture.repeat.set( 2, 1 );
+		wallTexture.repeat.set( 4, 1 );
 		let wallMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } ), friction, restitution );
 		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
+		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
+		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
+		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
 		for ( let i = 0; i < walls.length; ++i ) {
-			walls[i].position.y += 0;
 			scene.add( walls[i] );
 		}
+		walls[1].position.x = 4;
+		walls[1].position.z = 4;
+		walls[1].__dirtyPosition = true;
+		walls[1].rotation.y += 90 * THREE.Math.DEG2RAD;
+		walls[1].__dirtyRotation = true;
+
+		walls[2].position.x = -4;
+		walls[2].position.z = 4;
+		walls[2].__dirtyPosition = true;
+		walls[2].rotation.y += 90 * THREE.Math.DEG2RAD;
+		walls[2].__dirtyRotation = true;
+
+		walls[3].position.x = 0;
+		walls[3].position.z = 8;
+		walls[3].__dirtyPosition = true;
+		
 
 		let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } ), friction, restitution );
+		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.01 } ), friction, restitution );
 		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial );
 		scene.add( capsule );
 		
 		// move capsule +5z to be with camera, -0.5y to be on floor
 		capsule.position.y = -0.5;
-		capsule.position.z = 2;
+		capsule.position.z = 3;
+
+
+
+
+
+		// attempt to init doors from models
+
+		// model
+				// var onProgress = function ( xhr ) {
+				// 	if ( xhr.lengthComputable ) {
+				// 		var percentComplete = xhr.loaded / xhr.total * 100;
+				// 		console.log( Math.round(percentComplete, 2) + '% downloaded' );
+				// 	}
+				// };
+
+				// var onError = function ( xhr ) { };
+
+				// THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+
+				// var mtlLoader = new THREE.MTLLoader();
+				// mtlLoader.setPath( 'model/' );
+				// mtlLoader.load( 'door05.obj.mtl', function( materials ) {
+
+				// 	materials.preload();
+
+				// 	var objLoader = new THREE.OBJLoader();
+				// 	objLoader.setMaterials( materials );
+				// 	objLoader.setPath( 'model/' );
+				// 	objLoader.load( 'door05.obj', function ( object ) {
+
+				// 		object.position.set( 0, 0, 0 );
+				// 		scene.add( object );
+
+				// 	}, onProgress, onError );
+
+				// });;
+
+
+
+
+				// attempt 2 at importing models
+				// var loader = new THREE.ObjectLoader();
+				// loader.load("model/chest.json",function ( obj ) {
+				// 	scene.add( obj );
+				// });
+
+		
+				// init music playing in the background
+				let audio = new Audio( 'sound/vasiliy_statik-weird-dreaminstrumental.mp3' );
+				audio.currentTime = 30;
+				audio.play();
 
 	}
+
 
 
 	/*********************************************************
