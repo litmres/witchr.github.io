@@ -101,7 +101,7 @@
 		floorTexture.wrapS = THREE.RepeatWrapping;
 		floorTexture.wrapT = THREE.RepeatWrapping;
 		floorTexture.repeat.set( 8, 4 );
-		let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+		let floorMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } ), 0.9, 0.1 );
 		let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
 		let floor = new Physijs.BoxMesh( floorGeometry, floorMaterial, 0 );
 		floor.rotation.x = 90 * THREE.Math.DEG2RAD;
@@ -115,8 +115,8 @@
 
 		// init objects in scene, in this case just the cube
 		let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
-		let friction = 0; // high friction
-		let restitution = 0; // low restitution
+		let friction = 0.9; // high friction
+		let restitution = 0.1; // low restitution
 		let wallTexture = new THREE.TextureLoader().load('img/paper_pattern.jpg');
 		wallTexture.wrapS = THREE.RepeatWrapping;
 		wallTexture.wrapT = THREE.RepeatWrapping;
@@ -148,7 +148,7 @@
 
 		let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
 		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0 } ), friction, restitution );
-		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial );
+		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial, 999 );
 		scene.add( capsule );
 		
 		// move capsule +5z to be with camera, -0.5y to be on floor
