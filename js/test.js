@@ -148,65 +148,17 @@
 
 		let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
 		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0 } ), friction, restitution );
-		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial, 999 );
+		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial, 1 );
 		scene.add( capsule );
 		
 		// move capsule +5z to be with camera, -0.5y to be on floor
 		capsule.position.y = -0.5;
-		capsule.position.z = 3;
+		capsule.position.z = 1;
 
 
 
 
 
-		// attempt to init doors from models
-
-		// model
-				// var onProgress = function ( xhr ) {
-				// 	if ( xhr.lengthComputable ) {
-				// 		var percentComplete = xhr.loaded / xhr.total * 100;
-				// 		console.log( Math.round(percentComplete, 2) + '% downloaded' );
-				// 	}
-				// };
-
-				// var onError = function ( xhr ) { };
-
-				// THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
-
-				// var mtlLoader = new THREE.MTLLoader();
-				// mtlLoader.setPath( 'model/' );
-				// mtlLoader.load( 'door05.obj.mtl', function( materials ) {
-
-				// 	materials.preload();
-
-				// 	var objLoader = new THREE.OBJLoader();
-				// 	objLoader.setMaterials( materials );
-				// 	objLoader.setPath( 'model/' );
-				// 	objLoader.load( 'door05.obj', function ( object ) {
-
-				// 		object.position.set( 0, 0, 0 );
-				// 		scene.add( object );
-
-				// 	}, onProgress, onError );
-
-				// });;
-
-
-
-
-				// attempt 2 at importing models
-				// var loader = new THREE.ObjectLoader();
-				// loader.load("model/chest.json",function ( obj ) {
-				// 	scene.add( obj );
-				// });
-
-		
-
-		
-				// init music playing in the background
-				let audio = new Audio( 'sound/vasiliy_statik-weird-dreaminstrumental.mp3' );
-				audio.currentTime = 30;
-				audio.play();
 
 	}
 
