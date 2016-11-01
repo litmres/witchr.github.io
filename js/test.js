@@ -113,7 +113,7 @@
 		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
 		scene.fog = new THREE.FogExp2( 0x000000, 0.8 );
 
-		// init objects in scene, in this case just the cube
+		// init objects in scene, in this case just the cubes
 		let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
 		let friction = 0.9; // high friction
 		let restitution = 0.1; // low restitution
