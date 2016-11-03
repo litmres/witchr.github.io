@@ -141,8 +141,9 @@
 		let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } );
 		capsule = new THREE.Mesh( geometry, wireframeMaterial, 1 );
 		scene.add( capsule );
+		capsule.add( camera );
 		
-		// move capsule +5z to be with camera, -0.5y to be on floor
+		// move capsule +1z to be inside room and -0.5y to be on the floor
 		capsule.position.y = -0.5;
 		capsule.position.z = 1;
 
@@ -183,16 +184,10 @@
 		// 	based of mousedown and mousemove
 		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED_DAMP;
 		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED_DAMP;
-		// reset camera rotation on each render and set it according to our
-		// 	player's rotX and rotY values
-		camera.rotation.set( 0, 0, 0 );
-		// order makes a huge difference here!! rotate on y first, then x!!
-		camera.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
-		camera.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
 
-		// reset capsule rotation on each render and set it to -90 after so
-		//	that it appears underneath player camera without messing around
-		//  with its local coordinate system
+		// reset capsule (& camera) rotation on each render and set it
+		//  according to our player's rotX and rotY values
+		// order makes a huge difference here!! rotate on y first, then x!!
 		capsule.rotation.set( 0, 0, 0 );
 		capsule.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
 		capsule.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
@@ -212,9 +207,6 @@
 			moveForward -= step;
 
 		}
-
-		// update camera position to capsule position
-		camera.position.set( capsule.position.x, capsule.position.y, capsule.position.z );
 
 	}
 
