@@ -51,10 +51,6 @@
 	// init scene, camera, renderer
 	function init() {
 
-		// setup physijs worker & ammo
-		Physijs.scripts.worker = '/js/physijs_worker.js';
-		Physijs.scripts.ammo = '/js/ammo.js';
-
 		// init all enums that will be used from here on out
 		initEnums();
 
@@ -90,7 +86,7 @@
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
-		scene = new Physijs.Scene( { fixedTimeStep: 1 / 60 } );
+		scene = new THREE.Scene();
 
 		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
 		camera.lookAt( scene.position );
@@ -101,9 +97,9 @@
 		floorTexture.wrapS = THREE.RepeatWrapping;
 		floorTexture.wrapT = THREE.RepeatWrapping;
 		floorTexture.repeat.set( 8, 4 );
-		let floorMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } ), 0.9, 0.1 );
+		let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
 		let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
-		let floor = new Physijs.BoxMesh( floorGeometry, floorMaterial, 0 );
+		let floor = new THREE.Mesh( floorGeometry, floorMaterial );
 		floor.rotation.x = 90 * THREE.Math.DEG2RAD;
 		floor.position.y -= 1;
 		scene.add( floor );
@@ -121,34 +117,29 @@
 		wallTexture.wrapS = THREE.RepeatWrapping;
 		wallTexture.wrapT = THREE.RepeatWrapping;
 		wallTexture.repeat.set( 2, 1 );
-		let wallMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } ), friction, restitution );
-		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
-		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
-		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
-		walls.push( new Physijs.BoxMesh( wallGeometry, wallMaterial, 0 ) );
+		let wallMaterial = new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } );
+		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
+		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
+		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
+		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
 		for ( let i = 0; i < walls.length; ++i ) {
 			scene.add( walls[i] );
 		}
 		walls[1].position.x = 2;
 		walls[1].position.z = 2;
-		walls[1].__dirtyPosition = true;
 		walls[1].rotation.y += 90 * THREE.Math.DEG2RAD;
-		walls[1].__dirtyRotation = true;
 
 		walls[2].position.x = -2;
 		walls[2].position.z = 2;
-		walls[2].__dirtyPosition = true;
 		walls[2].rotation.y += 90 * THREE.Math.DEG2RAD;
-		walls[2].__dirtyRotation = true;
 
 		walls[3].position.x = 0;
 		walls[3].position.z = 4;
-		walls[3].__dirtyPosition = true;
 		
 
 		let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		let wireframeMaterial = Physijs.createMaterial( new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0 } ), friction, restitution );
-		capsule = new Physijs.CapsuleMesh( geometry, wireframeMaterial, 1 );
+		let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } );
+		capsule = new THREE.Mesh( geometry, wireframeMaterial, 1 );
 		scene.add( capsule );
 		
 		// move capsule +5z to be with camera, -0.5y to be on floor
@@ -175,8 +166,6 @@
 		handleKeyboard( Keyboard.keys );
 
 		update( tFrame ); // update scene rotations and translations
-
-		scene.simulate(); // run physics
 
 		renderer.render( scene, camera ); // render the scene
 
@@ -207,11 +196,6 @@
 		capsule.rotation.set( 0, 0, 0 );
 		capsule.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
 		capsule.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
-		// stop any kind of forces acting on capsule (push back forces mostly)
-		capsule.__dirtyRotation = true; // tell physijs rotation dirty
-		capsule.setAngularVelocity(new THREE.Vector3( 0, 0, 0 ) );
-		capsule.__dirtyPosition = true; // tell physijs position dirty
-		capsule.setLinearVelocity( new THREE.Vector3( 0, 0, 0 ) );
 
 		// handle moveforward input from click or tap
 		if ( moveForward > 0 ) {
