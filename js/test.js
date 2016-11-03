@@ -147,11 +147,6 @@
 		capsule.position.y = -0.5;
 		capsule.position.z = 1;
 
-
-
-
-
-
 	}
 
 
