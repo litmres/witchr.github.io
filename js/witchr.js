@@ -12,12 +12,24 @@
 	let de = true;
 	let bug = console;
 
+	// enums
+	let Canvas, Game, Player, Keyboard, Key;
+
+	// fps stats
 	let stats;
 
-	let scene, camera, renderer;
+	// three.js
+	let camera, scene, renderer;
+	let ground, cube, capsule;
 
-	let walls = [];
-	let capsule;
+	// cannon.js
+	let world;
+	let time = performance.now(), timeStep = 1 / 60;
+	let groundBody, cubeBody, capsuleBody;
+	
+	// mouse and touch events
+	let rotX = 0;
+	let rotY = 0;
 
 	let targetRotationX = 0;
 	let targetRotationOnMouseDownX = 0;
@@ -29,17 +41,12 @@
 	let mouseY = 0;
 	let mouseYOnMouseDown = 0;
 
-	let rotX = 0;
-	let rotY = 0;
-
-	let moveForward = 0;
 	let clickTimer = 0;
+	let moveForward = 0;
 
 	let windowHalfX = window.innerWidth / 2;
 	let windowHalfY = window.innerHeight / 2;
 	
-	let Canvas, Game, Player, Key, Keyboard;
-
 
 	window.onload = init();
 
@@ -48,20 +55,19 @@
 	 * initialize scene 
 	 *********************************************************
 	 */
-	// init scene, camera, renderer
 	function init() {
 
-		// init all enums that will be used from here on out
 		initEnums();
 
-		// init scene
-		initScene();
+		initCannon();
+
+		initThree();
 
 		// init stats
 		stats = new Stats();
 		document.body.appendChild( stats.dom );
 
-		// add all event listeners
+		// add handlers for io events
 		window.addEventListener( 'resize', onWindowResize, false );
 
 		window.addEventListener( 'keydown', Keyboard.keyPress.bind(Keyboard), false );
@@ -73,79 +79,177 @@
 		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
 		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
 
+
 		// start an rAF for the gameloop
 		requestAnimationFrame( gameloop );
 
 	}
 
-	function initScene() {
+	function initCannon() {
 
-		// init the renderer, scene, and camera
+		let physicsMaterial, physicsContactMaterial;
+
+		// setup worlds
+		world = new CANNON.World();
+		world.broadphase = new CANNON.NaiveBroadphase();
+		world.solver.iterations = 10;
+		world.gravity.set( 0, 0, 0 );
+
+		// create a slippery material
+		physicsMaterial = new CANNON.Material( 'groundMaterial' );
+		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial,
+																 physicsMaterial,
+																 0.0, // friction coefficient
+																 0.3  // restitution
+																 );
+		world.addContactMaterial( physicsContactMaterial );
+
+		// create ground plane
+		groundBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
+		groundBody.addShape( new CANNON.Plane() );
+		groundBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
+		groundBody.position.set( 0, 0, 0 );
+		world.addBody( groundBody );
+		
+
+	
+        // // Materials
+        // groundMaterial = new CANNON.Material("groundMaterial");
+
+        // // Adjust constraint equation parameters for ground/ground contact
+        // ground_ground_cm = new CANNON.ContactMaterial(groundMaterial, groundMaterial, {
+        //     friction: 0.9,
+        //     restitution: 0.9,
+        //     contactEquationStiffness: 1e8,
+        //     contactEquationRelaxation: 3,
+        //     frictionEquationStiffness: 1e8,
+        //     frictionEquationRegularizationTime: 3,
+        // });
+
+		// // ground plane
+        // var groundShape = new CANNON.Plane();
+        // var groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
+        // groundBody.addShape(groundShape);
+        // world.add(groundBody);
+
+        // // Add contact material to the world
+        // world.addContactMaterial(ground_ground_cm);	
+
+		// // box in center
+		// shape = new CANNON.Box( new CANNON.Vec3( 0.5, 0.5, 0.5 ) );
+		// body = new CANNON.Body( { mass: 1000, material: groundMaterial } );
+		// body.addShape( shape );
+		// body.angularVelocity.set( 0, 1, 0 );
+		// body.angularDamping = 0.99;
+		// body.linearDamping = 0.99;
+		// world.addBody( body );
+
+		// // capsule
+		// shape = new CANNON.Cylinder( 0.5, 0.5, 1, 16 );
+		// capsuleBody = new CANNON.Body( { mass: 1, material: groundMaterial } );
+		// capsuleBody.angularDamping = 0.9;
+		// capsuleBody.linearDamping = 0.9;
+		// capsuleBody.addShape( shape );
+		// world.addBody( capsuleBody );
+
+		// capsuleBody.position.z += 2;
+		// capsuleBody.position.x += 0;
+
+	}
+
+	function initThree() {
+
+		let groundGeometry, groundTexture, groundMaterial;
+		
+		// init the camera, scene,  renderer
+		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
+		camera.lookAt( 0, 0, 0 );
+		camera.position.z += 5;
+		camera.position.y += 1;
+
+		scene = new THREE.Scene();
+		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
+		// scene.fog = new THREE.FogExp2( 0x000000, 0.8 );
+		scene.add( camera );
+
 		renderer = new THREE.WebGLRenderer( { antialias: true } );
 		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
-		scene = new THREE.Scene();
+		// init ground
+		groundGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
+		groundTexture = new THREE.TextureLoader().load( 'img/old_wood.jpg' );
+		groundTexture.wrapS = THREE.RepeatWrapping;
+		groundTexture.wrapT = THREE.RepeatWrapping;
+		groundTexture.repeat.set( 8, 4 );
+		groundMaterial = new THREE.MeshBasicMaterial( { map: groundTexture, side: THREE.DoubleSide } );
+		ground =  new THREE.Mesh( groundGeometry, groundMaterial );
+		scene.add( ground );
 
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
-		camera.lookAt( scene.position );
-		scene.add( camera );
 
-		// init floor
-		let floorTexture = new THREE.TextureLoader().load('img/old_wood.jpg');
-		floorTexture.wrapS = THREE.RepeatWrapping;
-		floorTexture.wrapT = THREE.RepeatWrapping;
-		floorTexture.repeat.set( 8, 4 );
-		let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
-		let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
-		let floor = new THREE.Mesh( floorGeometry, floorMaterial );
-		floor.rotation.x = 90 * THREE.Math.DEG2RAD;
-		floor.position.y -= 1;
-		scene.add( floor );
+		// let floorTexture = new THREE.TextureLoader().load('img/old_wood.jpg');
+		// floorTexture.wrapS = THREE.RepeatWrapping;
+		// floorTexture.wrapT = THREE.RepeatWrapping;
+		// floorTexture.repeat.set( 8, 4 );
+		// let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+		// let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
+		// let floor = new THREE.Mesh( floorGeometry, floorMaterial );
+		// floor.rotation.x = 90 * THREE.Math.DEG2RAD;
+		// floor.position.y -= 1;
+		// scene.add( floor );
+		
+		
 
 		// init sky (not needed for this game)
 		// init fog
-		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
-		scene.fog = new THREE.FogExp2( 0x000000, 0.8 );
 
 		// init objects in scene, in this case just the cubes
-		let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
-		let friction = 0.9; // high friction
-		let restitution = 0.1; // low restitution
-		let wallTexture = new THREE.TextureLoader().load('img/paper_pattern.jpg');
-		wallTexture.wrapS = THREE.RepeatWrapping;
-		wallTexture.wrapT = THREE.RepeatWrapping;
-		wallTexture.repeat.set( 2, 1 );
-		let wallMaterial = new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } );
-		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		for ( let i = 0; i < walls.length; ++i ) {
-			scene.add( walls[i] );
-		}
-		walls[1].position.x = 2;
-		walls[1].position.z = 2;
-		walls[1].rotation.y += 90 * THREE.Math.DEG2RAD;
+		// let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
+		// let friction = 0.9; // high friction
+		// let restitution = 0.1; // low restitution
+		// let wallTexture = new THREE.TextureLoader().load('img/paper_pattern.jpg');
+		// wallTexture.wrapS = THREE.RepeatWrapping;
+		// wallTexture.wrapT = THREE.RepeatWrapping;
+		// wallTexture.repeat.set( 2, 1 );
+		// let wallMaterial = new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } );
+		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
+		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
+		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
+		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
+		// for ( let i = 0; i < walls.length; ++i ) {
+		// 	scene.add( walls[i] );
+		// }
+		// walls[1].position.x = 2;
+		// walls[1].position.z = 2;
+		// walls[1].rotation.y += 90 * THREE.Math.DEG2RAD;
 
-		walls[2].position.x = -2;
-		walls[2].position.z = 2;
-		walls[2].rotation.y += 90 * THREE.Math.DEG2RAD;
+		// walls[2].position.x = -2;
+		// walls[2].position.z = 2;
+		// walls[2].rotation.y += 90 * THREE.Math.DEG2RAD;
 
-		walls[3].position.x = 0;
-		walls[3].position.z = 4;
+		// walls[3].position.x = 0;
+		// walls[3].position.z = 4;
 		
 
-		let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 0.3 } );
-		capsule = new THREE.Mesh( geometry, wireframeMaterial, 1 );
-		scene.add( capsule );
-		capsule.add( camera );
 		
-		// move capsule +1z to be inside room and -0.5y to be on the floor
-		capsule.position.y = -0.5;
-		capsule.position.z = 1;
+
+		// let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
+		// let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 1 } );
+		// capsule = new THREE.Mesh( geometry, wireframeMaterial, 1 );
+		// scene.add( capsule );
+		// // capsule.add( camera );
+		// camera.position.z += 3;
+		
+		// // move capsule +1z to be inside room and -0.5y to be on the floor
+		// capsule.position.y = -0.5;
+		// capsule.position.z = 1;
+
+
+		// geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		// material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
+		// mesh = new THREE.Mesh( geometry, material );
+		// scene.add( mesh );
 
 	}
 
@@ -155,53 +259,72 @@
 	 * main game loop
 	 *********************************************************
 	 */
-	function gameloop( tFrame ) {
+	function gameloop( timeDelta ) {
 
 		Game.stopGameLoop = requestAnimationFrame( gameloop );
 
-		handleKeyboard( Keyboard.keys );
+		// handleKeyboard();
 
-		update( tFrame ); // update scene rotations and translations
+		updatePhysics( timeDelta );
 
 		renderer.render( scene, camera ); // render the scene
 
-		stats.update();
+		time = performance.now();
 
-		// let tNow = window.performance.now();	
-		// de&&bug.log( 'Game.stopGameLoop:', Game.stopGameLoop, 'tFrame:', tFrame, 'tNow:', tNow );
-		// cancelAnimationFrame( Game.stopGameLoop );
+		stats.update();
 
 	}
 
-	function update( tFrame ) {
-		
+
+	function updatePhysics( timeDelta ) {
+
+		world.step( timeStep );
+
+		ground.position.copy( groundBody.position );
+		ground.quaternion.copy( groundBody.quaternion );
+
+		// mesh.position.copy( body.position );
+		// mesh.quaternion.copy( body.quaternion );
+
+		// capsule.position.copy( capsuleBody.position );
+		// capsule.quaternion.copy( capsuleBody.quaternion );
+
+
 		// rotate camera in x and y offsets (about y and x axis respectively)
 		// 	based of mousedown and mousemove
 		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED_DAMP;
 		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED_DAMP;
 
-		// reset capsule (& camera) rotation on each render and set it
-		//  according to our player's rotX and rotY values
-		// order makes a huge difference here!! rotate on y first, then x!!
-		capsule.rotation.set( 0, 0, 0 );
-		capsule.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
-		capsule.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+		// // reset capsule (& camera) rotation on each render and set it
+		// //  according to our player's rotX and rotY values
+		// // order makes a huge difference here!! rotate on y first, then x!!
+		// // capsule.rotation.set( 0, 0, 0 );
+		// // capsule.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
+		// // capsule.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
+		// capsuleBody.quaternion.y = 0;
+		// capsuleBody.quaternion.y += rotY;
+		// capsuleBody.quaternion.x = 0;
+		// capsuleBody.quaternion.x += rotX;
+
 
 		// handle moveforward input from click or tap
-		if ( moveForward > 0 ) {
+		// if ( moveForward > 0 ) {
 
-			// get partial step to move forward (ease into location)
-			let step = moveForward * Player.STEP_DAMP;
+		// 	// get partial step to move forward (ease into location)
+		// 	let step = moveForward * Player.STEP_DAMP;
 
-			// translate capsule keeping y position static
-			let y = capsule.position.y;
-			capsule.translateZ( -step );
-			capsule.position.y = y;
+		// 	// translate capsule keeping y position static
+		// 	// let y = capsule.position.y;
+		// 	// capsule.translateZ( -step );
+		// 	// capsule.position.y = y;
+		// 	let y = capsuleBody.position.y;
+		// 	capsuleBody.position.z += -step;
+		// 	capsuleBody.position.y = y;
 
-			// decrement move offset (ease into location)
-			moveForward -= step;
+		// 	// decrement move offset (ease into location)
+		// 	moveForward -= step;
 
-		}
+		// }
 
 	}
 
@@ -211,44 +334,48 @@
 	 *********************************************************
 	 */
 	// handle keyboard input
-	function handleKeyboard( keys ) {
+	function handleKeyboard() {
 
 		// translate only in x,z and make sure to keep y position static
-		if ( keys[Key.LEFT] || keys[Key.A] ) {
-			translatePlayer( 'translateX', -Player.MOVE_SPEED );
+		if ( Keyboard.keys[Key.LEFT] || Keyboard.keys[Key.A] ) {
+			translatePlayer( 'x', -Player.MOVE_SPEED );
 		}
-		if ( keys[Key.UP] || keys[Key.W] ) {
-			translatePlayer( 'translateZ', -Player.MOVE_SPEED );
+		if ( Keyboard.keys[Key.UP] || Keyboard.keys[Key.W] ) {
+			translatePlayer( 'z', -Player.MOVE_SPEED );
 		}
-		if ( keys[Key.RIGHT] || keys[Key.D] ) {
-			translatePlayer( 'translateX', Player.MOVE_SPEED );
+		if ( Keyboard.keys[Key.RIGHT] || Keyboard.keys[Key.D] ) {
+			translatePlayer( 'x', Player.MOVE_SPEED );
 		}
-		if ( keys[Key.DOWN] || keys[Key.S] ) {
-			translatePlayer( 'translateZ', Player.MOVE_SPEED );
+		if ( Keyboard.keys[Key.DOWN] || Keyboard.keys[Key.S] ) {
+			translatePlayer( 'z', Player.MOVE_SPEED );
 		}
-		if ( keys[Key.R] ) {
+		if ( Keyboard.keys[Key.R] ) {
 			de&&bug.log( 'r pressed.' );
 		}
-		if ( keys[Key.F] ) {
+		if ( Keyboard.keys[Key.F] ) {
 			de&&bug.log( 'f pressed.' );
 		}
-		if ( keys[Key.SPACE] ) {
+		if ( Keyboard.keys[Key.SPACE] ) {
 			de&&bug.log( 'space pressed.' );
 		}
-		if ( keys[Key.CTRL] ) {
+		if ( Keyboard.keys[Key.CTRL] ) {
 			de&&bug.log( 'ctrl pressed.' );
 		}
 
 	}
 
-	function translatePlayer( func, speed ) {
+	function translatePlayer( axis, speed ) {
 
-		// translate capsule but keep y static
-		let y = capsule.position.y;
-		capsule[func]( speed );
-		capsule.position.y = y;
+		capsuleBody.position[axis] += speed;
 		
 	}
+	
+	
+	
+
+	
+	
+	
 
 	// handle mouse input
 	function onDocumentMouseDown( e ) {
