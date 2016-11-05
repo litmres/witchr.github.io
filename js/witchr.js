@@ -24,7 +24,7 @@
 
 	// cannon.js
 	let world;
-	let time = performance.now(), timeStep = 1 / 60;
+	let timeStep = 1 / 60, time = performance.now();
 	let groundBody, cubeBody, capsuleBody;
 	
 	// mouse and touch events
@@ -100,8 +100,8 @@
 		physicsMaterial = new CANNON.Material( 'groundMaterial' );
 		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
 															 physicsMaterial, 
-														   { friction: 0.0001,
-															 restitution: 2.0
+														   { friction: 0.0005,
+															 restitution: 0.0
 														   } );
 
 		world.addContactMaterial( physicsContactMaterial );
@@ -124,6 +124,18 @@
 		// cubeBody.linearDamping = 0.99;
 		world.addBody( cubeBody );
 	
+
+		// capsule that simulates the player
+		shape = new CANNON.Cylinder( 0.5, 0.5, 1, 16 );
+		capsuleBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
+		capsuleBody.addShape( shape );
+		// capsuleBody.angularDamping = 0.9;
+		// capsuleBody.linearDamping = 0.9;
+		world.addBody( capsuleBody );
+		capsuleBody.position.x += 2;
+
+		
+		
         // // Materials
         // groundMaterial = new CANNON.Material("groundMaterial");
 
@@ -147,16 +159,6 @@
         // world.addContactMaterial(ground_ground_cm);	
 
 
-		// // capsule
-		// shape = new CANNON.Cylinder( 0.5, 0.5, 1, 16 );
-		// capsuleBody = new CANNON.Body( { mass: 1, material: groundMaterial } );
-		// capsuleBody.angularDamping = 0.9;
-		// capsuleBody.linearDamping = 0.9;
-		// capsuleBody.addShape( shape );
-		// world.addBody( capsuleBody );
-
-		// capsuleBody.position.z += 2;
-		// capsuleBody.position.x += 0;
 
 	}
 
@@ -197,6 +199,14 @@
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
 		cube = new THREE.Mesh( geometry, material );
 		scene.add( cube );
+
+
+
+		geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
+		material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 1 } );
+		capsule = new THREE.Mesh( geometry, material );
+		scene.add( capsule );
+		// capsule.add( camera );
 
 
 		// let floorTexture = new THREE.TextureLoader().load('img/old_wood.jpg');
@@ -245,16 +255,6 @@
 
 		
 
-		// let geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		// let wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 1 } );
-		// capsule = new THREE.Mesh( geometry, wireframeMaterial, 1 );
-		// scene.add( capsule );
-		// // capsule.add( camera );
-		// camera.position.z += 3;
-		
-		// // move capsule +1z to be inside room and -0.5y to be on the floor
-		// capsule.position.y = -0.5;
-		// capsule.position.z = 1;
 
 
 		// geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -270,19 +270,19 @@
 	 * main game loop
 	 *********************************************************
 	 */
-	function gameloop( timeDelta ) {
+	function gameloop() {
 
 		Game.stopGameLoop = requestAnimationFrame( gameloop );
 
-		// handleKeyboard();
+		handleKeyboard( performance.now() - time );
 
-		updatePhysics( timeDelta );
+		updatePhysics( performance.now() - time );
 
 		renderer.render( scene, camera ); // render the scene
 
-		time = performance.now();
-
 		stats.update();
+
+		time = performance.now();
 
 	}
 
@@ -296,6 +296,9 @@
 
 		cube.position.copy( cubeBody.position );
 		cube.quaternion.copy( cubeBody.quaternion );
+
+		capsule.position.copy( capsuleBody.position );
+		capsule.quaternion.copy( capsuleBody.quaternion );
 
 		// mesh.position.copy( body.position );
 		// mesh.quaternion.copy( body.quaternion );
@@ -348,7 +351,7 @@
 	 *********************************************************
 	 */
 	// handle keyboard input
-	function handleKeyboard() {
+	function handleKeyboard( timeDelta ) {
 
 		// translate only in x,z and make sure to keep y position static
 		if ( Keyboard.keys[Key.LEFT] || Keyboard.keys[Key.A] ) {
