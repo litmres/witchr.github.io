@@ -41,8 +41,8 @@
 	let mouseY = 0;
 	let mouseYOnMouseDown = 0;
 
-	let clickTimer = 0;
-	let moveForward = 0;
+	let timeClick = 0;
+	let isMouseDown = false;
 
 	let windowHalfX = window.innerWidth / 2;
 	let windowHalfY = window.innerHeight / 2;
@@ -198,7 +198,7 @@
 
 		Game.stopGameLoop = requestAnimationFrame( gameloop );
 
-		handleKeyboard( performance.now() - time );
+		handleInputs( performance.now() - time );
 
 		updatePhysics( performance.now() - time );
 
@@ -245,25 +245,6 @@
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotSide );
 
 
-		// handle moveforward input from click or tap
-		// if ( moveForward > 0 ) {
-
-		// 	// get partial step to move forward (ease into location)
-		// 	let step = moveForward * Player.STEP_DAMP;
-
-		// 	// translate eye keeping y position static
-		// 	// let y = eye.position.y;
-		// 	// eye.translateZ( -step );
-		// 	// eye.position.y = y;
-		// 	let y = eyeBody.position.y;
-		// 	eyeBody.position.z += -step;
-		// 	eyeBody.position.y = y;
-
-		// 	// decrement move offset (ease into location)
-		// 	moveForward -= step;
-
-		// }
-
 	}
 
 
@@ -272,7 +253,7 @@
 	 *********************************************************
 	 */
 	// handle keyboard input
-	function handleKeyboard( timeDelta ) {
+	function handleInputs( timeDelta ) {
 
 		timeDelta *= 0.001;
 
@@ -311,6 +292,15 @@
 			de&&bug.log( 'ctrl pressed.' );
 		}
 
+		
+		// handle isMouseDown input from click or tap
+		if ( isMouseDown ) {
+
+			inputVelocity.z += -Player.MOVE_SPEED * timeDelta;
+
+		}
+
+
 		// apply the euler angle quaternion to the velocity vector so we can add
 		// 	the appropriate amount for each x and z component to translate
 		inputVelocity.applyQuaternion( quat );
@@ -340,7 +330,9 @@
 		mouseYOnMouseDown = e.clientY - windowHalfY;
 		targetRotationOnMouseDownY = targetRotationY;
 
-		clickTimer = ( new Date() ).getTime();
+		timeClick = performance.now();
+
+		isMouseDown = true;
 
 	}
 
@@ -369,9 +361,11 @@
 		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
 		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 		
-		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
-			moveForward = Player.STEP;
+		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
+			// do something on quick click
 		}
+
+		isMouseDown = false;
 		
 	}
 
@@ -381,9 +375,11 @@
 		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
 		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 		
-		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
-			moveForward = Player.STEP;
+		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
+			// do something on quick click
 		}
+
+		isMouseDown = false;	
 
 	}
 
@@ -399,10 +395,12 @@
 			mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
 			targetRotationOnMouseDownY = targetRotationY;
 
-			clickTimer = ( new Date() ).getTime();
+			timeClick = ( performance.now() );
 			
 		}
 
+		isMouseDown = true;
+		
 	}
 
 	function onDocumentTouchMove( e ) {
@@ -430,9 +428,11 @@
 
 	function onDocumentTouchEnd( e ) {
 
-		if ( ( new Date() ).getTime() - clickTimer < Player.STEP_TIMER ) {
-			moveForward = Player.STEP;
+		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
+			// do something on quick click
 		}
+
+		isMouseDown = false;
 
 	}
 
@@ -456,9 +456,7 @@
 		// init player properties
 		Player = {
 			MOVE_SPEED: 3,
-			STEP: 0.3,
-			STEP_DAMP: 0.05,
-			STEP_TIMER: 200,
+			QUICK_CLICK: 300,
 			ROTATE_SPEED: 2,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
 		};
@@ -485,7 +483,7 @@
 			keyPress: function( e ) {
 				// e.preventDefault();
 				if ( this.keys[e.keyCode] > 0 ) { return; }
-				this.keys[e.keyCode] = e.timeStamp || ( new Date() ).getTime();
+				this.keys[e.keyCode] = e.timeStamp || ( performance.now() );
 				e.stopPropagation();
 			},
 			keyRelease: function( e ) {
