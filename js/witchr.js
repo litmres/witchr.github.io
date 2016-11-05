@@ -353,18 +353,20 @@
 	// handle keyboard input
 	function handleKeyboard( timeDelta ) {
 
+		timeDelta *= 0.001;
+
 		// translate only in x,z and make sure to keep y position static
 		if ( Keyboard.keys[Key.LEFT] || Keyboard.keys[Key.A] ) {
-			translatePlayer( 'x', -Player.MOVE_SPEED );
+			capsuleBody.position.x += -Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.UP] || Keyboard.keys[Key.W] ) {
-			translatePlayer( 'z', -Player.MOVE_SPEED );
+			capsuleBody.position.z += -Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.RIGHT] || Keyboard.keys[Key.D] ) {
-			translatePlayer( 'x', Player.MOVE_SPEED );
+			capsuleBody.position.x += +Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.DOWN] || Keyboard.keys[Key.S] ) {
-			translatePlayer( 'z', Player.MOVE_SPEED );
+			capsuleBody.position.z += +Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.R] ) {
 			de&&bug.log( 'r pressed.' );
@@ -380,13 +382,6 @@
 		}
 
 	}
-
-	function translatePlayer( axis, speed ) {
-
-		capsuleBody.position[axis] += speed;
-		
-	}
-	
 	
 	
 
@@ -524,7 +519,7 @@
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 0.01,
+			MOVE_SPEED: 1,
 			STEP: 0.3,
 			STEP_DAMP: 0.05,
 			STEP_TIMER: 200,
