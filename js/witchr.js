@@ -20,12 +20,12 @@
 
 	// three.js
 	let camera, scene, renderer;
-	let ground, cube, capsule;
+	let ground, cube, eye;
 
 	// cannon.js
 	let world;
 	let timeStep = 1 / 60, time = performance.now();
-	let groundBody, cubeBody, capsuleBody;
+	let groundBody, cubeBody, eyeBody;
 	
 	// mouse and touch events
 	let rotX = 0;
@@ -85,6 +85,7 @@
 
 	}
 
+
 	function initCannon() {
 
 		let physicsMaterial, physicsContactMaterial;
@@ -100,7 +101,7 @@
 		physicsMaterial = new CANNON.Material( 'groundMaterial' );
 		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
 															 physicsMaterial, 
-														   { friction: 0.0005,
+														   { friction: 1.0,
 															 restitution: 0.0
 														   } );
 
@@ -117,50 +118,23 @@
 
 		// box in center
 		shape = new CANNON.Box( new CANNON.Vec3( 0.5, 0.5, 0.5 ) );
-		cubeBody = new CANNON.Body( { mass: 1000, material: physicsMaterial } );
+		cubeBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
 		cubeBody.addShape( shape );
 		cubeBody.angularVelocity.set( 0, 1, 0 );
-		// cubeBody.angularDamping = 0.99;
-		// cubeBody.linearDamping = 0.99;
 		world.addBody( cubeBody );
-	
 
-		// capsule that simulates the player
-		shape = new CANNON.Cylinder( 0.5, 0.5, 1, 16 );
-		capsuleBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
-		capsuleBody.addShape( shape );
-		// capsuleBody.angularDamping = 0.9;
-		// capsuleBody.linearDamping = 0.9;
-		world.addBody( capsuleBody );
-		capsuleBody.position.x += 2;
-
-		
-		
-        // // Materials
-        // groundMaterial = new CANNON.Material("groundMaterial");
-
-        // // Adjust constraint equation parameters for ground/ground contact
-        // ground_ground_cm = new CANNON.ContactMaterial(groundMaterial, groundMaterial, {
-        //     friction: 0.9,
-        //     restitution: 0.9,
-        //     contactEquationStiffness: 1e8,
-        //     contactEquationRelaxation: 3,
-        //     frictionEquationStiffness: 1e8,
-        //     frictionEquationRegularizationTime: 3,
-        // });
-
-		// // ground plane
-        // var groundShape = new CANNON.Plane();
-        // var groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
-        // groundBody.addShape(groundShape);
-        // world.add(groundBody);
-
-        // // Add contact material to the world
-        // world.addContactMaterial(ground_ground_cm);	
-
-
+		// eye that simulates the player
+		// shape = new CANNON.Cylinder( 0.5, 0.5, 1, 20 );
+		// shape = new CANNON.Box( new CANNON.Vec3( 0.5, 0.5, 0.5 ) );
+		shape = new CANNON.Sphere( 0.5 );
+		eyeBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
+		eyeBody.addShape( shape );
+		eyeBody.linearDamping = 0.99;
+		eyeBody.position.set( 2, -0.5, 0 );
+		world.addBody( eyeBody );
 
 	}
+
 
 	function initThree() {
 
@@ -202,65 +176,15 @@
 
 
 
-		geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 16 );
-		material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 1 } );
-		capsule = new THREE.Mesh( geometry, material );
-		scene.add( capsule );
-		// capsule.add( camera );
-
-
-		// let floorTexture = new THREE.TextureLoader().load('img/old_wood.jpg');
-		// floorTexture.wrapS = THREE.RepeatWrapping;
-		// floorTexture.wrapT = THREE.RepeatWrapping;
-		// floorTexture.repeat.set( 8, 4 );
-		// let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
-		// let floorGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
-		// let floor = new THREE.Mesh( floorGeometry, floorMaterial );
-		// floor.rotation.x = 90 * THREE.Math.DEG2RAD;
-		// floor.position.y -= 1;
-		// scene.add( floor );
-		
-		
-
-		// init sky (not needed for this game)
-		// init fog
-
-		// init objects in scene, in this case just the cubes
-		// let wallGeometry = new THREE.BoxGeometry( 4, 2, 0.1 );
-		// let friction = 0.9; // high friction
-		// let restitution = 0.1; // low restitution
-		// let wallTexture = new THREE.TextureLoader().load('img/paper_pattern.jpg');
-		// wallTexture.wrapS = THREE.RepeatWrapping;
-		// wallTexture.wrapT = THREE.RepeatWrapping;
-		// wallTexture.repeat.set( 2, 1 );
-		// let wallMaterial = new THREE.MeshBasicMaterial( { map: wallTexture, side: THREE.DoubleSide } );
-		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		// walls.push( new THREE.Mesh( wallGeometry, wallMaterial ) );
-		// for ( let i = 0; i < walls.length; ++i ) {
-		// 	scene.add( walls[i] );
-		// }
-		// walls[1].position.x = 2;
-		// walls[1].position.z = 2;
-		// walls[1].rotation.y += 90 * THREE.Math.DEG2RAD;
-
-		// walls[2].position.x = -2;
-		// walls[2].position.z = 2;
-		// walls[2].rotation.y += 90 * THREE.Math.DEG2RAD;
-
-		// walls[3].position.x = 0;
-		// walls[3].position.z = 4;
-		
-
-		
-
-
-
+		// geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 20 );
 		// geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		// material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
-		// mesh = new THREE.Mesh( geometry, material );
-		// scene.add( mesh );
+		geometry = new THREE.SphereGeometry( 0.5, 16, 16 );
+		material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 1 } );
+		eye = new THREE.Mesh( geometry, material );
+		scene.add( eye );
+		camera.position.copy( eye.position );
+		// eye.add( camera );
+		
 
 	}
 
@@ -289,6 +213,8 @@
 
 	function updatePhysics( timeDelta ) {
 
+		timeDelta *= 0.001;
+
 		world.step( timeStep );
 
 		ground.position.copy( groundBody.position );
@@ -297,31 +223,26 @@
 		cube.position.copy( cubeBody.position );
 		cube.quaternion.copy( cubeBody.quaternion );
 
-		capsule.position.copy( capsuleBody.position );
-		capsule.quaternion.copy( capsuleBody.quaternion );
-
-		// mesh.position.copy( body.position );
-		// mesh.quaternion.copy( body.quaternion );
-
-		// capsule.position.copy( capsuleBody.position );
-		// capsule.quaternion.copy( capsuleBody.quaternion );
+		eye.position.copy( eyeBody.position );
+		eye.quaternion.copy( eyeBody.quaternion );
 
 
-		// rotate camera in x and y offsets (about y and x axis respectively)
-		// 	based of mousedown and mousemove
-		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED_DAMP;
-		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED_DAMP;
+		// get the rotation offset values from mouse and touch input
+		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED * timeDelta;
+		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED * timeDelta;
 
-		// // reset capsule (& camera) rotation on each render and set it
-		// //  according to our player's rotX and rotY values
-		// // order makes a huge difference here!! rotate on y first, then x!!
-		// // capsule.rotation.set( 0, 0, 0 );
-		// // capsule.rotateOnAxis( new THREE.Vector3( 0, 1, 0 ), rotY );
-		// // capsule.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), rotX );
-		// capsuleBody.quaternion.y = 0;
-		// capsuleBody.quaternion.y += rotY;
-		// capsuleBody.quaternion.x = 0;
-		// capsuleBody.quaternion.x += rotX;
+		// reset eye quaternion so we only rotate by offsets
+		eyeBody.quaternion.set( 0, 0, 0, 1 );
+
+		// local rotation about the y-axis
+		let rotUp = new CANNON.Quaternion( 0, 0, 0, 1 );
+		rotUp.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
+		eyeBody.quaternion = eyeBody.quaternion.mult( rotUp );
+
+		// local rotation about the x-axis
+		let rotSide = new CANNON.Quaternion( 0, 0, 0, 1 );
+		rotSide.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
+		eyeBody.quaternion = eyeBody.quaternion.mult( rotSide );
 
 
 		// handle moveforward input from click or tap
@@ -330,13 +251,13 @@
 		// 	// get partial step to move forward (ease into location)
 		// 	let step = moveForward * Player.STEP_DAMP;
 
-		// 	// translate capsule keeping y position static
-		// 	// let y = capsule.position.y;
-		// 	// capsule.translateZ( -step );
-		// 	// capsule.position.y = y;
-		// 	let y = capsuleBody.position.y;
-		// 	capsuleBody.position.z += -step;
-		// 	capsuleBody.position.y = y;
+		// 	// translate eye keeping y position static
+		// 	// let y = eye.position.y;
+		// 	// eye.translateZ( -step );
+		// 	// eye.position.y = y;
+		// 	let y = eyeBody.position.y;
+		// 	eyeBody.position.z += -step;
+		// 	eyeBody.position.y = y;
 
 		// 	// decrement move offset (ease into location)
 		// 	moveForward -= step;
@@ -355,18 +276,27 @@
 
 		timeDelta *= 0.001;
 
+		// get the input velocity for translation, euler angle that describes
+		// 	the current rotation transformation and quaternion to apply the
+		// 	euler angle transform to the input vector
+		let inputVelocity, euler, quat;
+		inputVelocity = new THREE.Vector3( 0, 0, 0 );
+		euler = new THREE.Euler( 0, rotY, 0, 'XYZ' );
+		quat = new THREE.Quaternion();
+		quat.setFromEuler( euler );
+
 		// translate only in x,z and make sure to keep y position static
 		if ( Keyboard.keys[Key.LEFT] || Keyboard.keys[Key.A] ) {
-			capsuleBody.position.x += -Player.MOVE_SPEED * timeDelta;
+			inputVelocity.x += -Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.UP] || Keyboard.keys[Key.W] ) {
-			capsuleBody.position.z += -Player.MOVE_SPEED * timeDelta;
+			inputVelocity.z += -Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.RIGHT] || Keyboard.keys[Key.D] ) {
-			capsuleBody.position.x += +Player.MOVE_SPEED * timeDelta;
+			inputVelocity.x += +Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.DOWN] || Keyboard.keys[Key.S] ) {
-			capsuleBody.position.z += +Player.MOVE_SPEED * timeDelta;
+			inputVelocity.z += +Player.MOVE_SPEED * timeDelta;
 		}
 		if ( Keyboard.keys[Key.R] ) {
 			de&&bug.log( 'r pressed.' );
@@ -380,6 +310,12 @@
 		if ( Keyboard.keys[Key.CTRL] ) {
 			de&&bug.log( 'ctrl pressed.' );
 		}
+
+		// apply the euler angle quaternion to the velocity vector so we can add
+		// 	the appropriate amount for each x and z component to translate
+		inputVelocity.applyQuaternion( quat );
+		eyeBody.velocity.x += inputVelocity.x;
+		eyeBody.velocity.z += inputVelocity.z;
 
 	}
 	
@@ -519,11 +455,11 @@
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 1,
+			MOVE_SPEED: 3,
 			STEP: 0.3,
 			STEP_DAMP: 0.05,
 			STEP_TIMER: 200,
-			ROTATE_SPEED_DAMP: 0.2,		// speed to reach desired rotation
+			ROTATE_SPEED: 2,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
 		};
 
