@@ -130,7 +130,7 @@
 		eyeBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
 		eyeBody.addShape( shape );
 		eyeBody.linearDamping = 0.99;
-		eyeBody.position.set( 2, -0.5, 0 );
+		eyeBody.position.set( 0, -0.5, 2 );
 		world.addBody( eyeBody );
 
 	}
