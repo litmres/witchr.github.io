@@ -100,8 +100,8 @@
 		physicsMaterial = new CANNON.Material( 'groundMaterial' );
 		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
 															 physicsMaterial, 
-														   { friction: 0.001,
-															 restitution: 1.0
+														   { friction: 0.0001,
+															 restitution: 2.0
 														   } );
 
 		world.addContactMaterial( physicsContactMaterial );
