@@ -94,7 +94,7 @@
 		// setup worlds
 		world = new CANNON.World();
 		world.broadphase = new CANNON.NaiveBroadphase();
-		world.solver.iterations = 10;
+		world.solver.iterations = 1;
 		world.gravity.set( 0, -1, 0 );
 
 		// create a slippery material
