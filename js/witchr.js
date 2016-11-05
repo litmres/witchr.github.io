@@ -88,30 +88,41 @@
 	function initCannon() {
 
 		let physicsMaterial, physicsContactMaterial;
+		let shape;
 
 		// setup worlds
 		world = new CANNON.World();
 		world.broadphase = new CANNON.NaiveBroadphase();
 		world.solver.iterations = 10;
-		world.gravity.set( 0, 0, 0 );
+		world.gravity.set( 0, -1, 0 );
 
 		// create a slippery material
 		physicsMaterial = new CANNON.Material( 'groundMaterial' );
-		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial,
-																 physicsMaterial,
-																 0.0, // friction coefficient
-																 0.3  // restitution
-																 );
+		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
+															 physicsMaterial, 
+														   { friction: 0.001,
+															 restitution: 1.0
+														   } );
+
 		world.addContactMaterial( physicsContactMaterial );
 
 		// create ground plane
+		shape = new CANNON.Plane();
 		groundBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
-		groundBody.addShape( new CANNON.Plane() );
+		groundBody.addShape( shape );
 		groundBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
-		groundBody.position.set( 0, 0, 0 );
+		groundBody.position.set( 0, -1, 0 );
 		world.addBody( groundBody );
 		
 
+		// box in center
+		shape = new CANNON.Box( new CANNON.Vec3( 0.5, 0.5, 0.5 ) );
+		cubeBody = new CANNON.Body( { mass: 1000, material: physicsMaterial } );
+		cubeBody.addShape( shape );
+		cubeBody.angularVelocity.set( 0, 1, 0 );
+		// cubeBody.angularDamping = 0.99;
+		// cubeBody.linearDamping = 0.99;
+		world.addBody( cubeBody );
 	
         // // Materials
         // groundMaterial = new CANNON.Material("groundMaterial");
@@ -135,14 +146,6 @@
         // // Add contact material to the world
         // world.addContactMaterial(ground_ground_cm);	
 
-		// // box in center
-		// shape = new CANNON.Box( new CANNON.Vec3( 0.5, 0.5, 0.5 ) );
-		// body = new CANNON.Body( { mass: 1000, material: groundMaterial } );
-		// body.addShape( shape );
-		// body.angularVelocity.set( 0, 1, 0 );
-		// body.angularDamping = 0.99;
-		// body.linearDamping = 0.99;
-		// world.addBody( body );
 
 		// // capsule
 		// shape = new CANNON.Cylinder( 0.5, 0.5, 1, 16 );
@@ -160,6 +163,7 @@
 	function initThree() {
 
 		let groundGeometry, groundTexture, groundMaterial;
+		let geometry, material;
 		
 		// init the camera, scene,  renderer
 		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
@@ -186,6 +190,13 @@
 		groundMaterial = new THREE.MeshBasicMaterial( { map: groundTexture, side: THREE.DoubleSide } );
 		ground =  new THREE.Mesh( groundGeometry, groundMaterial );
 		scene.add( ground );
+
+
+		// cube mesh in center of screen
+		geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
+		cube = new THREE.Mesh( geometry, material );
+		scene.add( cube );
 
 
 		// let floorTexture = new THREE.TextureLoader().load('img/old_wood.jpg');
@@ -282,6 +293,9 @@
 
 		ground.position.copy( groundBody.position );
 		ground.quaternion.copy( groundBody.quaternion );
+
+		cube.position.copy( cubeBody.position );
+		cube.quaternion.copy( cubeBody.quaternion );
 
 		// mesh.position.copy( body.position );
 		// mesh.quaternion.copy( body.quaternion );
