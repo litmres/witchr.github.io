@@ -183,7 +183,7 @@
 		eye = new THREE.Mesh( geometry, material );
 		scene.add( eye );
 		camera.position.copy( eye.position );
-		// eye.add( camera );
+		eye.add( camera );
 		
 
 	}
