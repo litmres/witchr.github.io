@@ -140,6 +140,7 @@
 
 		let groundGeometry, groundTexture, groundMaterial;
 		let geometry, material;
+		let loader, object;
 		
 		// init the camera, scene,  renderer
 		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
@@ -184,6 +185,24 @@
 		scene.add( eye );
 		camera.position.copy( eye.position );
 		eye.add( camera );
+		
+
+
+		// asynchronously load json file and add to scene
+		XHR( 'model/door.json', function( data ) {
+			
+			loader = new THREE.ObjectLoader();
+			
+			object = JSON.parse( data );
+			object = loader.parse( object );
+
+			scene.add( object );
+
+		} );
+
+
+
+
 		
 
 	}
@@ -512,6 +531,25 @@
 		// reset logic based on window size
 		windowHalfX = window.innerWidth / 2;
 		windowHalfY = window.innerHeight / 2;
+
+	}
+
+
+	// get .json object locally
+	function XHR( file, callback ) {
+
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+
+			if ( xhr.readyState === 4 && xhr.status === 200 ) {
+
+				callback( xhr.responseText );
+				
+			}
+
+		}
+		xhr.open( 'GET', file, true );
+		xhr.send();
 
 	}
 
