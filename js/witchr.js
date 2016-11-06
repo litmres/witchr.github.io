@@ -141,7 +141,7 @@
 		// doorBody.angularVelocity = new CANNON.Vec3( 0, 9, 0 );
 
 		// test impulse force on door
-		let impulseForce = new CANNON.Vec3( 0, 0, -100000 );
+		let impulseForce = new CANNON.Vec3( 0, 0, 100000 );
 		let worldPoint = new CANNON.Vec3( doorBody.position.x,
 										  doorBody.position.y + 3,
 										  doorBody.position.z
@@ -150,12 +150,12 @@
 
 		// test hinge constraint on door
 		let hingeBody = new CANNON.Body( { mass: 0 } );
-		hingeBody.addShape( new CANNON.Box( new CANNON.Vec3( 0.5, 4.5, 0.5 ) ) );
-		hingeBody.position.x -= 4.5;
+		// hingeBody.addShape( new CANNON.Box( new CANNON.Vec3( 0.5, 4.5, 0.5 ) ) );
+		// hingeBody.position.x -= 4.5;
 		let hingeConstraint = new CANNON.HingeConstraint( hingeBody, doorBody, {
-			pivotA: new CANNON.Vec3( -5, 0, 0 ),
+			pivotA: new CANNON.Vec3( -4.5, 0, -4.5 ),
 			axisA: new CANNON.Vec3( 0, 1, 0 ),
-			pivotB: new CANNON.Vec3( 5, 0, 0 ),
+			pivotB: new CANNON.Vec3( -4.5, 0, 0 ),
 			axisB: new CANNON.Vec3( 0, 1, 0 )
 		} );
 		world.addConstraint( hingeConstraint );
