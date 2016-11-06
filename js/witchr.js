@@ -20,7 +20,7 @@
 
 	// three.js
 	let camera, scene, renderer;
-	let ground, eye, door, cube;
+	let ground, eye, door, box;
 
 	// cannon.js
 	let world;
@@ -110,7 +110,7 @@
 
 		world.addContactMaterial( physicsContactMaterial );
 
-		// create ground plane
+		// ground plane body which acts as room floor
 		shape = new CANNON.Plane();
 		groundBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
 		groundBody.addShape( shape );
@@ -121,7 +121,7 @@
 		world.addBody( groundBody );
 		
 
-		// eye that simulates the player
+		// eye body that simulates and positions player
 		shape = new CANNON.Sphere( 5 );
 		eyeBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
 		eyeBody.addShape( shape );
@@ -130,20 +130,24 @@
 		world.addBody( eyeBody );
 
 
-		// box in center
+		// door body in the scene 
 		shape = new CANNON.Box( new CANNON.Vec3( 4.5, 4.5, 0.5 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
 		
+
+		
 		// doorBody.angularVelocity = new CANNON.Vec3( 0, 9, 0 );
 
 		let impulseForce = new CANNON.Vec3( 0, 0, -100000 );
 		let worldPoint = new CANNON.Vec3( doorBody.position.x,
-										  doorBody.position.y + 4.5,
+										  doorBody.position.y + 3,
 										  doorBody.position.z
 									    );
 		doorBody.applyImpulse( impulseForce, worldPoint );
+
+		
 		
 
 	}
@@ -175,7 +179,7 @@
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
-		// init ground
+		// ground mesh acts as the room floor
 		groundGeometry = new THREE.PlaneGeometry( 50, 50, 1, 1 );
 		groundTexture = new THREE.TextureLoader().load( 'img/old_wood.jpg' );
 		groundTexture.wrapS = THREE.RepeatWrapping;
@@ -188,6 +192,7 @@
 		scene.add( ground );
 
 
+		// eye mesh really just for troubleshooting
 		geometry = new THREE.SphereGeometry( 5, 16, 16 );
 		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
 												  wireframe: true, 
@@ -200,13 +205,13 @@
 		eye.add( camera );
 		
 
-		// cube mesh for door in center of screen
+		// box mesh for door for troubleshooting
 		geometry = new THREE.BoxGeometry( 9, 9, 1 );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, 
 												  wireframe: true 
 											  } );
-		cube = new THREE.Mesh( geometry, material );
-		scene.add( cube );
+		box = new THREE.Mesh( geometry, material );
+		scene.add( box );
 
 
 
@@ -214,10 +219,10 @@
 		XHR( 'model/door.json', function( data ) {
 			
 			loader = new THREE.ObjectLoader();
-			
+
+			// door obj mesh that appears in room
 			door = JSON.parse( data );
 			door = loader.parse( door );
-
 			scene.add( door );
 
 			modelsLoaded = true;
@@ -282,8 +287,8 @@
 		ground.position.copy( groundBody.position );
 		ground.quaternion.copy( groundBody.quaternion );
 
-		cube.position.copy( doorBody.position );
-		cube.quaternion.copy( doorBody.quaternion );
+		box.position.copy( doorBody.position );
+		box.quaternion.copy( doorBody.quaternion );
 
 		eye.position.copy( eyeBody.position );
 		eye.quaternion.copy( eyeBody.quaternion );
