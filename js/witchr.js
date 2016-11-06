@@ -124,6 +124,7 @@
 		// box in center
 		shape = new CANNON.Box( new CANNON.Vec3( 4.5, 4.5, 0.5 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
+		doorBody.angularVelocity = new CANNON.Vec3( 0, 9, 0 );
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
 
@@ -179,15 +180,6 @@
 		scene.add( ground );
 
 
-		// cube mesh in center of screen
-		geometry = new THREE.BoxGeometry( 9, 9, 1 );
-		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, 
-												  wireframe: true 
-											  } );
-		cube = new THREE.Mesh( geometry, material );
-		scene.add( cube );
-
-
 		geometry = new THREE.SphereGeometry( 5, 16, 16 );
 		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
 												  wireframe: true, 
@@ -199,6 +191,15 @@
 		camera.position.copy( eye.position );
 		eye.add( camera );
 		
+
+		// cube mesh for door in center of screen
+		geometry = new THREE.BoxGeometry( 9, 9, 1 );
+		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, 
+												  wireframe: true 
+											  } );
+		cube = new THREE.Mesh( geometry, material );
+		scene.add( cube );
+
 
 
 		// asynchronously load json file and add to scene
@@ -251,27 +252,6 @@
 
 		world.step( timeStep );
 
-		ground.position.copy( groundBody.position );
-		ground.quaternion.copy( groundBody.quaternion );
-
-		cube.position.copy( doorBody.position );
-		cube.quaternion.copy( doorBody.quaternion );
-
-		eye.position.copy( eyeBody.position );
-		eye.quaternion.copy( eyeBody.quaternion );
-
-		if ( modelsLoaded ) {
-
-			door.position.copy( doorBody.position );
-			door.position.y -= 0.2;
-			door.quaternion.copy( doorBody.quaternion );
-			door.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ),
-											  -90 * THREE.Math.DEG2RAD 
-											);
-
-		}
-
-
 		// get the rotation offset values from mouse and touch input
 		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED * timeDelta;
 		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED * timeDelta;
@@ -289,6 +269,28 @@
 		rotSide.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotSide );
 
+
+		// set all of the meshes to the physics bodies
+		ground.position.copy( groundBody.position );
+		ground.quaternion.copy( groundBody.quaternion );
+
+		cube.position.copy( doorBody.position );
+		cube.quaternion.copy( doorBody.quaternion );
+
+		eye.position.copy( eyeBody.position );
+		eye.quaternion.copy( eyeBody.quaternion );
+
+		if ( modelsLoaded ) {
+
+			door.position.copy( doorBody.position );
+			// door needs to be rotated since it lies flatly in xz
+			let rotDoor = new CANNON.Quaternion( 0, 0, 0, 1 );
+			rotDoor.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ),
+									  -90 * THREE.Math.DEG2RAD 
+									);
+			door.quaternion.copy( doorBody.quaternion.mult( rotDoor ) );
+
+		}
 
 	}
 
