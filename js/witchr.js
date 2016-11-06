@@ -20,12 +20,12 @@
 
 	// three.js
 	let camera, scene, renderer;
-	let ground, cube, eye;
+	let ground, eye, door, cube;
 
 	// cannon.js
 	let world;
 	let timeStep = 1 / 60, time = performance.now();
-	let groundBody, cubeBody, eyeBody;
+	let groundBody, eyeBody, doorBody;
 	
 	// mouse and touch events
 	let rotX = 0;
@@ -46,6 +46,9 @@
 
 	let windowHalfX = window.innerWidth / 2;
 	let windowHalfY = window.innerHeight / 2;
+
+
+	let modelsLoaded = false;
 	
 
 	window.onload = init();
@@ -111,17 +114,18 @@
 		shape = new CANNON.Plane();
 		groundBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
 		groundBody.addShape( shape );
-		groundBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
+		groundBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), 
+												-90 * THREE.Math.DEG2RAD
+											  );
 		groundBody.position.set( 0, -10, 0 );
 		world.addBody( groundBody );
 		
 
 		// box in center
-		shape = new CANNON.Box( new CANNON.Vec3( 5, 5, 5 ) );
-		cubeBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
-		cubeBody.addShape( shape );
-		cubeBody.angularVelocity.set( 0, 1, 0 );
-		world.addBody( cubeBody );
+		shape = new CANNON.Box( new CANNON.Vec3( 4.5, 4.5, 0.5 ) );
+		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
+		doorBody.addShape( shape );
+		world.addBody( doorBody );
 
 		// eye that simulates the player
 		// shape = new CANNON.Cylinder( 0.5, 0.5, 1, 20 );
@@ -140,10 +144,14 @@
 
 		let groundGeometry, groundTexture, groundMaterial;
 		let geometry, material;
-		let loader, object;
+		let loader;
 		
 		// init the camera, scene,  renderer
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 110 );
+		camera = new THREE.PerspectiveCamera( 75, 
+											  window.innerWidth / window.innerHeight, 
+											  0.1, 
+											  110 
+											);
 		camera.lookAt( 0, 0, 0 );
 
 		scene = new THREE.Scene();
@@ -152,7 +160,9 @@
 		scene.add( camera );
 
 		renderer = new THREE.WebGLRenderer( { antialias: true } );
-		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
+		renderer.setSize( window.innerWidth * Canvas.SIZE, 
+						  window.innerHeight * Canvas.SIZE
+						);
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
@@ -162,20 +172,28 @@
 		groundTexture.wrapS = THREE.RepeatWrapping;
 		groundTexture.wrapT = THREE.RepeatWrapping;
 		groundTexture.repeat.set( 2, 1 );
-		groundMaterial = new THREE.MeshBasicMaterial( { map: groundTexture, side: THREE.DoubleSide } );
+		groundMaterial = new THREE.MeshBasicMaterial( { map: groundTexture, 
+														side: THREE.DoubleSide 
+													} );
 		ground =  new THREE.Mesh( groundGeometry, groundMaterial );
 		scene.add( ground );
 
 
 		// cube mesh in center of screen
-		geometry = new THREE.BoxGeometry( 10, 10, 10 );
-		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
+		geometry = new THREE.BoxGeometry( 9, 9, 1 );
+		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, 
+												  wireframe: true 
+											  } );
 		cube = new THREE.Mesh( geometry, material );
 		scene.add( cube );
 
 
 		geometry = new THREE.SphereGeometry( 5, 16, 16 );
-		material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 1 } );
+		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
+												  wireframe: true, 
+												  transparent: true, 
+												  opacity: 1 
+											  } );
 		eye = new THREE.Mesh( geometry, material );
 		scene.add( eye );
 		camera.position.copy( eye.position );
@@ -188,10 +206,12 @@
 			
 			loader = new THREE.ObjectLoader();
 			
-			object = JSON.parse( data );
-			object = loader.parse( object );
+			door = JSON.parse( data );
+			door = loader.parse( door );
 
-			scene.add( object );
+			scene.add( door );
+
+			modelsLoaded = true;
 
 		} );
 
@@ -234,11 +254,22 @@
 		ground.position.copy( groundBody.position );
 		ground.quaternion.copy( groundBody.quaternion );
 
-		cube.position.copy( cubeBody.position );
-		cube.quaternion.copy( cubeBody.quaternion );
+		cube.position.copy( doorBody.position );
+		cube.quaternion.copy( doorBody.quaternion );
 
 		eye.position.copy( eyeBody.position );
 		eye.quaternion.copy( eyeBody.quaternion );
+
+		if ( modelsLoaded ) {
+
+			door.position.copy( doorBody.position );
+			door.position.y -= 0.2;
+			door.quaternion.copy( doorBody.quaternion );
+			door.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ),
+											  -90 * THREE.Math.DEG2RAD 
+											);
+
+		}
 
 
 		// get the rotation offset values from mouse and touch input
@@ -521,7 +552,9 @@
 		camera.updateProjectionMatrix();
 
 		// reset renderer scene size
-		renderer.setSize( window.innerWidth * Canvas.SIZE, window.innerHeight * Canvas.SIZE );
+		renderer.setSize( window.innerWidth * Canvas.SIZE, 
+						  window.innerHeight * Canvas.SIZE 
+						);
 
 		// reset logic based on window size
 		windowHalfX = window.innerWidth / 2;
