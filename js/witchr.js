@@ -129,7 +129,7 @@
 		world.addBody( doorBody );
 		let impulseForce = new CANNON.Vec3( 0, 0, -100000 );
 		let worldPoint = new CANNON.Vec3( doorBody.position.x,
-										  doorBody.position.y,
+										  doorBody.position.y + 4.5,
 										  doorBody.position.z
 									    );
 		doorBody.applyImpulse( impulseForce, worldPoint );
