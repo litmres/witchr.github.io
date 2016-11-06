@@ -95,7 +95,7 @@
 		world = new CANNON.World();
 		world.broadphase = new CANNON.NaiveBroadphase();
 		world.solver.iterations = 1;
-		world.gravity.set( 0, -1, 0 );
+		world.gravity.set( 0, -10, 0 );
 
 		// create a slippery material
 		physicsMaterial = new CANNON.Material( 'groundMaterial' );
@@ -112,12 +112,12 @@
 		groundBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
 		groundBody.addShape( shape );
 		groundBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), -90 * THREE.Math.DEG2RAD );
-		groundBody.position.set( 0, -1, 0 );
+		groundBody.position.set( 0, -10, 0 );
 		world.addBody( groundBody );
 		
 
 		// box in center
-		shape = new CANNON.Box( new CANNON.Vec3( 0.5, 0.5, 0.5 ) );
+		shape = new CANNON.Box( new CANNON.Vec3( 5, 5, 5 ) );
 		cubeBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
 		cubeBody.addShape( shape );
 		cubeBody.angularVelocity.set( 0, 1, 0 );
@@ -126,11 +126,11 @@
 		// eye that simulates the player
 		// shape = new CANNON.Cylinder( 0.5, 0.5, 1, 20 );
 		// shape = new CANNON.Box( new CANNON.Vec3( 0.5, 0.5, 0.5 ) );
-		shape = new CANNON.Sphere( 0.5 );
+		shape = new CANNON.Sphere( 5 );
 		eyeBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
 		eyeBody.addShape( shape );
-		eyeBody.linearDamping = 0.99;
-		eyeBody.position.set( 0, -0.5, 2 );
+		eyeBody.linearDamping = 0.99	;
+		eyeBody.position.set( 0, -5, 20 );
 		world.addBody( eyeBody );
 
 	}
@@ -143,10 +143,8 @@
 		let loader, object;
 		
 		// init the camera, scene,  renderer
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100 );
+		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 110 );
 		camera.lookAt( 0, 0, 0 );
-		camera.position.z += 5;
-		camera.position.y += 1;
 
 		scene = new THREE.Scene();
 		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
@@ -159,27 +157,24 @@
 		document.body.appendChild( renderer.domElement );
 
 		// init ground
-		groundGeometry = new THREE.PlaneGeometry( 20, 20, 1, 1 );
+		groundGeometry = new THREE.PlaneGeometry( 50, 50, 1, 1 );
 		groundTexture = new THREE.TextureLoader().load( 'img/old_wood.jpg' );
 		groundTexture.wrapS = THREE.RepeatWrapping;
 		groundTexture.wrapT = THREE.RepeatWrapping;
-		groundTexture.repeat.set( 8, 4 );
+		groundTexture.repeat.set( 2, 1 );
 		groundMaterial = new THREE.MeshBasicMaterial( { map: groundTexture, side: THREE.DoubleSide } );
 		ground =  new THREE.Mesh( groundGeometry, groundMaterial );
 		scene.add( ground );
 
 
 		// cube mesh in center of screen
-		geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		geometry = new THREE.BoxGeometry( 10, 10, 10 );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
 		cube = new THREE.Mesh( geometry, material );
 		scene.add( cube );
 
 
-
-		// geometry = new THREE.CylinderGeometry( 0.5, 0.5, 1, 20 );
-		// geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		geometry = new THREE.SphereGeometry( 0.5, 16, 16 );
+		geometry = new THREE.SphereGeometry( 5, 16, 16 );
 		material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent: true, opacity: 1 } );
 		eye = new THREE.Mesh( geometry, material );
 		scene.add( eye );
@@ -474,7 +469,7 @@
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 3,
+			MOVE_SPEED: 30,
 			QUICK_CLICK: 300,
 			ROTATE_SPEED: 2,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
