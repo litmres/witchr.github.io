@@ -355,11 +355,6 @@
 	}
 	
 	
-
-	
-	
-	
-
 	// handle mouse input
 	function onDocumentMouseDown( e ) {
 
@@ -381,6 +376,7 @@
 
 	}
 
+
 	function onDocumentMouseMove( e ) {
 
 		mouseX = e.clientX - windowHalfX;
@@ -400,6 +396,7 @@
 
 	}
 
+
 	function onDocumentMouseUp( e ) {
 		
 		document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -414,6 +411,7 @@
 		
 	}
 
+
 	function onDocumentMouseOut( e ) {
 		
 		document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -427,6 +425,7 @@
 		isMouseDown = false;	
 
 	}
+
 
 	function onDocumentTouchStart( e ) {
 
@@ -447,6 +446,7 @@
 		isMouseDown = true;
 		
 	}
+
 
 	function onDocumentTouchMove( e ) {
 
@@ -470,6 +470,7 @@
 		}
 
 	}
+
 
 	function onDocumentTouchEnd( e ) {
 
