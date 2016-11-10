@@ -133,6 +133,8 @@
 		// door body in the scene 
 		shape = new CANNON.Box( new CANNON.Vec3( 4.5, 4.5, 0.5 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
+		let doorY = 0;
+		doorBody.position.set( 0, doorY, 0 );
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
 		
@@ -143,23 +145,37 @@
 		// test impulse force on door
 		let impulseForce = new CANNON.Vec3( 0, 0, 100000 );
 		let worldPoint = new CANNON.Vec3( doorBody.position.x,
-										  doorBody.position.y + 3,
+										  doorBody.position.y,
 										  doorBody.position.z
 									    );
 		doorBody.applyImpulse( impulseForce, worldPoint );
 
 		// test hinge constraint on door
-		let hingeBody = new CANNON.Body( { mass: 0 } );
-		// hingeBody.addShape( new CANNON.Box( new CANNON.Vec3( 0.5, 4.5, 0.5 ) ) );
-		// hingeBody.position.x -= 4.5;
-		let hingeConstraint = new CANNON.HingeConstraint( hingeBody, doorBody, {
-			pivotA: new CANNON.Vec3( -4.5, 0, -4.5 ),
-			axisA: new CANNON.Vec3( 0, 1, 0 ),
-			pivotB: new CANNON.Vec3( -4.5, 0, 0 ),
-			axisB: new CANNON.Vec3( 0, 1, 0 )
+		let hingeBotBody = new CANNON.Body( { mass: 0 } );
+		// hingeBody must match position of doorBody!
+		hingeBotBody.position.set( 0, doorY, 0 );
+		// note that pivotA & pivotB offsets should be the same if hingeBody
+		// 	position is not specified. we are basically specifying the offset
+		// 	of where the rotation axis is locally from bodyB (doorBody)
+		// axis should also be the same
+		let hingeConstraint = new CANNON.HingeConstraint( hingeBotBody, doorBody, {
+			pivotA: new CANNON.Vec3( -5, -5, 0 ), // pivot offsets should be same 
+			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
+			pivotB: new CANNON.Vec3( -5, -5, 0 ), // pivot offsets should be same
+			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
 		world.addConstraint( hingeConstraint );
 
+		// test hinge constraint on door
+		let hingeTopBody = new CANNON.Body( { mass: 0 } );
+		hingeTopBody.position.set( 0, doorY, 0 );
+		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
+			pivotA: new CANNON.Vec3( -5, +5, 0 ), // pivot offsets should be same 
+			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
+			pivotB: new CANNON.Vec3( -5, +5, 0 ), // pivot offsets should be same
+			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
+		} );
+		world.addConstraint( hingeConstraint );
 		
 		
 
