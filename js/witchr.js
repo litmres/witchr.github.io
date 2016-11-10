@@ -133,7 +133,8 @@
 		// door body in the scene 
 		shape = new CANNON.Box( new CANNON.Vec3( 4.5, 4.5, 0.5 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
-		let doorY = 0;
+		doorBody.linearDamping = 0.99;
+		let doorY = -5;
 		doorBody.position.set( 0, doorY, 0 );
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
@@ -143,7 +144,7 @@
 		// doorBody.angularVelocity = new CANNON.Vec3( 0, 9, 0 );
 
 		// test impulse force on door
-		let impulseForce = new CANNON.Vec3( 0, 0, 100000 );
+		let impulseForce = new CANNON.Vec3( 0, 0, 300000 );
 		let worldPoint = new CANNON.Vec3( doorBody.position.x,
 										  doorBody.position.y,
 										  doorBody.position.z
