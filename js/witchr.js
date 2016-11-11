@@ -279,21 +279,21 @@
 											  } );
 		let wallDoorT = new THREE.Mesh( geometry, material );
 		scene.add( wallDoorT );
-		wallDoorT.position.set( 0, ( (wh-dh)/2 )+dh, 0 );
+		wallDoorT.position.set( 0, ((wh-dh)/2)+dh, 0 );
 
-		// // wallDoor left box mesh
-		// geometry = new THREE.BoxGeometry( (wallW-doorW)/2, wallH, wallD );
-		// material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
-		// 										  wireframe: true 
-		// 									  } );
-		// let wallDoorL = new THREE.Mesh( geometry, material );
-		// scene.add( wallDoorL );
-		// wallDoorL.position.set( (-wallW+2*doorW)/2, 0, 0 );
+		// wallDoor left box mesh
+		geometry = new THREE.BoxGeometry( (ww-dw)/2, wh, wd );
+		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
+												  wireframe: true 
+											  } );
+		let wallDoorL = new THREE.Mesh( geometry, material );
+		scene.add( wallDoorL );
+		wallDoorL.position.set( -(2*dw-ww)/2, wh/2, 0 );
 
-		// // wallDoor right box mesh
-		// let wallDoorR = new THREE.Mesh( geometry, material );
-		// scene.add( wallDoorR );
-		// wallDoorR.position.set( -(-wallW+2*doorW)/2, 0, 0 );
+		// wallDoor right box mesh
+		let wallDoorR = new THREE.Mesh( geometry, material );
+		scene.add( wallDoorR );
+		wallDoorR.position.set( (2*dw-ww)/2, wh/2, 0 );
 
 
 
