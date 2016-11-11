@@ -21,6 +21,7 @@
 	// three.js
 	let camera, scene, renderer;
 	let ground, eye, door, box;
+	let doorX = 0, doorY = -5, doorZ = 0;
 
 	// cannon.js
 	let world;
@@ -134,8 +135,7 @@
 		shape = new CANNON.Box( new CANNON.Vec3( 4.5, 4.5, 0.5 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
 		doorBody.linearDamping = 0.99;
-		let doorY = -5;
-		doorBody.position.set( 0, doorY, 0 );
+		doorBody.position.set( doorX, doorY, doorZ );
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
 		
@@ -154,7 +154,7 @@
 		// test hinge constraint on door
 		let hingeBotBody = new CANNON.Body( { mass: 0 } );
 		// hingeBody must match position of doorBody!
-		hingeBotBody.position.set( 0, doorY, 0 );
+		hingeBotBody.position.set( doorX, doorY, doorZ );
 		// note that pivotA & pivotB offsets should be the same if hingeBody
 		// 	position is not specified. we are basically specifying the offset
 		// 	of where the rotation axis is locally from bodyB (doorBody)
@@ -169,7 +169,7 @@
 
 		// test hinge constraint on door
 		let hingeTopBody = new CANNON.Body( { mass: 0 } );
-		hingeTopBody.position.set( 0, doorY, 0 );
+		hingeTopBody.position.set( doorX, doorY, doorZ );
 		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
 			pivotA: new CANNON.Vec3( -5, +5, 0 ), // pivot offsets should be same 
 			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
@@ -254,6 +254,12 @@
 			door = JSON.parse( data );
 			door = loader.parse( door );
 			scene.add( door );
+
+			// door obj that stays in the frame as a shadow?
+			let doorway = JSON.parse( data );
+			doorway = loader.parse( doorway );
+			scene.add( doorway );
+			doorway.position.set( doorX, doorY, doorZ );
 
 			modelsLoaded = true;
 
