@@ -20,15 +20,16 @@
 
 	// cannon.js
 	let world;
-	let timeStep = 1 / 60, time = performance.now();
-	let groundBody, eyeBody, doorBody, wallDoorBody;
-	let offsetY = -5;
-	let doorW = 9, doorH = 9, doorD = 1, doorX = 0, doorY = offsetY, doorZ = 0;
-	let wallW = 50, wallH = 20, wallD = 1;
+	let timeStep = 1/60, time = performance.now();
+	let floorBody, fw = 50, fh = 50;
+	let eyeBody, er = 5;
+	let doorBody, dw = 9, dh = 9, dd = 1;
+	let wallBody, ww = 50, wh = 20, wd = 1;
+	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
 	// three.js
 	let camera, scene, renderer;
-	let ground, eye, door, box, wallDoor;
+	let floor, eye, door, box, wallDoor;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -47,8 +48,8 @@
 	let timeClick = 0;
 	let isMouseDown = false;
 
-	let windowHalfX = window.innerWidth / 2;
-	let windowHalfY = window.innerHeight / 2;
+	let windowHalfX = window.innerWidth/2;
+	let windowHalfY = window.innerHeight/2;
 
 
 	let modelsLoaded = false;
@@ -97,6 +98,7 @@
 		let physicsMaterial, physicsContactMaterial;
 		let shape;
 
+
 		// setup worlds
 		world = new CANNON.World();
 		world.broadphase = new CANNON.NaiveBroadphase();
@@ -104,7 +106,7 @@
 		world.gravity.set( 0, -10, 0 );
 
 		// create a slippery material
-		physicsMaterial = new CANNON.Material( 'groundMaterial' );
+		physicsMaterial = new CANNON.Material( 'floorMaterial' );
 		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
 															 physicsMaterial, 
 														   { friction: 0.03,
@@ -113,31 +115,32 @@
 
 		world.addContactMaterial( physicsContactMaterial );
 
-		// ground plane body which acts as room floor
+		// floor plane body which acts as room floor
+		// floor will be on y=0 and all objects will be init with that in mind
 		shape = new CANNON.Plane();
-		groundBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
-		groundBody.addShape( shape );
-		groundBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), 
-												-90 * THREE.Math.DEG2RAD
+		floorBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
+		floorBody.addShape( shape );
+		floorBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), 
+												-90*THREE.Math.DEG2RAD
 											  );
-		groundBody.position.set( 0, -10, 0 );
-		world.addBody( groundBody );
+		floorBody.position.set( 0, 0, 0 );
+		world.addBody( floorBody );
 		
 
 		// eye body that simulates and positions player
-		shape = new CANNON.Sphere( 5 );
+		shape = new CANNON.Sphere( er );
 		eyeBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
 		eyeBody.addShape( shape );
 		eyeBody.linearDamping = 0.99	;
-		eyeBody.position.set( 0, offsetY, 20 );
+		eyeBody.position.set( 0, er, 20 );
 		world.addBody( eyeBody );
 
 
-		// door body in the scene 
-		shape = new CANNON.Box( new CANNON.Vec3( doorW/2, doorH/2, doorD/2 ) );
+		// door body in the scene (half extents)
+		shape = new CANNON.Box( new CANNON.Vec3( dw/2, dh/2, dd/2 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
 		doorBody.linearDamping = 0.99;
-		doorBody.position.set( doorX, doorY, doorZ );
+		doorBody.position.set( 0, dh/2, 0 );
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
 		
@@ -146,47 +149,47 @@
 		// doorBody.angularVelocity = new CANNON.Vec3( 0, 9, 0 );
 
 		// test impulse force on door
-		let impulseForce = new CANNON.Vec3( 0, 0, 300000 );
-		let worldPoint = new CANNON.Vec3( doorBody.position.x,
-										  doorBody.position.y,
-										  doorBody.position.z
-									    );
+		impulseForce = new CANNON.Vec3( 0, 0, 300000 );
+		worldPoint = new CANNON.Vec3( doorBody.position.x,
+									  doorBody.position.y,
+									  doorBody.position.z
+									);
 		doorBody.applyImpulse( impulseForce, worldPoint );
 
 		// test hinge constraint on door
-		let hingeBotBody = new CANNON.Body( { mass: 0 } );
+		hingeBotBody = new CANNON.Body( { mass: 0 } );
 		// hingeBody must match position of doorBody!
-		hingeBotBody.position.set( doorX, doorY, doorZ );
+		hingeBotBody.position.set( 0, dh/2, 0 );
 		// note that pivotA & pivotB offsets should be the same if hingeBody
 		// 	position is not specified. we are basically specifying the offset
 		// 	of where the rotation axis is locally from bodyB (doorBody)
 		// axis should also be the same
-		let hingeConstraint = new CANNON.HingeConstraint( hingeBotBody, doorBody, {
-			pivotA: new CANNON.Vec3( -5, -5, 0 ), // pivot offsets should be same 
+		hingeConstraint = new CANNON.HingeConstraint( hingeBotBody, doorBody, {
+			pivotA: new CANNON.Vec3( -dw/2, -dh/2, 0 ), // pivot offsets should be same 
 			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
-			pivotB: new CANNON.Vec3( -5, -5, 0 ), // pivot offsets should be same
+			pivotB: new CANNON.Vec3( -dw/2, -dh/2, 0 ), // pivot offsets should be same
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
 		world.addConstraint( hingeConstraint );
 
 		// test hinge constraint on door
-		let hingeTopBody = new CANNON.Body( { mass: 0 } );
-		hingeTopBody.position.set( doorX, doorY, doorZ );
+		hingeTopBody = new CANNON.Body( { mass: 0 } );
+		hingeTopBody.position.set( 0, dh/2, 0 );
 		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
-			pivotA: new CANNON.Vec3( -5, +5, 0 ), // pivot offsets should be same 
+			pivotA: new CANNON.Vec3( -dw/2, +dh/2, 0 ), // pivot offsets should be same 
 			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
-			pivotB: new CANNON.Vec3( -5, +5, 0 ), // pivot offsets should be same
+			pivotB: new CANNON.Vec3( -dw/2, +dh/2, 0 ), // pivot offsets should be same
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
 		world.addConstraint( hingeConstraint );
 		
 		
 		// wallbody in the scene 
-		shape = new CANNON.Box( new CANNON.Vec3( (wallW-doorW)/4, wallH/2, wallD/2 ) );
-		wallDoorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
-		wallDoorBody.position.set( (-wallW+2*doorW)/2, 0, 0 );
-		wallDoorBody.addShape( shape );
-		world.addBody( wallDoorBody );
+		// shape = new CANNON.Box( new CANNON.Vec3( (wallW-doorW)/4, wallH/2, wallD/2 ) );
+		// wallDoorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
+		// wallDoorBody.position.set( (-wallW+2*doorW)/2, 0, 0 );
+		// wallDoorBody.addShape( shape );
+		// world.addBody( wallDoorBody );
 
 
 	}
@@ -194,7 +197,7 @@
 
 	function initThree() {
 
-		let groundGeometry, groundTexture, groundMaterial;
+		let floorGeometry, floorTexture, floorMaterial;
 		let geometry, material;
 		let loader;
 		
@@ -218,21 +221,21 @@
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
-		// ground mesh acts as the room floor
-		groundGeometry = new THREE.PlaneGeometry( 50, 50, 1, 1 );
-		groundTexture = new THREE.TextureLoader().load( 'img/old_wood.jpg' );
-		groundTexture.wrapS = THREE.RepeatWrapping;
-		groundTexture.wrapT = THREE.RepeatWrapping;
-		groundTexture.repeat.set( 2, 1 );
-		groundMaterial = new THREE.MeshBasicMaterial( { map: groundTexture, 
+		// floor mesh acts as the room floor
+		floorGeometry = new THREE.PlaneGeometry( fw, fh, 1, 1 );
+		floorTexture = new THREE.TextureLoader().load( 'img/old_wood.jpg' );
+		floorTexture.wrapS = THREE.RepeatWrapping;
+		floorTexture.wrapT = THREE.RepeatWrapping;
+		floorTexture.repeat.set( 2, 1 );
+		floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, 
 														side: THREE.DoubleSide 
 													} );
-		ground =  new THREE.Mesh( groundGeometry, groundMaterial );
-		scene.add( ground );
+		floor =  new THREE.Mesh( floorGeometry, floorMaterial );
+		scene.add( floor );
 
 
 		// eye mesh really just for troubleshooting
-		geometry = new THREE.SphereGeometry( 5, 16, 16 );
+		geometry = new THREE.SphereGeometry( er, 16, 16 );
 		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
 												  wireframe: true, 
 												  transparent: true, 
@@ -245,7 +248,7 @@
 		
 
 		// box mesh for door for troubleshooting
-		geometry = new THREE.BoxGeometry( doorW, doorH, doorD );
+		geometry = new THREE.BoxGeometry( dw, dh, dd );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, 
 												  wireframe: true 
 											  } );
@@ -270,27 +273,27 @@
 
 
 		// wallDoor top box mesh
-		geometry = new THREE.BoxGeometry( doorW, wallH-doorH, wallD );
+		geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
 												  wireframe: true 
 											  } );
 		let wallDoorT = new THREE.Mesh( geometry, material );
 		scene.add( wallDoorT );
-		wallDoorT.position.set( 0, 5, 0 );
+		wallDoorT.position.set( 0, ( (wh-dh)/2 )+dh, 0 );
 
-		// wallDoor left box mesh
-		geometry = new THREE.BoxGeometry( (wallW-doorW)/2, wallH, wallD );
-		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
-												  wireframe: true 
-											  } );
-		let wallDoorL = new THREE.Mesh( geometry, material );
-		scene.add( wallDoorL );
-		wallDoorL.position.set( (-wallW+2*doorW)/2, 0, 0 );
+		// // wallDoor left box mesh
+		// geometry = new THREE.BoxGeometry( (wallW-doorW)/2, wallH, wallD );
+		// material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
+		// 										  wireframe: true 
+		// 									  } );
+		// let wallDoorL = new THREE.Mesh( geometry, material );
+		// scene.add( wallDoorL );
+		// wallDoorL.position.set( (-wallW+2*doorW)/2, 0, 0 );
 
-		// wallDoor right box mesh
-		let wallDoorR = new THREE.Mesh( geometry, material );
-		scene.add( wallDoorR );
-		wallDoorR.position.set( -(-wallW+2*doorW)/2, 0, 0 );
+		// // wallDoor right box mesh
+		// let wallDoorR = new THREE.Mesh( geometry, material );
+		// scene.add( wallDoorR );
+		// wallDoorR.position.set( -(-wallW+2*doorW)/2, 0, 0 );
 
 
 
@@ -347,8 +350,8 @@
 
 
 		// set all of the meshes to the physics bodies
-		ground.position.copy( groundBody.position );
-		ground.quaternion.copy( groundBody.quaternion );
+		floor.position.copy( floorBody.position );
+		floor.quaternion.copy( floorBody.quaternion );
 
 		box.position.copy( doorBody.position );
 		box.quaternion.copy( doorBody.quaternion );
