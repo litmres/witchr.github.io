@@ -23,7 +23,7 @@
 	let timeStep = 1/60, time = performance.now();
 	let floorBody, fw = 50, fh = 50;
 	let eyeBody, er = 5;
-	let doorBody, dw = 9, dh = 9, dd = 1;
+	let doorBody, dw = 2, dh = 2, dd = 1;
 	let wallBody, ww = 50, wh = 20, wd = 1;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
@@ -288,12 +288,12 @@
 											  } );
 		let wallDoorL = new THREE.Mesh( geometry, material );
 		scene.add( wallDoorL );
-		wallDoorL.position.set( -(2*dw-ww)/2, wh/2, 0 );
+		wallDoorL.position.set( -((ww-dw)/4)-dw/2, wh/2, 0 );
 
 		// wallDoor right box mesh
 		let wallDoorR = new THREE.Mesh( geometry, material );
 		scene.add( wallDoorR );
-		wallDoorR.position.set( (2*dw-ww)/2, wh/2, 0 );
+		wallDoorR.position.set( ((ww-dw)/4)+dw/2, wh/2, 0 );
 
 
 
