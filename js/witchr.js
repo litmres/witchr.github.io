@@ -18,16 +18,18 @@
 	// fps stats
 	let stats;
 
-	// three.js
-	let camera, scene, renderer;
-	let ground, eye, door, box;
-	let doorX = 0, doorY = -5, doorZ = 0;
-
 	// cannon.js
 	let world;
 	let timeStep = 1 / 60, time = performance.now();
-	let groundBody, eyeBody, doorBody;
+	let groundBody, eyeBody, doorBody, wallDoorBody;
+	let offsetY = -5;
+	let doorW = 9, doorH = 9, doorD = 1, doorX = 0, doorY = offsetY, doorZ = 0;
+	let wallW = 50, wallH = 20, wallD = 1;
 	
+	// three.js
+	let camera, scene, renderer;
+	let ground, eye, door, box, wallDoor;
+
 	// mouse and touch events
 	let rotX = 0;
 	let rotY = 0;
@@ -127,12 +129,12 @@
 		eyeBody = new CANNON.Body( { mass: 1, material: physicsMaterial } );
 		eyeBody.addShape( shape );
 		eyeBody.linearDamping = 0.99	;
-		eyeBody.position.set( 0, -5, 20 );
+		eyeBody.position.set( 0, offsetY, 20 );
 		world.addBody( eyeBody );
 
 
 		// door body in the scene 
-		shape = new CANNON.Box( new CANNON.Vec3( 4.5, 4.5, 0.5 ) );
+		shape = new CANNON.Box( new CANNON.Vec3( doorW/2, doorH/2, doorD/2 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
 		doorBody.linearDamping = 0.99;
 		doorBody.position.set( doorX, doorY, doorZ );
@@ -179,6 +181,13 @@
 		world.addConstraint( hingeConstraint );
 		
 		
+		// wallbody in the scene 
+		shape = new CANNON.Box( new CANNON.Vec3( (wallW-doorW)/4, wallH/2, wallD/2 ) );
+		wallDoorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
+		wallDoorBody.position.set( (-wallW+2*doorW)/2, 0, 0 );
+		wallDoorBody.addShape( shape );
+		world.addBody( wallDoorBody );
+
 
 	}
 
@@ -227,7 +236,7 @@
 		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
 												  wireframe: true, 
 												  transparent: true, 
-												  opacity: 1 
+												  opacity: 0.1 
 											  } );
 		eye = new THREE.Mesh( geometry, material );
 		scene.add( eye );
@@ -236,7 +245,7 @@
 		
 
 		// box mesh for door for troubleshooting
-		geometry = new THREE.BoxGeometry( 9, 9, 1 );
+		geometry = new THREE.BoxGeometry( doorW, doorH, doorD );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, 
 												  wireframe: true 
 											  } );
@@ -255,15 +264,33 @@
 			door = loader.parse( door );
 			scene.add( door );
 
-			// door obj that stays in the frame as a shadow?
-			let doorway = JSON.parse( data );
-			doorway = loader.parse( doorway );
-			scene.add( doorway );
-			doorway.position.set( doorX, doorY, doorZ );
-
 			modelsLoaded = true;
 
 		} );
+
+
+		// wallDoor top box mesh
+		geometry = new THREE.BoxGeometry( doorW, wallH-doorH, wallD );
+		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
+												  wireframe: true 
+											  } );
+		let wallDoorT = new THREE.Mesh( geometry, material );
+		scene.add( wallDoorT );
+		wallDoorT.position.set( 0, 5, 0 );
+
+		// wallDoor left box mesh
+		geometry = new THREE.BoxGeometry( (wallW-doorW)/2, wallH, wallD );
+		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
+												  wireframe: true 
+											  } );
+		let wallDoorL = new THREE.Mesh( geometry, material );
+		scene.add( wallDoorL );
+		wallDoorL.position.set( (-wallW+2*doorW)/2, 0, 0 );
+
+		// wallDoor right box mesh
+		let wallDoorR = new THREE.Mesh( geometry, material );
+		scene.add( wallDoorR );
+		wallDoorR.position.set( -(-wallW+2*doorW)/2, 0, 0 );
 
 
 
