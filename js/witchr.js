@@ -22,7 +22,7 @@
 	let world;
 	let timeStep = 1/60, time = performance.now();
 	let floorBody, fw = 50, fh = 50;
-	let eyeBody, er = 5;
+	let eyeBody, er = 3;
 	let doorBody, dw = 10, dh = 10, dd = 1, df = 1; // door offset (inside wall)
 	let wallBody, ww = 50, wh = 20, wd = 1;
 	let wallDoorBody;
@@ -260,6 +260,8 @@
 		eye = new THREE.Mesh( geometry, material );
 		scene.add( eye );
 		camera.position.copy( eye.position );
+		// place camera at the very top of eye
+		camera.position.y += er;
 		eye.add( camera );
 		
 
