@@ -25,6 +25,7 @@
 	let eyeBody, er = 5;
 	let doorBody, dw = 10, dh = 10, dd = 1;
 	let wallBody, ww = 50, wh = 20, wd = 1;
+	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
 	// three.js
@@ -183,13 +184,28 @@
 		} );
 		world.addConstraint( hingeConstraint );
 		
+	
+		// // door body in the scene (half extents)
+		// shape = new CANNON.Box( new CANNON.Vec3( dw/2, dh/2, dd/2 ) );
+		// doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
+		// doorBody.linearDamping = 0.99;
+		// doorBody.position.set( 0, dh/2, 0 );
+		// doorBody.addShape( shape );
+		// world.addBody( doorBody );
 		
-		// wallbody in the scene 
-		// shape = new CANNON.Box( new CANNON.Vec3( (wallW-doorW)/4, wallH/2, wallD/2 ) );
-		// wallDoorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
-		// wallDoorBody.position.set( (-wallW+2*doorW)/2, 0, 0 );
-		// wallDoorBody.addShape( shape );
-		// world.addBody( wallDoorBody );
+		wallDoorBody = new CANNON.Body( { mass: 1000 } );
+
+		// wallDoor top box mesh
+		shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, dd/2 ) );
+		wallDoorBody.addShape( shape, new CANNON.Vec3( 0, ((wh-dh)/2)+dh, 0 ) );
+		// wallDoor left box mesh
+		shape = new CANNON.Box( new CANNON.Vec3( (ww-dw)/4, wh/2, wd/2 ) );
+		wallDoorBody.addShape( shape, new CANNON.Vec3( -((ww-dw)/4)-dw/2, wh/2, 0 ) );
+		// wallDoor right box mesh
+		wallDoorBody.addShape( shape, new CANNON.Vec3( +((ww-dw)/4)+dw/2, wh/2, 0 ) );
+
+		world.addBody( wallDoorBody );
+
 
 
 	}
@@ -272,8 +288,8 @@
 		} );
 
 
-		// create wall that has a door on it
-		let wallDoor = new THREE.Mesh();
+		// wall that has a door on it
+		wallDoor = new THREE.Mesh();
 
 		// wallDoor top box mesh
 		geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
@@ -373,6 +389,9 @@
 									  -90 * THREE.Math.DEG2RAD 
 									);
 			door.quaternion.copy( doorBody.quaternion.mult( rotDoor ) );
+
+			wallDoor.position.copy( wallDoorBody.position );
+			wallDoor.quaternion.copy( wallDoorBody.quaternion );
 
 		}
 
