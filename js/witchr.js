@@ -23,7 +23,7 @@
 	let timeStep = 1/60, time = performance.now();
 	let floorBody, fw = 50, fh = 50;
 	let eyeBody, er = 5;
-	let doorBody, dw = 10, dh = 10, dd = 1;
+	let doorBody, dw = 10, dh = 10, dd = 1, df = 1; // door offset (inside wall)
 	let wallBody, ww = 50, wh = 20, wd = 1;
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
@@ -138,7 +138,7 @@
 
 
 		// door body in the scene (half extents)
-		shape = new CANNON.Box( new CANNON.Vec3( dw/2, dh/2, dd/2 ) );
+		shape = new CANNON.Box( new CANNON.Vec3( (dw-df)/2, (dh-df)/2, dd/2 ) );
 		doorBody = new CANNON.Body( { mass: 10000, material: physicsMaterial } );
 		doorBody.linearDamping = 0.99;
 		doorBody.position.set( 0, dh/2, 0 );
@@ -264,7 +264,7 @@
 		
 
 		// box mesh for door for troubleshooting
-		geometry = new THREE.BoxGeometry( dw, dh, dd );
+		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00, 
 												  wireframe: true 
 											  } );
@@ -290,7 +290,6 @@
 
 		// wall that has a door on it
 		wallDoor = new THREE.Mesh();
-
 		// wallDoor top box mesh
 		geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
