@@ -272,14 +272,17 @@
 		} );
 
 
+		// create wall that has a door on it
+		let wallDoor = new THREE.Mesh();
+
 		// wallDoor top box mesh
 		geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
 												  wireframe: true 
 											  } );
 		let wallDoorT = new THREE.Mesh( geometry, material );
-		scene.add( wallDoorT );
 		wallDoorT.position.set( 0, ((wh-dh)/2)+dh, 0 );
+		wallDoor.add( wallDoorT );
 
 		// wallDoor left box mesh
 		geometry = new THREE.BoxGeometry( (ww-dw)/2, wh, wd );
@@ -287,13 +290,15 @@
 												  wireframe: true 
 											  } );
 		let wallDoorL = new THREE.Mesh( geometry, material );
-		scene.add( wallDoorL );
 		wallDoorL.position.set( -((ww-dw)/4)-dw/2, wh/2, 0 );
+		wallDoor.add( wallDoorL );
 
 		// wallDoor right box mesh
 		let wallDoorR = new THREE.Mesh( geometry, material );
-		scene.add( wallDoorR );
 		wallDoorR.position.set( ((ww-dw)/4)+dw/2, wh/2, 0 );
+		wallDoor.add( wallDoorR );
+
+		scene.add( wallDoor );
 
 
 
