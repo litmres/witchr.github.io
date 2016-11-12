@@ -23,7 +23,7 @@
 	let timeStep = 1/60, time = performance.now();
 	let floorBody, fw = 50, fh = 50;
 	let eyeBody, er = 5;
-	let doorBody, dw = 2, dh = 2, dd = 1;
+	let doorBody, dw = 10, dh = 10, dd = 1;
 	let wallBody, ww = 50, wh = 20, wd = 1;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
