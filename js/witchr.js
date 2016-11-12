@@ -21,7 +21,7 @@
 	// cannon.js
 	let world;
 	let timeStep = 1/60, time = performance.now();
-	let floorBody, fw = 50, fh = 50;
+	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3;
 	let doorBody, dw = 10, dh = 10, dd = 1, df = 1; // door offset (inside wall)
 	let wallBody, ww = 50, wh = 20, wd = 1;
@@ -124,8 +124,8 @@
 		floorBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), 
 												-90*THREE.Math.DEG2RAD
 											  );
-		floorBody.position.set( 0, 0, 0 );
 		world.addBody( floorBody );
+		floorBody.position.z += fd/2;
 		
 
 		// eye body that simulates and positions player
@@ -238,7 +238,7 @@
 		document.body.appendChild( renderer.domElement );
 
 		// floor mesh acts as the room floor
-		floorGeometry = new THREE.PlaneGeometry( fw, fh, 1, 1 );
+		floorGeometry = new THREE.PlaneGeometry( fw, fd, 1, 1 );
 		floorTexture = new THREE.TextureLoader().load( 'img/old_wood.jpg' );
 		floorTexture.wrapS = THREE.RepeatWrapping;
 		floorTexture.wrapT = THREE.RepeatWrapping;
