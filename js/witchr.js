@@ -193,8 +193,8 @@
 		// doorBody.addShape( shape );
 		// world.addBody( doorBody );
 		
-		wallDoorBody = new CANNON.Body( { mass: 1000 } );
-
+		// immovable wall that has a door on it
+		wallDoorBody = new CANNON.Body( { mass: 0 } );
 		// wallDoor top box mesh
 		shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, dd/2 ) );
 		wallDoorBody.addShape( shape, new CANNON.Vec3( 0, ((wh-dh)/2)+dh, 0 ) );
