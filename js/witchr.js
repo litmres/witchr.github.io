@@ -7,13 +7,14 @@
 'use strict';
 
 
+
 (function( witchr, undefined ) {
 
 	let de = true;
 	let bug = console;
 
 	// enums
-	let Canvas, Game, Player, Keyboard, Key;
+	let Canvas, Game, Player, Keyboard, Key, Mouse;
 
 	// fps stats
 	let stats;
@@ -48,7 +49,8 @@
 	let mouseYOnMouseDown = 0;
 
 	let timeClick = 0;
-	let isMouseDown = false;
+	let isMouseLeftDown = false;
+	let isMouseRightDown = false;
 
 	let windowHalfX = window.innerWidth/2;
 	let windowHalfY = window.innerHeight/2;
@@ -83,6 +85,8 @@
 		window.addEventListener( 'keyup', Keyboard.keyRelease.bind(Keyboard), false );
 
 		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+		// disable contextmenu on right clicks (will be used to move)
+		window.oncontextmenu = function() { return false; };
 
 		document.addEventListener( 'touchstart', onDocumentTouchStart, false );
 		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
@@ -433,7 +437,7 @@
 	 * handle keyboard, mouse, touch inputs
 	 *********************************************************
 	 */
-	// handle keyboard input
+	// handle keyboard and mouse inputs
 	function handleInputs( timeDelta ) {
 
 		timeDelta *= 0.001;
@@ -474,8 +478,8 @@
 		}
 
 		
-		// handle isMouseDown input from click or tap
-		if ( isMouseDown ) {
+		// handle isMouseRightDown input from click or tap
+		if ( isMouseRightDown ) {
 
 			inputVelocity.z += -Player.MOVE_SPEED * timeDelta;
 
@@ -495,20 +499,34 @@
 	function onDocumentMouseDown( e ) {
 
 		e.preventDefault();
+		e.stopPropagation();
 
-		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-		document.addEventListener( 'mouseup', onDocumentMouseUp, false);
-		document.addEventListener( 'mouseout', onDocumentMouseOut, false);
-		
-		mouseXOnMouseDown = e.clientX - windowHalfX;
-		targetRotationOnMouseDownX = targetRotationX;
+		if ( !isMouseLeftDown && !isMouseRightDown ) {
+			
+			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+			document.addEventListener( 'mouseup', onDocumentMouseUp, false);
+			document.addEventListener( 'mouseout', onDocumentMouseOut, false);
+			
+		}
 
-		mouseYOnMouseDown = e.clientY - windowHalfY;
-		targetRotationOnMouseDownY = targetRotationY;
+		if ( e.button === Mouse.LEFT ) {
 
+			mouseXOnMouseDown = e.clientX - windowHalfX;
+			mouseYOnMouseDown = e.clientY - windowHalfY;
+
+			targetRotationOnMouseDownX = targetRotationX;
+			targetRotationOnMouseDownY = targetRotationY;
+
+			isMouseLeftDown = true;
+
+		}
+
+		if ( e.button === Mouse.RIGHT ) {
+			isMouseRightDown = true;
+		}
+
+		// handle if mouse is clicked quickly
 		timeClick = performance.now();
-
-		isMouseDown = true;
 
 	}
 
@@ -516,18 +534,25 @@
 	function onDocumentMouseMove( e ) {
 
 		mouseX = e.clientX - windowHalfX;
-
-		targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-
 		mouseY = e.clientY - windowHalfY;
 
-		targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-		// targetRotationY (rotX looking up/down) from should be max 90 deg
-		if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
-			targetRotationY = 90 * THREE.Math.DEG2RAD;
+		if ( isMouseLeftDown ) {
+
+			targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+			targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+
+			// targetRotationY (rotX looking up/down) from should be max 90 deg
+			if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
+				targetRotationY = 90 * THREE.Math.DEG2RAD;
+			}
+			if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
+				targetRotationY = -90 * THREE.Math.DEG2RAD;
+			}
+
 		}
-		if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
-			targetRotationY = -90 * THREE.Math.DEG2RAD;
+
+		if ( isMouseRightDown ) {
+
 		}
 
 	}
@@ -535,37 +560,57 @@
 
 	function onDocumentMouseUp( e ) {
 		
-		document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
-		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
-		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
-		
+		// do something on quick click
 		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
-			// do something on quick click
 		}
 
-		isMouseDown = false;
+		if ( e.button === Mouse.LEFT ) {
+			console.log( 'mouse left up' );
+			isMouseLeftDown = false;
+		}
+
+		if ( e.button === Mouse.RIGHT ) {
+			console.log( 'mouse right up' );
+			isMouseRightDown = false;
+		}
+
+		// remove MouseUp event listener only if all buttons are up
+		if ( !isMouseLeftDown && !isMouseRightDown ) {
+			document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
+			document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
+			document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+		}
 		
 	}
 
 
 	function onDocumentMouseOut( e ) {
 		
-		document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
-		document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
-		document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
-		
+		// do something on quick click
 		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
-			// do something on quick click
 		}
 
-		isMouseDown = false;	
+		if ( e.button === Mouse.LEFT ) {
+			isMouseLeftDown = false;
+		}
 
+		if ( e.button === Mouse.RIGHT ) {
+			isMouseRightDown = false;	
+		}
+
+		// remove MouseUp event listener only if all buttons are up
+		if ( !isMouseLeftDown && !isMouseRightDown ) {
+			document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
+			document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
+			document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+		}
+		
 	}
 
 
 	function onDocumentTouchStart( e ) {
 
-		if ( e.touches.length === 1 ) {
+		if ( e.touches.length === 2 ) {
 
 			e.preventDefault();
 
@@ -577,9 +622,10 @@
 
 			timeClick = ( performance.now() );
 			
+			isMouseRightDown = true;
+
 		}
 
-		isMouseDown = true;
 		
 	}
 
@@ -614,7 +660,7 @@
 			// do something on quick click
 		}
 
-		isMouseDown = false;
+		isMouseRightDown = false;
 
 	}
 
@@ -673,6 +719,13 @@
 				this.keys[e.keyCode] = 0;
 				e.stopPropagation();
 			}
+		};
+
+		// init mouse clicks
+		Mouse = {
+			LEFT: 0,
+			MIDDLE: 1,
+			RIGHT: 2
 		};
 
 	}
