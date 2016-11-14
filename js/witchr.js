@@ -384,15 +384,15 @@
 		// reset eye quaternion so we only rotate by offsets
 		eyeBody.quaternion.set( 0, 0, 0, 1 );
 
-		// local rotation about the y-axis
-		let rotUp = new CANNON.Quaternion( 0, 0, 0, 1 );
-		rotUp.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
-		eyeBody.quaternion = eyeBody.quaternion.mult( rotUp );
-
 		// local rotation about the x-axis
 		let rotSide = new CANNON.Quaternion( 0, 0, 0, 1 );
-		rotSide.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
+		rotSide.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotSide );
+
+		// local rotation about the y-axis
+		let rotUp = new CANNON.Quaternion( 0, 0, 0, 1 );
+		rotUp.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
+		eyeBody.quaternion = eyeBody.quaternion.mult( rotUp );
 
 
 		// set all of the meshes to the physics bodies
@@ -438,8 +438,8 @@
 		timeDelta *= 0.001;
 
 		// get the rotation offset values from mouse and touch input
-		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED * timeDelta;
-		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED * timeDelta;
+		rotX += ( targetRotationX - rotX ) * Player.ROTATE_SPEED * timeDelta;
+		rotY += ( targetRotationY - rotY ) * Player.ROTATE_SPEED * timeDelta;
 
 		// get the input velocity for translation, euler angle that describes
 		// 	the current rotation transformation and quaternion to apply the
@@ -533,18 +533,18 @@
 
 		if ( isMouseLeftDown ) {
 
-			targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-			targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+			targetRotationX = targetRotationOnMouseDownX + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+			targetRotationY = targetRotationOnMouseDownY + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
-			// targetRotationY (rotX looking up/down) from should be max 90 deg
-			if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
+			// rotation about x-axis should be max 90 deg
+			if ( targetRotationX * THREE.Math.RAD2DEG > 90 ) {
 
-				targetRotationY = 90 * THREE.Math.DEG2RAD;
+				targetRotationX = 90 * THREE.Math.DEG2RAD;
 
 			}
-			if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
+			if ( targetRotationX * THREE.Math.RAD2DEG < -90 ) {
 
-				targetRotationY = -90 * THREE.Math.DEG2RAD;
+				targetRotationX = -90 * THREE.Math.DEG2RAD;
 
 			}
 
@@ -633,20 +633,19 @@
 	function onDocumentTouchMove( e ) {
 
 		mouseX = e.touches[ 0 ].pageX - windowHalfX;
-		targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-
 		mouseY = e.touches[ 0 ].pageY - windowHalfY;
-		targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+		targetRotationX = targetRotationOnMouseDownX + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+		targetRotationY = targetRotationOnMouseDownY + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
-		// targetRotationY (rotX looking up/down) from should be max 90 deg
-		if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
+		// rotation about x-axis should be max 90 deg
+		if ( targetRotationX * THREE.Math.RAD2DEG > 90 ) {
 
-			targetRotationY = 90 * THREE.Math.DEG2RAD;
+			targetRotationX = 90 * THREE.Math.DEG2RAD;
 
 		}
-		if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
+		if ( targetRotationX * THREE.Math.RAD2DEG < -90 ) {
 
-			targetRotationY = -90 * THREE.Math.DEG2RAD;
+			targetRotationX = -90 * THREE.Math.DEG2RAD;
 
 		}
 
