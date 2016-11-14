@@ -381,10 +381,6 @@
 
 		world.step( timeStep );
 
-		// get the rotation offset values from mouse and touch input
-		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED * timeDelta;
-		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED * timeDelta;
-
 		// reset eye quaternion so we only rotate by offsets
 		eyeBody.quaternion.set( 0, 0, 0, 1 );
 
@@ -436,10 +432,14 @@
 	 * handle keyboard, mouse, touch inputs
 	 *********************************************************
 	 */
-	// handle keyboard and mouse inputs
+	// handle mouse and keyboard inputs
 	function handleInputs( timeDelta ) {
 
 		timeDelta *= 0.001;
+
+		// get the rotation offset values from mouse and touch input
+		rotX += ( targetRotationY - rotX ) * Player.ROTATE_SPEED * timeDelta;
+		rotY += ( targetRotationX - rotY ) * Player.ROTATE_SPEED * timeDelta;
 
 		// get the input velocity for translation, euler angle that describes
 		// 	the current rotation transformation and quaternion to apply the
@@ -452,16 +452,16 @@
 
 		// translate only in x,z and make sure to keep y position static
 		if ( Keyboard.keys[Key.LEFT] || Keyboard.keys[Key.A] ) {
-			inputVelocity.x += -Player.MOVE_SPEED * timeDelta;
+			inputVelocity.x += -Player.MOVE_SPEED;
 		}
 		if ( Keyboard.keys[Key.UP] || Keyboard.keys[Key.W] ) {
-			inputVelocity.z += -Player.MOVE_SPEED * timeDelta;
+			inputVelocity.z += -Player.MOVE_SPEED;
 		}
 		if ( Keyboard.keys[Key.RIGHT] || Keyboard.keys[Key.D] ) {
-			inputVelocity.x += +Player.MOVE_SPEED * timeDelta;
+			inputVelocity.x += +Player.MOVE_SPEED;
 		}
 		if ( Keyboard.keys[Key.DOWN] || Keyboard.keys[Key.S] ) {
-			inputVelocity.z += +Player.MOVE_SPEED * timeDelta;
+			inputVelocity.z += +Player.MOVE_SPEED;
 		}
 		if ( Keyboard.keys[Key.R] ) {
 			de&&bug.log( 'r pressed.' );
@@ -476,20 +476,18 @@
 			de&&bug.log( 'ctrl pressed.' );
 		}
 
-		
 		// handle isMouseRightDown input from click or tap
 		if ( isMouseRightDown ) {
 
-			inputVelocity.z += -Player.MOVE_SPEED * timeDelta;
+			inputVelocity.z += -Player.MOVE_SPEED;
 
 		}
-
 
 		// apply the euler angle quaternion to the velocity vector so we can add
 		// 	the appropriate amount for each x and z component to translate
 		inputVelocity.applyQuaternion( quat );
-		eyeBody.velocity.x += inputVelocity.x;
-		eyeBody.velocity.z += inputVelocity.z;
+		eyeBody.velocity.x += inputVelocity.x * timeDelta;
+		eyeBody.velocity.z += inputVelocity.z * timeDelta;
 
 	}
 	
