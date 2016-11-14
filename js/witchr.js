@@ -48,7 +48,6 @@
 	let mouseY = 0;
 	let mouseYOnMouseDown = 0;
 
-	let timeClick = 0;
 	let isMouseLeftDown = false;
 	let isMouseRightDown = false;
 
@@ -513,7 +512,6 @@
 
 			mouseXOnMouseDown = e.clientX - windowHalfX;
 			mouseYOnMouseDown = e.clientY - windowHalfY;
-
 			targetRotationOnMouseDownX = targetRotationX;
 			targetRotationOnMouseDownY = targetRotationY;
 
@@ -522,11 +520,10 @@
 		}
 
 		if ( e.button === Mouse.RIGHT ) {
-			isMouseRightDown = true;
-		}
 
-		// handle if mouse is clicked quickly
-		timeClick = performance.now();
+			isMouseRightDown = true;
+
+		}
 
 	}
 
@@ -543,10 +540,14 @@
 
 			// targetRotationY (rotX looking up/down) from should be max 90 deg
 			if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
+
 				targetRotationY = 90 * THREE.Math.DEG2RAD;
+
 			}
 			if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
+
 				targetRotationY = -90 * THREE.Math.DEG2RAD;
+
 			}
 
 		}
@@ -560,25 +561,25 @@
 
 	function onDocumentMouseUp( e ) {
 		
-		// do something on quick click
-		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
-		}
-
 		if ( e.button === Mouse.LEFT ) {
-			console.log( 'mouse left up' );
+
 			isMouseLeftDown = false;
+
 		}
 
 		if ( e.button === Mouse.RIGHT ) {
-			console.log( 'mouse right up' );
+
 			isMouseRightDown = false;
+
 		}
 
 		// remove MouseUp event listener only if all buttons are up
 		if ( !isMouseLeftDown && !isMouseRightDown ) {
+
 			document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
 			document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
 			document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+
 		}
 		
 	}
@@ -586,23 +587,25 @@
 
 	function onDocumentMouseOut( e ) {
 		
-		// do something on quick click
-		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
-		}
-
 		if ( e.button === Mouse.LEFT ) {
+
 			isMouseLeftDown = false;
+
 		}
 
 		if ( e.button === Mouse.RIGHT ) {
+
 			isMouseRightDown = false;	
+
 		}
 
 		// remove MouseUp event listener only if all buttons are up
 		if ( !isMouseLeftDown && !isMouseRightDown ) {
+
 			document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
 			document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
 			document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
+
 		}
 		
 	}
@@ -610,20 +613,19 @@
 
 	function onDocumentTouchStart( e ) {
 
+		e.preventDefault();
+		e.stopPropagation();
+
+		mouseXOnMouseDown = e.touches[ 0 ].pageX - windowHalfX;
+		mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
+		targetRotationOnMouseDownX = targetRotationX;
+		targetRotationOnMouseDownY = targetRotationY;
+
+		// all touches can rotate screen but only 2 fingers moves player forward
 		if ( e.touches.length === 2 ) {
 
-			e.preventDefault();
-
-			mouseXOnMouseDown = e.touches[ 0 ].pageX - windowHalfX;
-			targetRotationOnMouseDownX = targetRotationX;
-
-			mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
-			targetRotationOnMouseDownY = targetRotationY;
-
-			timeClick = ( performance.now() );
-			
 			isMouseRightDown = true;
-
+			
 		}
 
 		
@@ -632,22 +634,21 @@
 
 	function onDocumentTouchMove( e ) {
 
-		if ( e.touches.length === 1 ) {
+		mouseX = e.touches[ 0 ].pageX - windowHalfX;
+		targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
-			e.preventDefault();
+		mouseY = e.touches[ 0 ].pageY - windowHalfY;
+		targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 
-			mouseX = e.touches[ 0 ].pageX - windowHalfX;
-			targetRotationX = targetRotationOnMouseDownX + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
+		// targetRotationY (rotX looking up/down) from should be max 90 deg
+		if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
 
-			mouseY = e.touches[ 0 ].pageY - windowHalfY;
-			targetRotationY = targetRotationOnMouseDownY + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-			// targetRotationY (rotX looking up/down) from should be max 90 deg
-			if ( targetRotationY * THREE.Math.RAD2DEG > 90 ) {
-				targetRotationY = 90 * THREE.Math.DEG2RAD;
-			}
-			if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
-				targetRotationY = -90 * THREE.Math.DEG2RAD;
-			}
+			targetRotationY = 90 * THREE.Math.DEG2RAD;
+
+		}
+		if ( targetRotationY * THREE.Math.RAD2DEG < -90 ) {
+
+			targetRotationY = -90 * THREE.Math.DEG2RAD;
 
 		}
 
@@ -656,11 +657,18 @@
 
 	function onDocumentTouchEnd( e ) {
 
-		if ( ( performance.now() ) - timeClick < Player.QUICK_CLICK ) {
-			// do something on quick click
+		// reset 1-finger touch position if touchend called on 2-fingers
+		if ( e.touches.length === 1 ) {
+
+			mouseXOnMouseDown = e.touches[ 0 ].pageX - windowHalfX;
+			mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
+			targetRotationOnMouseDownX = targetRotationX;
+			targetRotationOnMouseDownY = targetRotationY;
+
+			isMouseRightDown = false;
+
 		}
 
-		isMouseRightDown = false;
 
 	}
 
@@ -684,7 +692,6 @@
 		// init player properties
 		Player = {
 			MOVE_SPEED: 30,
-			QUICK_CLICK: 300,
 			ROTATE_SPEED: 2,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
 		};
