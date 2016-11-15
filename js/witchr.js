@@ -16,25 +16,24 @@
 
 	
 	// enums
-	let Canvas, Game, Player, Keyboard, Key, Mouse;
+	let Canvas, Game, Player, Keyboard, Key, Mouse, Wall;
 
 	// fps stats
 	let stats;
 
 	// cannon.js
 	let world;
-	let t = 0, dt = 1/120, newTime, frameTime, currTime = performance.now(), accumulator = 0;
+	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 1; // er (eye radius), em (eye mass)
 	let doorBody, dw = 10, dh = 10, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
-	let Wall = { BACK: 0, LEFT: 1, RIGHT: 2 };
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
 	// three.js
-	let camera, scene, renderer;
-	let floor, eye, door, box, wallDoor, walls, paper, paper2;
+	let camera, scene, renderer, raycaster, mouse;
+	let floor, eye, door, box, wallDoor, walls, objects;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -123,7 +122,7 @@
 		world.addContactMaterial( physicsContactMaterial );
 
 		// floor plane body which acts as room floor
-		// floor will be on y=0 and all objects will be init with that in mind
+		// floor will be on y=0 and all bodies will be init with that in mind
 		shape = new CANNON.Plane();
 		floorBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
 		floorBody.addShape( shape );
@@ -255,6 +254,9 @@
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
+		raycaster = new THREE.Raycaster();
+		mouse = new THREE.Vector2();
+
 		// floor mesh acts as the room floor
 		floorGeometry = new THREE.PlaneGeometry( fw, fd, 1, 1 );
 		floorTexture = new THREE.TextureLoader().load( 'img/old_wood.jpg' );
@@ -350,19 +352,28 @@
 
 
 		// test clicking on paper on floor 
+		objects = [];
 		geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		material = new THREE.MeshBasicMaterial( { color: 0xffffff,
-												  wireframe: true
-											  } );
-		paper = new THREE.Mesh( geometry, material );
+		let paper = new THREE.Mesh( geometry,
+									new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
+								  );
 		paper.position.set( 1, 1/2, 1 );
 		scene.add( paper );
+		objects.push( paper );
 
-		paper2 = new THREE.Mesh( geometry, material );
+		let paper2 = new THREE.Mesh( geometry,
+									new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
+								  );
 		paper2.position.set( 10, 1/2, 10 );
 		scene.add( paper2 );
+		objects.push( paper2 );
 
-
+		let paper3 = new THREE.Mesh( geometry,
+									new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
+								  );
+		paper3.position.set( 11, 1/2, 8 );
+		scene.add( paper3 );
+		objects.push( paper3 );
 
 		
 
@@ -531,10 +542,23 @@
 
 		if ( e.button === Mouse.LEFT ) {
 
+			// camera rotation on mouse swipes
 			mouseXOnMouseDown = e.clientX - windowHalfX;
 			mouseYOnMouseDown = e.clientY - windowHalfY;
 			targetRotationOnMouseDownX = targetRotationX;
 			targetRotationOnMouseDownY = targetRotationY;
+
+			// mouse x,y tracking for raytracer object intersection
+			mouse.x = ( event.clientX / renderer.domElement.clientWidth )  * 2 - 1;
+			mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+			raycaster.setFromCamera( mouse, camera );
+
+			// grab the first object we intersect if any
+			let intersects = raycaster.intersectObjects( objects );
+			if ( intersects.length ) {
+				intersects[0].object.material.color.setHex( Math.random() * 0xffffff );
+			}
+			
 
 			isMouseLeftDown = true;
 
@@ -753,6 +777,11 @@
 			LEFT: 0,
 			MIDDLE: 1,
 			RIGHT: 2
+		};
+		
+		// non-door containing walls
+		Wall = {
+			BACK: 0, LEFT: 1, RIGHT: 2
 		};
 
 	}
