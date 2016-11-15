@@ -23,7 +23,7 @@
 
 	// cannon.js
 	let world;
-	let t = 0, dt = 1/120, newTime, frameTime, deltaTime, currTime = performance.now();
+	let t = 0, dt = 1/120, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 1; // er (eye radius), em (eye mass)
 	let doorBody, dw = 10, dh = 10, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
@@ -383,14 +383,15 @@
 		frameTime *= 0.001; // need frame time in seconds 
 		currTime = newTime;
 
-		while ( frameTime > 0 ) {
+		accumulator += frameTime;
 
-			deltaTime = ( frameTime < dt )? frameTime : dt;
-			handleInputs( deltaTime );
+		while ( accumulator >= dt ) {
+
+			handleInputs( dt );
 			updatePhysics();
 
-			frameTime -= deltaTime;
-			t += deltaTime;
+			accumulator -= dt;
+			t += dt;
 
 		}
 
@@ -457,11 +458,11 @@
 	 *********************************************************
 	 */
 	// handle mouse and keyboard inputs
-	function handleInputs( timeDelta ) {
+	function handleInputs( deltaTime ) {
 
 		// get the rotation offset values from mouse and touch input
-		rotX += ( targetRotationX - rotX ) * Player.ROTATE_SPEED * timeDelta;
-		rotY += ( targetRotationY - rotY ) * Player.ROTATE_SPEED * timeDelta;
+		rotX += ( targetRotationX - rotX ) * Player.ROTATE_SPEED * deltaTime;
+		rotY += ( targetRotationY - rotY ) * Player.ROTATE_SPEED * deltaTime;
 
 		// get the input velocity for translation, euler angle that describes
 		// 	the current rotation transformation and quaternion to apply the
@@ -508,8 +509,8 @@
 		// apply the euler angle quaternion to the velocity vector so we can add
 		// 	the appropriate amount for each x and z component to translate
 		inputVelocity.applyQuaternion( quat );
-		eyeBody.velocity.x += inputVelocity.x * timeDelta;
-		eyeBody.velocity.z += inputVelocity.z * timeDelta;
+		eyeBody.velocity.x += inputVelocity.x * deltaTime;
+		eyeBody.velocity.z += inputVelocity.z * deltaTime;
 
 	}
 	
