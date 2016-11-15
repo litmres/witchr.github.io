@@ -23,7 +23,7 @@
 
 	// cannon.js
 	let world;
-	let timeStep = 1/30, time = performance.now();
+	let t = 0, dt = 1/120, newTime, frameTime, deltaTime, currTime = performance.now();
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 1; // er (eye radius), em (eye mass)
 	let doorBody, dw = 10, dh = 10, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
@@ -34,7 +34,7 @@
 	
 	// three.js
 	let camera, scene, renderer;
-	let floor, eye, door, box, wallDoor, walls;
+	let floor, eye, door, box, wallDoor, walls, paper, paper2;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -349,6 +349,20 @@
 
 
 
+		// test clicking on paper on floor 
+		geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		material = new THREE.MeshBasicMaterial( { color: 0xffffff,
+												  wireframe: true
+											  } );
+		paper = new THREE.Mesh( geometry, material );
+		paper.position.set( 1, 1/2, 1 );
+		scene.add( paper );
+
+		paper2 = new THREE.Mesh( geometry, material );
+		paper2.position.set( 10, 1/2, 10 );
+		scene.add( paper2 );
+
+
 
 		
 
@@ -364,22 +378,32 @@
 
 		Game.stopGameLoop = requestAnimationFrame( gameloop );
 
-		handleInputs( performance.now() - time );
+		newTime = performance.now();
+		frameTime = newTime - currTime;
+		frameTime *= 0.001; // need frame time in seconds 
+		currTime = newTime;
 
-		updatePhysics();
+		while ( frameTime > 0 ) {
+
+			deltaTime = ( frameTime < dt )? frameTime : dt;
+			handleInputs( deltaTime );
+			updatePhysics();
+
+			frameTime -= deltaTime;
+			t += deltaTime;
+
+		}
+
 
 		renderer.render( scene, camera ); // render the scene
-
 		stats.update();
-
-		time = performance.now();
 
 	}
 
 
 	function updatePhysics() {
 
-		world.step( timeStep );
+		world.step( dt );
 
 		// reset eye quaternion so we only rotate by offsets
 		eyeBody.quaternion.set( 0, 0, 0, 1 );
@@ -434,8 +458,6 @@
 	 */
 	// handle mouse and keyboard inputs
 	function handleInputs( timeDelta ) {
-
-		timeDelta *= 0.001 * timeStep;
 
 		// get the rotation offset values from mouse and touch input
 		rotX += ( targetRotationX - rotX ) * Player.ROTATE_SPEED * timeDelta;
@@ -688,9 +710,9 @@
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 1333,
-			ROTATE_SPEED: 200,		// speed to reach desired rotation
-			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
+			MOVE_SPEED: 66,
+			ROTATE_SPEED: 10,		// speed to reach desired rotation
+			ROTATE_OFFSET_DAMP: 0.002	// offset sensitivity
 		};
 
 		// init keyboard input keycodes
