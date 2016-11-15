@@ -10,9 +10,12 @@
 
 (function( witchr, undefined ) {
 
+	// debugging toggle
 	let de = true;
 	let bug = console;
+	let p;
 
+	
 	// enums
 	let Canvas, Game, Player, Keyboard, Key, Mouse;
 
@@ -21,11 +24,11 @@
 
 	// cannon.js
 	let world;
-	let timeStep = 1/60, time = performance.now();
+	let timeStep = 1/30, time = performance.now();
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 1; // er (eye radius), em (eye mass)
 	let doorBody, dw = 10, dh = 10, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
-	let wallsBody, ww = 50, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
+	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let Wall = { BACK: 0, LEFT: 1, RIGHT: 2 };
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
@@ -67,6 +70,10 @@
 	 */
 	function init() {
 
+		if ( de ) {
+			initDebug();
+		}
+
 		initEnums();
 
 		initCannon();
@@ -74,7 +81,7 @@
 		initThree();
 
 		// init stats
-		stats = new Stats();
+		stats = witchr.Stats();
 		document.body.appendChild( stats.dom );
 
 		// add handlers for io events
@@ -364,7 +371,7 @@
 
 		handleInputs( performance.now() - time );
 
-		updatePhysics( performance.now() - time );
+		updatePhysics();
 
 		renderer.render( scene, camera ); // render the scene
 
@@ -375,9 +382,7 @@
 	}
 
 
-	function updatePhysics( timeDelta ) {
-
-		timeDelta *= 0.001;
+	function updatePhysics() {
 
 		world.step( timeStep );
 
@@ -435,7 +440,7 @@
 	// handle mouse and keyboard inputs
 	function handleInputs( timeDelta ) {
 
-		timeDelta *= 0.001;
+		timeDelta *= 0.001 * timeStep;
 
 		// get the rotation offset values from mouse and touch input
 		rotX += ( targetRotationX - rotX ) * Player.ROTATE_SPEED * timeDelta;
@@ -488,6 +493,11 @@
 		inputVelocity.applyQuaternion( quat );
 		eyeBody.velocity.x += inputVelocity.x * timeDelta;
 		eyeBody.velocity.z += inputVelocity.z * timeDelta;
+
+		// debugging movespeed on various devices
+		if ( de ) {
+			p.innerHTML = ( Math.abs(eyeBody.velocity.x) + Math.abs(eyeBody.velocity.z) ) * 1000 >> 0;
+		}
 
 	}
 	
@@ -688,8 +698,8 @@
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 30,
-			ROTATE_SPEED: 2,		// speed to reach desired rotation
+			MOVE_SPEED: 1333,
+			ROTATE_SPEED: 200,		// speed to reach desired rotation
 			ROTATE_OFFSET_DAMP: 0.002	// x offset sensitivity
 		};
 
@@ -772,6 +782,19 @@
 		}
 		xhr.open( 'GET', file, true );
 		xhr.send();
+
+	}
+
+
+	function initDebug() {
+
+		// debugging output div for testing x,z movespeed on actual devices
+		p = document.createElement( 'p' );
+		p.appendChild( document.createTextNode( 'test' ) );
+		let div = document.createElement( 'div' );
+		div.appendChild( p );
+		div.style.cssText = 'background: #ffffff; position: fixed; left: 0px; top: 50px; padding: 0 5px; margin: 0; opacity: 0.6;';
+		document.body.appendChild( div );
 
 	}
 
