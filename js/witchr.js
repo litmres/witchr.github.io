@@ -85,6 +85,9 @@
 		window.addEventListener( 'keyup', Keyboard.keyRelease.bind(Keyboard), false );
 
 		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		document.addEventListener( 'mouseup', onDocumentMouseUp, false);
+		document.addEventListener( 'mouseout', onDocumentMouseOut, false);
 		// disable contextmenu on right clicks (will be used to move)
 		window.oncontextmenu = function() { return false; };
 
@@ -532,14 +535,6 @@
 		e.preventDefault();
 		e.stopPropagation();
 
-		if ( !isMouseLeftDown && !isMouseRightDown ) {
-			
-			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-			document.addEventListener( 'mouseup', onDocumentMouseUp, false);
-			document.addEventListener( 'mouseout', onDocumentMouseOut, false);
-			
-		}
-
 		if ( e.button === Mouse.LEFT ) {
 
 			// camera rotation on mouse swipes
@@ -617,15 +612,6 @@
 			isMouseRightDown = false;
 
 		}
-
-		// remove MouseUp event listener only if all buttons are up
-		if ( !isMouseLeftDown && !isMouseRightDown ) {
-
-			document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
-			document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
-			document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
-
-		}
 		
 	}
 
@@ -641,15 +627,6 @@
 		if ( e.button === Mouse.RIGHT ) {
 
 			isMouseRightDown = false;	
-
-		}
-
-		// remove MouseUp event listener only if all buttons are up
-		if ( !isMouseLeftDown && !isMouseRightDown ) {
-
-			document.removeEventListener( 'mousemove', onDocumentMouseMove, false );
-			document.removeEventListener( 'mouseup', onDocumentMouseUp, false );
-			document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 
 		}
 		
