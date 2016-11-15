@@ -13,7 +13,6 @@
 	// debugging toggle
 	let de = true;
 	let bug = console;
-	let p;
 
 	
 	// enums
@@ -69,10 +68,6 @@
 	 *********************************************************
 	 */
 	function init() {
-
-		if ( de ) {
-			initDebug();
-		}
 
 		initEnums();
 
@@ -494,11 +489,6 @@
 		eyeBody.velocity.x += inputVelocity.x * timeDelta;
 		eyeBody.velocity.z += inputVelocity.z * timeDelta;
 
-		// debugging movespeed on various devices
-		if ( de ) {
-			p.innerHTML = ( Math.abs(eyeBody.velocity.x) + Math.abs(eyeBody.velocity.z) ) * 1000 >> 0;
-		}
-
 	}
 	
 	
@@ -782,19 +772,6 @@
 		}
 		xhr.open( 'GET', file, true );
 		xhr.send();
-
-	}
-
-
-	function initDebug() {
-
-		// debugging output div for testing x,z movespeed on actual devices
-		p = document.createElement( 'p' );
-		p.appendChild( document.createTextNode( 'test' ) );
-		let div = document.createElement( 'div' );
-		div.appendChild( p );
-		div.style.cssText = 'background: #ffffff; position: fixed; left: 0px; top: 50px; padding: 0 5px; margin: 0; opacity: 0.6;';
-		document.body.appendChild( div );
 
 	}
 
