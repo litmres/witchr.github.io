@@ -87,7 +87,7 @@
 		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 		document.addEventListener( 'mouseup', onDocumentMouseUp, false);
-		document.addEventListener( 'mouseout', onDocumentMouseOut, false);
+		document.addEventListener( 'mouseout', onDocumentMouseUp, false);
 		// disable contextmenu on right clicks (will be used to move)
 		window.oncontextmenu = function() { return false; };
 
@@ -471,7 +471,6 @@
 	 * handle keyboard, mouse, touch inputs
 	 *********************************************************
 	 */
-	// handle mouse and keyboard inputs
 	function handleInputs( deltaTime ) {
 
 		// get the rotation offset values from mouse and touch input
@@ -529,31 +528,32 @@
 	}
 	
 	
-	// handle mouse input
+	// handle mouse button and movement input
 	function onDocumentMouseDown( e ) {
 
 		e.preventDefault();
 		e.stopPropagation();
 
+		// capture mouse movement on all mouse button downs except...
+		// 	only raycast objects & rotate camera on mouse left button and
+		// 	only move player in z on mouse right button 
+		// track camera rotation on mouse swipes
+		mouseXOnMouseDown = e.clientX - windowHalfX;
+		mouseYOnMouseDown = e.clientY - windowHalfY;
+		targetRotationOnMouseDownX = targetRotationX;
+		targetRotationOnMouseDownY = targetRotationY;
+
 		if ( e.button === Mouse.LEFT ) {
 
-			// camera rotation on mouse swipes
-			mouseXOnMouseDown = e.clientX - windowHalfX;
-			mouseYOnMouseDown = e.clientY - windowHalfY;
-			targetRotationOnMouseDownX = targetRotationX;
-			targetRotationOnMouseDownY = targetRotationY;
-
 			// mouse x,y tracking for raytracer object intersection
-			mouse.x = ( event.clientX / renderer.domElement.clientWidth )  * 2 - 1;
-			mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+			mouse.x = ( e.clientX / renderer.domElement.clientWidth )  * 2 - 1;
+			mouse.y = -( e.clientY / renderer.domElement.clientHeight ) * 2 + 1;
 			raycaster.setFromCamera( mouse, camera );
-
 			// grab the first object we intersect if any
 			let intersects = raycaster.intersectObjects( objects );
 			if ( intersects.length ) {
 				intersects[0].object.material.color.setHex( Math.random() * 0xffffff );
 			}
-			
 
 			isMouseLeftDown = true;
 
@@ -573,21 +573,17 @@
 		mouseX = e.clientX - windowHalfX;
 		mouseY = e.clientY - windowHalfY;
 
+		// only rotate camera on mouse left button hold
 		if ( isMouseLeftDown ) {
 
 			targetRotationX = targetRotationOnMouseDownX + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
 			targetRotationY = targetRotationOnMouseDownY + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-
 			// rotation about x-axis should be max 90 deg
 			if ( targetRotationX * THREE.Math.RAD2DEG > 90 ) {
-
 				targetRotationX = 90 * THREE.Math.DEG2RAD;
-
 			}
 			if ( targetRotationX * THREE.Math.RAD2DEG < -90 ) {
-
 				targetRotationX = -90 * THREE.Math.DEG2RAD;
-
 			}
 
 		}
@@ -601,95 +597,52 @@
 
 	function onDocumentMouseUp( e ) {
 		
-		if ( e.button === Mouse.LEFT ) {
-
-			isMouseLeftDown = false;
-
-		}
-
-		if ( e.button === Mouse.RIGHT ) {
-
-			isMouseRightDown = false;
-
-		}
-		
-	}
-
-
-	function onDocumentMouseOut( e ) {
-		
-		if ( e.button === Mouse.LEFT ) {
-
-			isMouseLeftDown = false;
-
-		}
-
-		if ( e.button === Mouse.RIGHT ) {
-
-			isMouseRightDown = false;	
-
-		}
+		if ( e.button === Mouse.LEFT ) { isMouseLeftDown = false; }
+		if ( e.button === Mouse.RIGHT ) { isMouseRightDown = false; }
 		
 	}
 
 
 	function onDocumentTouchStart( e ) {
+		
+		// don't handle 3+ touches
+		if ( e.touches.length > 2 ) { e.preventDefault(); e.stopPropagation(); return; }
 
-		e.preventDefault();
-		e.stopPropagation();
-
-		mouseXOnMouseDown = e.touches[ 0 ].pageX - windowHalfX;
-		mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
-		targetRotationOnMouseDownX = targetRotationX;
-		targetRotationOnMouseDownY = targetRotationY;
-
-		// all touches can rotate screen but only 2 fingers moves player forward
-		if ( e.touches.length === 2 ) {
-
-			isMouseRightDown = true;
-			
-		}
-
+		// simulate mousedown event for easier handling 
+		e.clientX = e.touches[0].clientX;
+		e.clientY = e.touches[0].clientY;
+		if ( e.touches.length === 1 ) { e.button = Mouse.LEFT; }
+		if ( e.touches.length === 2 ) { e.button = Mouse.RIGHT; }
+		onDocumentMouseDown( e );
 		
 	}
 
 
 	function onDocumentTouchMove( e ) {
 
-		mouseX = e.touches[ 0 ].pageX - windowHalfX;
-		mouseY = e.touches[ 0 ].pageY - windowHalfY;
-		targetRotationX = targetRotationOnMouseDownX + ( mouseY - mouseYOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-		targetRotationY = targetRotationOnMouseDownY + ( mouseX - mouseXOnMouseDown ) * Player.ROTATE_OFFSET_DAMP;
-
-		// rotation about x-axis should be max 90 deg
-		if ( targetRotationX * THREE.Math.RAD2DEG > 90 ) {
-
-			targetRotationX = 90 * THREE.Math.DEG2RAD;
-
-		}
-		if ( targetRotationX * THREE.Math.RAD2DEG < -90 ) {
-
-			targetRotationX = -90 * THREE.Math.DEG2RAD;
-
-		}
+		// simulate mousemove event for easier handling
+		e.clientX = e.touches[0].clientX;
+		e.clientY = e.touches[0].clientY;
+		if ( e.touches.length === 1 ) { e.button = Mouse.LEFT; }
+		if ( e.touches.length === 2 ) { e.button = Mouse.RIGHT; }
+		onDocumentMouseMove( e );
 
 	}
 
 
 	function onDocumentTouchEnd( e ) {
 
-		// reset 1-finger touch position if touchend called on 2-fingers
-		if ( e.touches.length === 1 ) {
+		// don't handle 3+ touches
+		if ( e.touches.length > 1 ) { e.preventDefault(); e.stopPropagation(); return; }
 
-			mouseXOnMouseDown = e.touches[ 0 ].pageX - windowHalfX;
-			mouseYOnMouseDown = e.touches[ 0 ].pageY - windowHalfY;
-			targetRotationOnMouseDownX = targetRotationX;
-			targetRotationOnMouseDownY = targetRotationY;
+		// reset rotation tracking to position of last touch on screen
+		mouseXOnMouseDown = e.touches[0].clientX - windowHalfX;
+		mouseYOnMouseDown = e.touches[0].clientY - windowHalfY;
+		targetRotationOnMouseDownX = targetRotationX;
+		targetRotationOnMouseDownY = targetRotationY;
 
-			isMouseRightDown = false;
-
-		}
-
+		if ( e.touches.length === 0 ) { isMouseLeftDown = false; }
+		if ( e.touches.length === 1 ) { isMouseRightDown = false; }
 
 	}
 
