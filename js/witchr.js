@@ -241,7 +241,7 @@
 		camera = new THREE.PerspectiveCamera( 75, 
 											  window.innerWidth / window.innerHeight, 
 											  0.1, 
-											  110 
+											  220 
 											);
 		camera.lookAt( 0, 0, 0 );
 
@@ -377,6 +377,32 @@
 		paper3.position.set( 11, 1/2, 8 );
 		scene.add( paper3 );
 		objects.push( paper3 );
+
+
+
+
+
+		// test crazy vertex geometry from threejs webgl_points_sprites example
+		// Base class for geometries.
+		// A geometry holds all data necessary to describe a 3D model.
+		geometry = new THREE.Geometry(); // basic geometry is a square
+		for ( let i = 0; i < 100000; ++i ) {
+			let vertex = new THREE.Vector3();
+			vertex.x = Math.random() * 2000 - 1000;
+			vertex.y = Math.random() * 2000 - 1000;
+			vertex.z = Math.random() * 2000 - 1000;
+			// push the vertices of geometry x,y,z location
+			geometry.vertices.push( vertex );
+		}
+		// size of each point (square) and special blending effects
+		material = new THREE.PointsMaterial( { size: 10, blending: THREE.AdditiveBlending, depthTest: false, transparent: true } );
+		material.color.setHSL( 0.1, 0.9, 0.5 ); // h, s, l values between 0.0 and 1.0 
+		// add all vertex points to THREE.Points class (like THREE.Mesh)
+		let particle = new THREE.Points( geometry, material );
+		scene.add( particle );
+
+
+
 
 		
 
@@ -553,6 +579,8 @@
 			let intersects = raycaster.intersectObjects( objects );
 			if ( intersects.length ) {
 				intersects[0].object.material.color.setHex( Math.random() * 0xffffff );
+
+				
 			}
 
 			isMouseLeftDown = true;
