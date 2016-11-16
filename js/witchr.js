@@ -395,8 +395,8 @@
 			geometry.vertices.push( vertex );
 		}
 		// size of each point (square) and special blending effects
-		material = new THREE.PointsMaterial( { size: 10, blending: THREE.AdditiveBlending, depthTest: false, transparent: true } );
-		material.color.setHSL( 0.1, 0.9, 0.5 ); // h, s, l values between 0.0 and 1.0 
+		material = new THREE.PointsMaterial( { size: 100, blending: THREE.AdditiveBlending, depthTest: false, transparent: true } );
+		material.color.setHSL( 0, 0.9, 0.5 ); // h, s, l values between 0.0 and 1.0 
 		// add all vertex points to THREE.Points class (like THREE.Mesh)
 		let particle = new THREE.Points( geometry, material );
 		scene.add( particle );
