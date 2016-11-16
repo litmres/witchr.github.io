@@ -387,9 +387,8 @@
 		// A geometry holds all data necessary to describe a 3D model.
 		geometry = new THREE.Geometry(); // basic geometry is a square
 		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		// size of each point (square) and special blending effects
-		material = new THREE.PointsMaterial( { size: 10, blending: THREE.AdditiveBlending, depthTest: false, transparent: true } );
-		material.color.setHSL( 0, 0.9, 0.5 ); // h, s, l values between 0.0 and 1.0 
+		material = new THREE.PointsMaterial( { color: new THREE.Color( 'hsl( 0, 90%, 50%)' ), size: 10, blending: THREE.AdditiveBlending, depthTest: false, transparent: true } ); // size of each point (square) and special blending effects
+		// material.color.setHSL( 0, 0.9, 0.5 ); // h, s, l values between 0.0 and 1.0 
 		// add all vertex points to THREE.Points class (like THREE.Mesh)
 		let particle = new THREE.Points( geometry, material );
 		scene.add( particle );
