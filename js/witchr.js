@@ -383,7 +383,7 @@
 
 
 		// test crazy vertex geometry from threejs webgl_points_sprites example
-		let spriteTexture = new THREE.TextureLoader().load( './img/news.jpg' );
+		let spriteTexture = new THREE.TextureLoader().load( './img/note1.png' );
 		// Base class for geometries.
 		// A geometry holds all data necessary to describe a 3D model.
 		geometry = new THREE.Geometry(); // basic geometry is a square
@@ -393,6 +393,7 @@
 		// add all vertex points to THREE.Points class (like THREE.Mesh)
 		let particle = new THREE.Points( geometry, material );
 		scene.add( particle );
+		console.log( particle );
 
 
 
