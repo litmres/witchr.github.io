@@ -394,7 +394,7 @@
 		let particle = new THREE.Points( geometry, material );
 		scene.add( particle );
 
-		// add the sprite to the camera hud (always visible -10z) and rendered
+		// add the sprite to the camera hud (always visible -z) and rendered
 		// 	last so as to always be visible (vs. other objects in scene)
 		camera.add( particle );
 		particle.position.z += -6;
