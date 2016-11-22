@@ -400,6 +400,55 @@
 
 
 
+		// create a 2d canvas and print the text procedurally!! use a note png
+		// 	as the background of the text...
+		// let canvas = document.createElement( 'canvas' );
+		// canvas.style.cssText = 'position: fixed; top: 0; left: 0;';
+		// document.body.appendChild( canvas );
+		// let ctx = canvas.getContext('2d');
+		// ctx.font = "12px serif";
+		// ctx.fillStyle = 'orange';
+		// ctx.fillText( "Hello world", 0, 100 );
+
+
+		var PIXEL_RATIO = (function () {
+			var ctx = document.createElement("canvas").getContext("2d"),
+				dpr = window.devicePixelRatio || 1,
+				bsr = ctx.webkitBackingStorePixelRatio ||
+					ctx.mozBackingStorePixelRatio ||
+					ctx.msBackingStorePixelRatio ||
+					ctx.oBackingStorePixelRatio ||
+					ctx.backingStorePixelRatio || 1;
+
+			return dpr / bsr;
+		})();
+
+
+		let createHiDPICanvas = function(w, h, ratio) {
+			if (!ratio) { ratio = PIXEL_RATIO; }
+			var can = document.createElement("canvas");
+			can.width = w * ratio;
+			can.height = h * ratio;
+			can.style.width = w + "px";
+			can.style.height = h + "px";
+			can.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+			return can;
+		}
+
+		//Create canvas with the device resolution.
+		var myCanvas = createHiDPICanvas(500, 250);
+		document.body.appendChild( myCanvas );
+		myCanvas.style.position = 'fixed';
+		myCanvas.style.top = '0';
+		myCanvas.style.left = '0';
+		let ctx = myCanvas.getContext('2d');
+		ctx.font = "48px serif";
+		ctx.fillStyle = 'orange';
+		ctx.fillText( "Hello world", 100, 100 );
+
+		//Create canvas with a custom resolution.
+		// var myCustomCanvas = createHiDPICanvas(500, 200, 4);
+
 
 		
 
