@@ -382,69 +382,69 @@
 
 
 
-		// test crazy vertex geometry from threejs webgl_points_sprites example
-		let spriteTexture = new THREE.TextureLoader().load( './img/note1.png' );
-		// Base class for geometries.
-		// A geometry holds all data necessary to describe a 3D model.
-		geometry = new THREE.Geometry(); // basic geometry is a square
-		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-		material = new THREE.PointsMaterial( { size: 10, map: spriteTexture, blending: THREE.AdditiveBlending, depthTest: false, transparent: false, alphaTest: 0.5 } ); // size of each point (square) and special blending effects
-		let particle = new THREE.Points( geometry, material );
-		scene.add( particle );
+		// // test crazy vertex geometry from threejs webgl_points_sprites example
+		// let spriteTexture = new THREE.TextureLoader().load( './img/note1.png' );
+		// // Base class for geometries.
+		// // A geometry holds all data necessary to describe a 3D model.
+		// geometry = new THREE.Geometry(); // basic geometry is a square
+		// geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		// material = new THREE.PointsMaterial( { size: 10, map: spriteTexture, blending: THREE.AdditiveBlending, depthTest: false, transparent: false, alphaTest: 0.5 } ); // size of each point (square) and special blending effects
+		// let particle = new THREE.Points( geometry, material );
+		// scene.add( particle );
 
-		// add the sprite to the camera hud (always visible -z) and rendered
-		// 	last so as to always be visible (vs. other objects in scene)
-		camera.add( particle );
-		particle.position.z += -6;
-		particle.renderOrder = 10;
+		// // add the sprite to the camera hud (always visible -z) and rendered
+		// // 	last so as to always be visible (vs. other objects in scene)
+		// camera.add( particle );
+		// particle.position.z += -6;
+		// particle.renderOrder = 10;
 
 
 
-		// create a 2d canvas and print the text procedurally!! use a note png
-		// 	as the background of the text...
-		// let canvas = document.createElement( 'canvas' );
-		// canvas.style.cssText = 'position: fixed; top: 0; left: 0;';
-		// document.body.appendChild( canvas );
-		// let ctx = canvas.getContext('2d');
-		// ctx.font = "12px serif";
+		// // create a 2d canvas and print the text procedurally!! use a note png
+		// // 	as the background of the text...
+		// // let canvas = document.createElement( 'canvas' );
+		// // canvas.style.cssText = 'position: fixed; top: 0; left: 0;';
+		// // document.body.appendChild( canvas );
+		// // let ctx = canvas.getContext('2d');
+		// // ctx.font = "12px serif";
+		// // ctx.fillStyle = 'orange';
+		// // ctx.fillText( "Hello world", 0, 100 );
+
+
+		// var PIXEL_RATIO = (function () {
+		// 	var ctx = document.createElement("canvas").getContext("2d"),
+		// 		dpr = window.devicePixelRatio || 1,
+		// 		bsr = ctx.webkitBackingStorePixelRatio ||
+		// 			ctx.mozBackingStorePixelRatio ||
+		// 			ctx.msBackingStorePixelRatio ||
+		// 			ctx.oBackingStorePixelRatio ||
+		// 			ctx.backingStorePixelRatio || 1;
+
+		// 	return dpr / bsr;
+		// })();
+
+
+		// let createHiDPICanvas = function(w, h, ratio) {
+		// 	if (!ratio) { ratio = PIXEL_RATIO; }
+		// 	var can = document.createElement("canvas");
+		// 	can.width = w * ratio;
+		// 	can.height = h * ratio;
+		// 	can.style.width = w + "px";
+		// 	can.style.height = h + "px";
+		// 	can.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+		// 	return can;
+		// }
+
+		// //Create canvas with the device resolution.
+		// var myCanvas = createHiDPICanvas(500, 250);
+		// document.body.appendChild( myCanvas );
+		// myCanvas.style.position = 'fixed';
+		// myCanvas.style.top = '0';
+		// myCanvas.style.left = '0';
+		// let ctx = myCanvas.getContext('2d');
+		// ctx.font = "48px serif";
 		// ctx.fillStyle = 'orange';
-		// ctx.fillText( "Hello world", 0, 100 );
-
-
-		var PIXEL_RATIO = (function () {
-			var ctx = document.createElement("canvas").getContext("2d"),
-				dpr = window.devicePixelRatio || 1,
-				bsr = ctx.webkitBackingStorePixelRatio ||
-					ctx.mozBackingStorePixelRatio ||
-					ctx.msBackingStorePixelRatio ||
-					ctx.oBackingStorePixelRatio ||
-					ctx.backingStorePixelRatio || 1;
-
-			return dpr / bsr;
-		})();
-
-
-		let createHiDPICanvas = function(w, h, ratio) {
-			if (!ratio) { ratio = PIXEL_RATIO; }
-			var can = document.createElement("canvas");
-			can.width = w * ratio;
-			can.height = h * ratio;
-			can.style.width = w + "px";
-			can.style.height = h + "px";
-			can.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
-			return can;
-		}
-
-		//Create canvas with the device resolution.
-		var myCanvas = createHiDPICanvas(500, 250);
-		document.body.appendChild( myCanvas );
-		myCanvas.style.position = 'fixed';
-		myCanvas.style.top = '0';
-		myCanvas.style.left = '0';
-		let ctx = myCanvas.getContext('2d');
-		ctx.font = "48px serif";
-		ctx.fillStyle = 'orange';
-		ctx.fillText( "Hello world", 100, 100 );
+		// ctx.fillText( "Hello world", 100, 100 );
 
 		//Create canvas with a custom resolution.
 		// var myCustomCanvas = createHiDPICanvas(500, 200, 4);
