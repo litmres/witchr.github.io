@@ -16,7 +16,7 @@
 
 	
 	// enums
-	let Canvas, Game, Player, Keyboard, Key, Mouse, Wall;
+	let Canvas, Game, Player, Keyboard, Key, Mouse, Wall, Door;
 
 	// fps stats
 	let stats;
@@ -26,7 +26,7 @@
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 1; // er (eye radius), em (eye mass)
-	let doorBody, dw = 8, dh = 10, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
+	let doorBody, dw = 7, dh = 11, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
@@ -307,12 +307,9 @@
 			door = JSON.parse( data );
 			door = loader.parse( door );
 			// add materials to each of the door's meshes [frame, door, handle]
-			door.children[0].material = new THREE.MeshBasicMaterial( { color: 0xff0000 } )
-			door.children[1].material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } )
-			door.children[2].material = new THREE.MeshBasicMaterial( { color: 0x0000ff } )
+			door.children[Door.DOOR].material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } )
+			door.children[Door.HANDLE].material = new THREE.MeshBasicMaterial( { color: 0x0000ff } )
 			scene.add( door );
-
-			console.log( door );
 
 			modelsLoaded = true;
 
@@ -718,6 +715,12 @@
 			LEFT: 0,
 			MIDDLE: 1,
 			RIGHT: 2
+		};
+
+		// door mesh parts
+		Door = {
+			DOOR: 0,
+			HANDLE: 1
 		};
 		
 		// non-door containing walls
