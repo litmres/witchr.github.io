@@ -26,7 +26,7 @@
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 1; // er (eye radius), em (eye mass)
-	let doorBody, dw = 10, dh = 10, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
+	let doorBody, dw = 8, dh = 10, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
@@ -299,14 +299,20 @@
 
 
 		// asynchronously load json file and add to scene
-		XHR( 'model/door.json', function( data ) {
+		XHR( 'model/door2.json', function( data ) {
 			
 			loader = new THREE.ObjectLoader();
 
-			// door obj mesh that appears in room
+			// door obj that appears in room
 			door = JSON.parse( data );
 			door = loader.parse( door );
+			// add materials to each of the door's meshes [frame, door, handle]
+			door.children[0].material = new THREE.MeshBasicMaterial( { color: 0xff0000 } )
+			door.children[1].material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } )
+			door.children[2].material = new THREE.MeshBasicMaterial( { color: 0x0000ff } )
 			scene.add( door );
+
+			console.log( door );
 
 			modelsLoaded = true;
 
@@ -449,12 +455,8 @@
 		if ( modelsLoaded ) {
 
 			door.position.copy( doorBody.position );
-			// door needs to be rotated since it lies flatly in xz
-			let rotDoor = new CANNON.Quaternion( 0, 0, 0, 1 );
-			rotDoor.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ),
-									  -90 * THREE.Math.DEG2RAD 
-									);
-			door.quaternion.copy( doorBody.quaternion.mult( rotDoor ) );
+			door.position.y -= dh/2;
+			door.quaternion.copy( doorBody.quaternion );
 
 			wallDoor.position.copy( wallDoorBody.position );
 			wallDoor.quaternion.copy( wallDoorBody.quaternion );
