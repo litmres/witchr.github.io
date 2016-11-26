@@ -258,7 +258,7 @@
 
 		// create floor mesh that acts as the room floor
 		geometry = new THREE.PlaneGeometry( fw, fd, 1, 1 );
-		texture = new THREE.TextureLoader().load( './img/old_wood.jpg' );
+		texture = new THREE.TextureLoader().load( './img/old_wood-min.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 2, 1 );
@@ -287,7 +287,7 @@
 		// create door as a textured box mesh
 		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
 		// texture door sides
-		texture = new THREE.TextureLoader().load( './img/door_face_side.jpg' );
+		texture = new THREE.TextureLoader().load( './img/door_face_side-min.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 1, 1 );
@@ -296,7 +296,7 @@
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
 		// texture door front & back
-		texture = new THREE.TextureLoader().load( './img/door_face_front.jpg' );
+		texture = new THREE.TextureLoader().load( './img/door_face_front-min.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 1, 1 );
@@ -318,7 +318,7 @@
 			doorHandle = JSON.parse( data );
 			doorHandle = loader.parse( doorHandle );
 			// setup door handle texture (from shiny metallic img)
-			texture = new THREE.TextureLoader().load( './img/door_handle.jpg' );
+			texture = new THREE.TextureLoader().load( './img/door_handle-min.jpg' );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
 			texture.repeat.set( 1, 1 );
@@ -365,6 +365,8 @@
 
 		// create other three wall meshes that make up the room
 		geometry = new THREE.BoxGeometry( ww, wh, wd );
+		// create full wall textures
+		texture = new THREE.TextureLoader().load( './img/wall_pattern-min.jpg' );
 		for ( let i = 0; i < wn; ++i ) {
 			walls[i] = new THREE.Mesh( geometry, material );
 			scene.add( walls[i] );
