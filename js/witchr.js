@@ -307,6 +307,8 @@
 		door = new THREE.Mesh( geometry, material );
 		scene.add( door );
 		pickObjects.push( door );
+		// add open function to door (via door body)
+		initDoor( door, doorBody );
 
 
 		// create door handle via asynchronous load json file
@@ -570,7 +572,7 @@
 				// check notes
 				for ( let i = 0; i < notes.length; ++i ) {
 					if ( id === notes[i].uuid ) {
-						console.log( notes[i].uuid );
+						door.body.open();
 					}
 				}
 				
@@ -779,33 +781,50 @@
 	}
 
 
-	// toggle door impulse (and change door mass so it can be opened)
-	function openDoor( theDoorBody, openForce ) {
+	// toggle door body impulse (and change door mass so it can be opened)
+	function initDoor( dr, drb ) {
 
-		if ( !theDoorBody ) {
-			theDoorBody = doorBody;
+		// check if door and door body defined
+		if ( !dr && !drb ) {
+			de&&bug.log( 'initDoor() error: door or door body undefined.' );
 		}
-		if ( !openForce ) {
-			openForce = 100;
+
+		// check for existing props
+		if ( dr.body || drb.open ) {
+			de&&bug.log( 'initDoor() error: an existing door body prop was overwritten' );
+		}
+
+		// attach door body to door
+		dr.body = drb;
+
+		// open function will change door body's mass and open it via impulse
+		drb.open = function( openForce ) {
+			// check acting force on door body exists
+			if ( !openForce ) {
+				openForce = 100;
+			}
+			// toggle mass so door is movable
+			drb.mass = dm;
+			drb.updateMassProperties();
+			// apply impulse force on door
+			impulseForce = new CANNON.Vec3( 0, 0, openForce );
+			worldPoint = new CANNON.Vec3( drb.position.x,
+										  drb.position.y,
+										  drb.position.z
+										);
+			drb.applyImpulse( impulseForce, worldPoint );
 		}
 		
-		// toggle mass so door is movable
-		theDoorBody.mass = dm;
-		theDoorBody.updateMassProperties();
-
-		// apply impulse force on door
-		impulseForce = new CANNON.Vec3( 0, 0, openForce );
-		worldPoint = new CANNON.Vec3( theDoorBody.position.x,
-									  theDoorBody.position.y,
-									  theDoorBody.position.z
-									);
-		theDoorBody.applyImpulse( impulseForce, worldPoint );
-
 	}
 
 
 	// toggle door handle
 	function initDoorHandle( dr, dh ) {
+
+		// error check that door and door handle defined
+		if ( !dr && !dh ) {
+			de&&bug.log( 'initDoorHandle() error: door or door handle undefined.' );
+		}
 
 		// error check if any of the new created props already exist
 		if ( dr.handle || dh.animating || dh.update || dh.toggle ) {
