@@ -33,8 +33,8 @@
 	
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
-	let floor, eye, door, doorHandle, wallDoor, walls;
-	let objects, notes, nw = 3, nh = 3, nd = 0.001, nn = 3;
+	let floor, eye, door, wallDoor, walls;
+	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nn = 3;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -222,10 +222,10 @@
 
 	function initThree() {
 		
-		walls = [], objects = [], notes = [];
+		walls = [], pickObjects = [], notes = [];
 		let geometry, material, texture, mats = [];
 		let loader;
-		let wallDoorT, wallDoorL, wallDoorR, paper;
+		let doorHandle, wallDoorT, wallDoorL, wallDoorR, paper;
 		
 		
 		// init camera
@@ -306,7 +306,7 @@
         material = new THREE.MeshFaceMaterial( mats );
 		door = new THREE.Mesh( geometry, material );
 		scene.add( door );
-		objects.push( door );
+		pickObjects.push( door );
 
 
 		// create door handle via asynchronous load json file
@@ -323,10 +323,10 @@
 			// add texture to door handle obj group (from .json loader)
 			doorHandle.children[0].material = new THREE.MeshBasicMaterial( { map: texture } )
 			// stick door handle appropriately on door
-			door.add( doorHandle );
 			doorHandle.position.set( 0.41*dw, -0.06*dh, 0 );
-			doorHandle.toggle = false;
-			doorHandle.done = false;
+			door.add( doorHandle );
+			// add update and toggle functions to door handle
+			initDoorHandle( door, doorHandle );
 
 
 			// signal all models are loaded (if waiting for scene)
@@ -385,7 +385,7 @@
 			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
 			scene.add( paper );
 			notes.push( paper );
-			objects.push( paper );
+			pickObjects.push( paper );
 		}
 		paper = null;
 		
@@ -462,23 +462,8 @@
 		}
 
 
-		// handle togglable objects (pickable objects)
-		if ( doorHandle.toggle ) {
-			if ( doorHandle.rotation.z*THREE.Math.RAD2DEG < 1 ) {
-				if ( doorHandle.done ) {
-					doorHandle.done = false;
-					doorHandle.toggle = false;
-				} else {
-					doorHandle.rotateZ( Math.PI/2 );
-				}
-			} else {
-				doorHandle.rotateZ( -1*THREE.Math.DEG2RAD );
-				if ( doorHandle.rotation.z*THREE.Math.RAD2DEG < 1 ) {
-					doorHandle.done = true;
-				}
-			}
-		}
-
+		// update pickable objects
+		door.handle.update();
 
 
 	}
@@ -569,20 +554,20 @@
 			mouse.x = ( e.clientX / renderer.domElement.clientWidth )  * 2 - 1;
 			mouse.y = -( e.clientY / renderer.domElement.clientHeight ) * 2 + 1;
 			raycaster.setFromCamera( mouse, camera );
-			// grab the first object we intersect if any
-			let intersects = raycaster.intersectObjects( objects );
+			// grab the first object we intersect if any and
+			// only interact if the object's distance is close 
+			let intersects = raycaster.intersectObjects( pickObjects );
 			if ( intersects.length && intersects[0].distance < pickDistance ) {
 
+				// compare intersected obj by each mesh id
 				let id = intersects[0].object.uuid;
 
-				// only interact if the object's distance is close 
-				console.log(intersects);
+				// check doors
 				if ( id === door.uuid ) {
-					console.log( door.uuid );
-					if ( !doorHandle.toggle ) {
-						doorHandle.toggle = true;
-					}
+					door.handle.toggle();
 				}
+
+				// check notes
 				for ( let i = 0; i < notes.length; ++i ) {
 					if ( id === notes[i].uuid ) {
 						console.log( notes[i].uuid );
@@ -815,6 +800,45 @@
 									  theDoorBody.position.z
 									);
 		theDoorBody.applyImpulse( impulseForce, worldPoint );
+
+	}
+
+
+	// toggle door handle
+	function initDoorHandle( dr, dh ) {
+
+		// error check if any of the new created props already exist
+		if ( dr.handle || dh.animating || dh.update || dh.toggle ) {
+			de&&bug.log( 'initDoorHandle() error: an existing door/doorHandle prop was overwritten.' );
+		}
+
+		// attach door to handle
+		dr.handle = dh;
+
+		// init door handle properties
+		dh.animating = false;
+
+		// update function called on each frame
+		dh.update = function() {
+			if ( dh.animating ) {
+				if ( dh.rotation.z*THREE.Math.RAD2DEG < 1 ) {
+					dh.rotateZ( Math.PI/2 );
+				} else {
+					dh.rotateZ( -1*THREE.Math.DEG2RAD );
+					if ( dh.rotation.z*THREE.Math.RAD2DEG < 1 ) {
+						dh.animating = false;
+					}
+				}
+			}
+		}
+
+		// toggle door handle animation
+		dh.toggle = function() {
+			if ( !dh.animating ) {
+				dh.animating = true;
+			}
+		}
+
 
 	}
 
