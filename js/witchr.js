@@ -366,7 +366,11 @@
 		// create other three wall meshes that make up the room
 		geometry = new THREE.BoxGeometry( ww, wh, wd );
 		// create full wall textures
-		texture = new THREE.TextureLoader().load( './img/wall_pattern-min.jpg' );
+		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		material = new THREE.MeshBasicMaterial( { map: texture } );
+		texture.repeat.set( 2, 1 );
 		for ( let i = 0; i < wn; ++i ) {
 			walls[i] = new THREE.Mesh( geometry, material );
 			scene.add( walls[i] );
