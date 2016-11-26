@@ -26,7 +26,7 @@
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
-	let doorBody, dw = 8, dh = 11, dd = 0.5, df = 0.5, dm = 10, dld = 0.66; // df (door offset in wall), dm (door mass), dld (door linear damping)
+	let doorBody, dw = 8, dh = 11, dd = 0.5, df = 0.5, dmc = 0, dmo = 10, dld = 0.66; // df (door offset in wall), dmc/dmo (door mass open/closed), dld (door linear damping)
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
@@ -104,16 +104,19 @@
 
 	function initCannon() {
 
+
 		let physicsMaterial, physicsContactMaterial;
 		let shape;
 
 
-		// setup worlds
+		// setup world of physics
 		world = new CANNON.World();
 		world.broadphase = new CANNON.NaiveBroadphase();
 		world.solver.iterations = 1;
 		world.gravity.set( 0, -10, 0 );
 
+
+		// setup floor physics body
 		// create a slippery material
 		physicsMaterial = new CANNON.Material( 'floorMaterial' );
 		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
@@ -121,22 +124,20 @@
 														   { friction: wf,
 															 restitution: wr
 														   } );
-
 		world.addContactMaterial( physicsContactMaterial );
-
 		// floor plane body which acts as room floor
 		// floor will be on y=0 and all bodies will be init with that in mind
 		shape = new CANNON.Plane();
 		floorBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
 		floorBody.addShape( shape );
 		floorBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), 
-												-90*THREE.Math.DEG2RAD
-											  );
+											   -90*THREE.Math.DEG2RAD
+											 );
 		world.addBody( floorBody );
 		floorBody.position.z += fd/2;
 		
 
-		// eye body that simulates and positions player
+		// setup eye physics body that simulates and positions player
 		shape = new CANNON.Sphere( er );
 		eyeBody = new CANNON.Body( { mass: em, material: physicsMaterial } );
 		eyeBody.addShape( shape );
@@ -145,15 +146,14 @@
 		world.addBody( eyeBody );
 
 
-		// door body in the scene (half extents)
+		// setup door physics body in the scene (half extents)
 		shape = new CANNON.Box( new CANNON.Vec3( (dw-df)/2, (dh-df)/2, dd/2 ) );
-		doorBody = new CANNON.Body( { mass: dm, material: physicsMaterial } );
+		doorBody = new CANNON.Body( { mass: dmc, material: physicsMaterial } );
 		doorBody.linearDamping = dld;
 		doorBody.position.set( 0, dh/2, dd/2 );
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
-
-		// test hinge constraint on door
+		// create bottom hinge constraint on door
 		hingeBotBody = new CANNON.Body( { mass: 0 } );
 		// hingeBody must match position of doorBody!
 		hingeBotBody.position.set( 0, dh/2, 0 );
@@ -168,8 +168,7 @@
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
 		world.addConstraint( hingeConstraint );
-
-		// test hinge constraint on door
+		// create top hinge constraint on door
 		hingeTopBody = new CANNON.Body( { mass: 0 } );
 		hingeTopBody.position.set( 0, dh/2, 0 );
 		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
@@ -181,16 +180,7 @@
 		world.addConstraint( hingeConstraint );
 	
 	
-		// test impulse force on door
-		impulseForce = new CANNON.Vec3( 0, 0, 100 );
-		worldPoint = new CANNON.Vec3( doorBody.position.x,
-									  doorBody.position.y,
-									  doorBody.position.z
-									);
-		doorBody.applyImpulse( impulseForce, worldPoint );
-
-
-		// immovable wall that has a door on it
+		// create walls: first wall physics body that contains door
 		wallDoorBody = new CANNON.Body( { mass: wm } );
 		// wallDoor top box mesh
 		shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, dd/2 ) );
@@ -200,11 +190,9 @@
 		wallDoorBody.addShape( shape, new CANNON.Vec3( -((ww-dw)/4)-dw/2, wh/2, 0 ) );
 		// wallDoor right box mesh
 		wallDoorBody.addShape( shape, new CANNON.Vec3( +((ww-dw)/4)+dw/2, wh/2, 0 ) );
-
 		world.addBody( wallDoorBody );
-
-
-		// walls body
+		
+		// create other walls physics bodies
 		wallsBody = [];
 		shape = new CANNON.Box( new CANNON.Vec3( ww/2, wh/2, wd/2 ) );
 		for ( let i = 0; i < wn; ++i ) {
@@ -212,7 +200,7 @@
 			wallsBody[i].addShape( shape );
 			world.addBody( wallsBody[i] );
 		}
-		// position the back wall, left side wall, right side wall
+		// position the other walls: back wall, left side wall, right side wall
 		wallsBody[Wall.BACK].position.set( 0, wh/2, fd );
 		wallsBody[Wall.LEFT].quaternion.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), 
 														 -90*THREE.Math.DEG2RAD
@@ -222,12 +210,8 @@
 														  -90*THREE.Math.DEG2RAD
 														);
 		wallsBody[Wall.RIGHT].position.set( fw/2, wh/2, fd/2 );
-
-
 		
-
-
-
+		
 	}
 
 
@@ -779,6 +763,23 @@
 		}
 		xhr.open( 'GET', file, true );
 		xhr.send();
+
+	}
+
+
+	// toggle door impulse (and change door mass so it can be opened)
+	function openDoor( theDoorBody, impulseForce ) {
+
+		// toggle door mass so it is movable
+		theDoorBody.mass = dmo;
+		
+		// test impulse force on door
+		impulseForce = new CANNON.Vec3( 0, 0, impulseForce );
+		worldPoint = new CANNON.Vec3( theDoorBody.position.x,
+									  theDoorBody.position.y,
+									  theDoorBody.position.z
+									);
+		theDoorBody.applyImpulse( impulseForce, worldPoint );
 
 	}
 
