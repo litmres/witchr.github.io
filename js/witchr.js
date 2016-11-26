@@ -26,7 +26,7 @@
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 1; // er (eye radius), em (eye mass)
-	let doorBody, dw = 7, dh = 11, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
+	let doorBody, dw = 8, dh = 11, dd = 1, df = 1, dm = 10000; // df (door offset in wall), dm (door mass)
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
@@ -306,7 +306,7 @@
 			// door obj that appears in room
 			door = JSON.parse( data );
 			door = loader.parse( door );
-			// add materials to each of the door's meshes [frame, door, handle]
+			// add materials to each of the door's meshes
 			door.children[Door.DOOR].material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } )
 			door.children[Door.HANDLE].material = new THREE.MeshBasicMaterial( { color: 0x0000ff } )
 			scene.add( door );
