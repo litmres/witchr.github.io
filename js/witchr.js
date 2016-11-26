@@ -26,7 +26,7 @@
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
-	let doorBody, dw = 8, dh = 11, dd = 0.5, df = 0.5, dmc = 0, dmo = 10, dld = 0.66; // df (door offset in wall), dmc/dmo (door mass open/closed), dld (door linear damping)
+	let doorBody, dw = 8, dh = 11, dd = 0.5, df = 0.5, dm = 10, dld = 0.66; // df (door offset in wall), dm (door mass), dld (door linear damping)
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
@@ -148,7 +148,11 @@
 
 		// setup door physics body in the scene (half extents)
 		shape = new CANNON.Box( new CANNON.Vec3( (dw-df)/2, (dh-df)/2, dd/2 ) );
-		doorBody = new CANNON.Body( { mass: dmc, material: physicsMaterial } );
+		doorBody = new CANNON.Body( { mass: dm, material: physicsMaterial } );
+		// door body starts with a mass so physics knows it is initially a
+		// 	moving body but it should start closed so let's freeze it via mass 0
+		doorBody.mass = 0;
+		doorBody.updateMassProperties();
 		doorBody.linearDamping = dld;
 		doorBody.position.set( 0, dh/2, dd/2 );
 		doorBody.addShape( shape );
@@ -178,7 +182,7 @@
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
 		world.addConstraint( hingeConstraint );
-	
+
 	
 		// create walls: first wall physics body that contains door
 		wallDoorBody = new CANNON.Body( { mass: wm } );
@@ -768,13 +772,21 @@
 
 
 	// toggle door impulse (and change door mass so it can be opened)
-	function openDoor( theDoorBody, impulseForce ) {
+	function openDoor( theDoorBody, openForce ) {
 
-		// toggle door mass so it is movable
-		theDoorBody.mass = dmo;
+		if ( !theDoorBody ) {
+			theDoorBody = doorBody;
+		}
+		if ( !openForce ) {
+			openForce = 100;
+		}
 		
-		// test impulse force on door
-		impulseForce = new CANNON.Vec3( 0, 0, impulseForce );
+		// toggle mass so door is movable
+		theDoorBody.mass = dm;
+		theDoorBody.updateMassProperties();
+
+		// apply impulse force on door
+		impulseForce = new CANNON.Vec3( 0, 0, openForce );
 		worldPoint = new CANNON.Vec3( theDoorBody.position.x,
 									  theDoorBody.position.y,
 									  theDoorBody.position.z
