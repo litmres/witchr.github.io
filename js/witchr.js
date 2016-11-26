@@ -220,11 +220,14 @@
 
 
 	function initThree() {
+		
 
 		let geometry, material, texture, mats;
 		let loader;
+		let wallDoorT, wallDoorL, wallDoorR;
 		
-		// init the camera, scene,  renderer
+		
+		// init camera
 		camera = new THREE.PerspectiveCamera( 75, 
 											  window.innerWidth / window.innerHeight, 
 											  0.1, 
@@ -232,11 +235,18 @@
 											);
 		camera.lookAt( 0, 0, 0 );
 
+
+		// init scene
 		scene = new THREE.Scene();
 		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
 		// scene.fog = new THREE.FogExp2( 0x000000, 0.8 );
 		scene.add( camera );
+		// raycaster used in picking objects
+		raycaster = new THREE.Raycaster();
+		mouse = new THREE.Vector2();
 
+
+		// init renderer
 		renderer = new THREE.WebGLRenderer( { antialias: true } );
 		renderer.setSize( window.innerWidth * Canvas.SIZE, 
 						  window.innerHeight * Canvas.SIZE
@@ -244,23 +254,21 @@
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
-		raycaster = new THREE.Raycaster();
-		mouse = new THREE.Vector2();
 
-		// floor mesh acts as the room floor
+		// create floor mesh that acts as the room floor
 		geometry = new THREE.PlaneGeometry( fw, fd, 1, 1 );
 		texture = new THREE.TextureLoader().load( './img/old_wood.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 2, 1 );
 		material = new THREE.MeshBasicMaterial( { map: texture, 
-														side: THREE.DoubleSide 
-													} );
+												  side: THREE.DoubleSide 
+												} );
 		floor =  new THREE.Mesh( geometry, material );
 		scene.add( floor );
 
 
-		// eye mesh really just for troubleshooting
+		// create eye mesh to render eye body for troubleshooting
 		geometry = new THREE.SphereGeometry( er, 16, 16 );
 		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
 												  wireframe: true, 
@@ -270,15 +278,14 @@
 		eye = new THREE.Mesh( geometry, material );
 		scene.add( eye );
 		camera.position.copy( eye.position );
-		// place camera at the very top of eye
+		// place camera at the very top of eye mesh
 		camera.position.y += er;
 		eye.add( camera );
 		
 
-		// door as a textured box mesh
+		// create door as a textured box mesh
 		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
         mats = [];
-		
 		// texture door sides
 		texture = new THREE.TextureLoader().load( './img/door_face_side.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
@@ -288,7 +295,6 @@
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-
 		// texture door front & back
 		texture = new THREE.TextureLoader().load( './img/door_face_front.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
@@ -296,76 +302,70 @@
 		texture.repeat.set( 1, 1 );
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-
+		// put all mats together and create door
         material = new THREE.MeshFaceMaterial( mats );
 		door = new THREE.Mesh( geometry, material );
 		scene.add( door );
 
 
-
-		// asynchronously load json file and add to scene
+		// create door handle via asynchronous load json file
 		XHR( './model/door_handle.json', function( data ) {
-			
 			loader = new THREE.ObjectLoader();
-
-			// door handle obj that is stuck to door
+			// load door handle obj group (will be stuck to door)
 			doorHandle = JSON.parse( data );
 			doorHandle = loader.parse( doorHandle );
-		// door handle texture 
-		texture = new THREE.TextureLoader().load( './img/door_handle.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 1, 1 );
+			// setup door handle texture (from shiny metallic img)
+			texture = new THREE.TextureLoader().load( './img/door_handle.jpg' );
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set( 1, 1 );
+			// add texture to door handle obj group (from .json loader)
 			doorHandle.children[0].material = new THREE.MeshBasicMaterial( { map: texture } )
-			// position door handle appropriately on door
+			// stick door handle appropriately on door
 			doorHandle.position.set( 0.67*dw, -0.52*dh, 0 );
 			door.add( doorHandle );
 
-			modelsLoaded = true;
 
+			// signal all models are loaded (if waiting for scene)
+			modelsLoaded = true;
 		} );
 
 
-		// wall that has a door on it
+		// create the wall door parts separately and add them to wall door
+		// 	(the wall that has a door in it)
 		wallDoor = new THREE.Mesh();
-		// wallDoor top box mesh
+		// create top part of wall door mesh (right above door)
 		geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
 												  wireframe: true 
-											  } );
-		let wallDoorT = new THREE.Mesh( geometry, material );
+											  	} );
+		wallDoorT = new THREE.Mesh( geometry, material );
 		wallDoorT.position.set( 0, ((wh-dh)/2)+dh, 0 );
 		wallDoor.add( wallDoorT );
-
-		// wallDoor left box mesh
+		// create left part of wall door mesh
 		geometry = new THREE.BoxGeometry( (ww-dw)/2, wh, wd );
 		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
 												  wireframe: true 
-											  } );
-		let wallDoorL = new THREE.Mesh( geometry, material );
+												} );
+		wallDoorL = new THREE.Mesh( geometry, material );
 		wallDoorL.position.set( -((ww-dw)/4)-dw/2, wh/2, 0 );
 		wallDoor.add( wallDoorL );
-
-		// wallDoor right box mesh
-		let wallDoorR = new THREE.Mesh( geometry, material );
+		// create right part of wall door mesh
+		wallDoorR = new THREE.Mesh( geometry, material );
 		wallDoorR.position.set( ((ww-dw)/4)+dw/2, wh/2, 0 );
 		wallDoor.add( wallDoorR );
-
+		// add the completed wall door to scene
 		scene.add( wallDoor );
 
 
-		// other three walls that make up the room
+		// create other three wall meshes that make up the room
 		walls = [];
 		geometry = new THREE.BoxGeometry( ww, wh, wd );
 		for ( let i = 0; i < wn; ++i ) {
 			walls[i] = new THREE.Mesh( geometry, material );
 			scene.add( walls[i] );
 		}
-
-
 		
-
-
 
 		// test clicking on paper on floor 
 		objects = [];
