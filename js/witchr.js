@@ -325,6 +325,8 @@
 			// stick door handle appropriately on door
 			door.add( doorHandle );
 			doorHandle.position.set( 0.41*dw, -0.06*dh, 0 );
+			doorHandle.toggle = false;
+			doorHandle.done = false;
 
 
 			// signal all models are loaded (if waiting for scene)
@@ -426,45 +428,58 @@
 
 	function updatePhysics() {
 
+
 		world.step( dt );
 
-		// reset eye quaternion so we only rotate by offsets
-		eyeBody.quaternion.set( 0, 0, 0, 1 );
 
+		// reset eye quaternion so we always rotate offset from origin
+		eyeBody.quaternion.set( 0, 0, 0, 1 );
 		// local rotation about the x-axis
 		let rotSide = new CANNON.Quaternion( 0, 0, 0, 1 );
 		rotSide.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotSide );
-
 		// local rotation about the y-axis
 		let rotUp = new CANNON.Quaternion( 0, 0, 0, 1 );
 		rotUp.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotUp );
 
 
-		// set all of the meshes to the physics bodies
+		// set all of the meshes to their physics bodies
 		floor.position.copy( floorBody.position );
 		floor.quaternion.copy( floorBody.quaternion );
-
+		
 		door.position.copy( doorBody.position );
 		door.quaternion.copy( doorBody.quaternion );
-
-		
-		
-		doorHandle.rotateZ( 0.01 );
-
-
 
 		eye.position.copy( eyeBody.position );
 		eye.quaternion.copy( eyeBody.quaternion );
 
 		wallDoor.position.copy( wallDoorBody.position );
 		wallDoor.quaternion.copy( wallDoorBody.quaternion );
-
 		for ( let i = 0; i < wn; ++i ) {
 			walls[i].position.copy( wallsBody[i].position );
 			walls[i].quaternion.copy( wallsBody[i].quaternion );
 		}
+
+
+		// handle togglable objects (pickable objects)
+		if ( doorHandle.toggle ) {
+			if ( doorHandle.rotation.z*THREE.Math.RAD2DEG < 1 ) {
+				if ( doorHandle.done ) {
+					doorHandle.done = false;
+					doorHandle.toggle = false;
+				} else {
+					doorHandle.rotateZ( Math.PI/2 );
+				}
+			} else {
+				doorHandle.rotateZ( -1*THREE.Math.DEG2RAD );
+				if ( doorHandle.rotation.z*THREE.Math.RAD2DEG < 1 ) {
+					doorHandle.done = true;
+				}
+			}
+		}
+
+
 
 	}
 
@@ -564,6 +579,9 @@
 				console.log(intersects);
 				if ( id === door.uuid ) {
 					console.log( door.uuid );
+					if ( !doorHandle.toggle ) {
+						doorHandle.toggle = true;
+					}
 				}
 				for ( let i = 0; i < notes.length; ++i ) {
 					if ( id === notes[i].uuid ) {
