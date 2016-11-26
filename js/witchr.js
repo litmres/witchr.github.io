@@ -769,9 +769,7 @@
 		xhr.onreadystatechange = function() {
 
 			if ( xhr.readyState === 4 && xhr.status === 200 ) {
-
 				callback( xhr.responseText );
-				
 			}
 
 		}
@@ -813,6 +811,8 @@
 										  drb.position.z
 										);
 			drb.applyImpulse( impulseForce, worldPoint );
+			// toggle door handle whenever door opens
+			dr.handle.toggle();
 		}
 		
 	}
