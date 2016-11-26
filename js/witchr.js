@@ -22,7 +22,7 @@
 	let stats;
 
 	// cannon.js
-	let world;
+	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
@@ -118,8 +118,8 @@
 		physicsMaterial = new CANNON.Material( 'floorMaterial' );
 		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
 															 physicsMaterial, 
-														   { friction: 0.0,
-															 restitution: 0.0
+														   { friction: wf,
+															 restitution: wr
 														   } );
 
 		world.addContactMaterial( physicsContactMaterial );
