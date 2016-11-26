@@ -32,8 +32,9 @@
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
 	// three.js
-	let camera, scene, renderer, raycaster, mouse;
-	let floor, eye, door, doorHandle, wallDoor, walls, objects;
+	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
+	let floor, eye, door, doorHandle, wallDoor, walls;
+	let objects, notes, nw = 3, nh = 3, nd = 0.001, nn = 3;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -105,6 +106,7 @@
 	function initCannon() {
 
 
+		wallsBody = [];
 		let physicsMaterial, physicsContactMaterial;
 		let shape;
 
@@ -197,7 +199,6 @@
 		world.addBody( wallDoorBody );
 		
 		// create other walls physics bodies
-		wallsBody = [];
 		shape = new CANNON.Box( new CANNON.Vec3( ww/2, wh/2, wd/2 ) );
 		for ( let i = 0; i < wn; ++i ) {
 			wallsBody[i] = new CANNON.Body( { mass: wm } );
@@ -221,10 +222,10 @@
 
 	function initThree() {
 		
-
-		let geometry, material, texture, mats;
+		walls = [], objects = [], notes = [];
+		let geometry, material, texture, mats = [];
 		let loader;
-		let wallDoorT, wallDoorL, wallDoorR;
+		let wallDoorT, wallDoorL, wallDoorR, paper;
 		
 		
 		// init camera
@@ -285,7 +286,6 @@
 
 		// create door as a textured box mesh
 		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
-        mats = [];
 		// texture door sides
 		texture = new THREE.TextureLoader().load( './img/door_face_side.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
@@ -306,6 +306,7 @@
         material = new THREE.MeshFaceMaterial( mats );
 		door = new THREE.Mesh( geometry, material );
 		scene.add( door );
+		objects.push( door );
 
 
 		// create door handle via asynchronous load json file
@@ -359,40 +360,32 @@
 
 
 		// create other three wall meshes that make up the room
-		walls = [];
 		geometry = new THREE.BoxGeometry( ww, wh, wd );
 		for ( let i = 0; i < wn; ++i ) {
 			walls[i] = new THREE.Mesh( geometry, material );
 			scene.add( walls[i] );
 		}
-		
-
-		// test clicking on paper on floor 
-		objects = [];
-		geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		let paper = new THREE.Mesh( geometry,
-									new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
-								  );
-		paper.position.set( 1, 1/2, 1 );
-		scene.add( paper );
-		objects.push( paper );
-
-		let paper2 = new THREE.Mesh( geometry,
-									new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
-								  );
-		paper2.position.set( 10, 1/2, 10 );
-		scene.add( paper2 );
-		objects.push( paper2 );
-
-		let paper3 = new THREE.Mesh( geometry,
-									new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
-								  );
-		paper3.position.set( 11, 1/2, 8 );
-		scene.add( paper3 );
-		objects.push( paper3 );
 
 
-
+		// create notes that will be spread all over room
+		geometry = new THREE.BoxGeometry( nw, nh, nd );
+		// create note texture
+		texture = new THREE.TextureLoader().load( './img/note1.png' );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( 1, 1 );
+		// create all notes
+		for ( let i = 0; i < nn; ++i ) {
+			paper = new THREE.Mesh( geometry,
+										new THREE.MeshBasicMaterial( { map: texture,
+																	alphaTest: 0.5 } )
+									);
+			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
+			scene.add( paper );
+			notes.push( paper );
+			objects.push( paper );
+		}
+		paper = null;
 		
 
 	}
@@ -557,14 +550,20 @@
 			raycaster.setFromCamera( mouse, camera );
 			// grab the first object we intersect if any
 			let intersects = raycaster.intersectObjects( objects );
-			if ( intersects.length ) {
-				intersects[0].object.material.color.setHex( Math.random() * 0xffffff );
+			if ( intersects.length && intersects[0].distance < pickDistance ) {
+
+				let id = intersects[0].object.uuid;
 
 				// only interact if the object's distance is close 
-				if ( intersects[0].distance < 6 ) {
-					console.log( 'touchable!' );
+				console.log(intersects);
+				if ( id === door.uuid ) {
+					console.log( door.uuid );
 				}
-
+				for ( let i = 0; i < notes.length; ++i ) {
+					if ( id === notes[i].uuid ) {
+						console.log( notes[i].uuid );
+					}
+				}
 				
 			}
 
