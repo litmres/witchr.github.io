@@ -323,8 +323,8 @@
 			// add texture to door handle obj group (from .json loader)
 			doorHandle.children[0].material = new THREE.MeshBasicMaterial( { map: texture } )
 			// stick door handle appropriately on door
-			doorHandle.position.set( 0.67*dw, -0.52*dh, 0 );
 			door.add( doorHandle );
+			doorHandle.position.set( 0.41*dw, -0.06*dh, 0 );
 
 
 			// signal all models are loaded (if waiting for scene)
@@ -448,6 +448,12 @@
 
 		door.position.copy( doorBody.position );
 		door.quaternion.copy( doorBody.quaternion );
+
+		
+		
+		doorHandle.rotateZ( 0.01 );
+
+
 
 		eye.position.copy( eyeBody.position );
 		eye.quaternion.copy( eyeBody.quaternion );
