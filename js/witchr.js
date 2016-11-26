@@ -514,7 +514,10 @@
 		}
 
 		// handle isMouseRightDown input from click or tap
-		if ( isMouseRightDown ) {
+		if ( isMouseRightDown &&
+			 !( Keyboard.keys[Key.UP] || Keyboard.keys[Key.W] ||
+				Keyboard.keys[Key.DOWN] || Keyboard.keys[Key.S] )
+		   ) {
 
 			inputVelocity.z += -Player.MOVE_SPEED;
 
