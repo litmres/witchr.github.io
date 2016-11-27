@@ -34,7 +34,7 @@
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
 	let floor, eye, door, wallDoor, walls;
-	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nn = 3;
+	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nn = 3, img;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -341,17 +341,43 @@
 		wallDoor = new THREE.Mesh();
 		// create top part of wall door mesh (right above door)
 		geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
-		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
-												  wireframe: true 
-											  	} );
+		mats = [];
+		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( dw*2/ww, dd/wh );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( dw*2/ww, (dh-wh)/wh );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		material = new THREE.MeshFaceMaterial( mats );
 		wallDoorT = new THREE.Mesh( geometry, material );
 		wallDoorT.position.set( 0, ((wh-dh)/2)+dh, 0 );
 		wallDoor.add( wallDoorT );
 		// create left part of wall door mesh
 		geometry = new THREE.BoxGeometry( (ww-dw)/2, wh, wd );
-		material = new THREE.MeshBasicMaterial( { color: 0x0000ff, 
-												  wireframe: true 
-												} );
+		mats = [];
+		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( wd*2/ww, dh/wh );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( (ww-dw)/ww, 1 );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		material = new THREE.MeshFaceMaterial( mats );
 		wallDoorL = new THREE.Mesh( geometry, material );
 		wallDoorL.position.set( -((ww-dw)/4)-dw/2, wh/2, 0 );
 		wallDoor.add( wallDoorL );
@@ -369,8 +395,8 @@
 		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
-		material = new THREE.MeshBasicMaterial( { map: texture } );
 		texture.repeat.set( 2, 1 );
+		material = new THREE.MeshBasicMaterial( { map: texture } );
 		for ( let i = 0; i < wn; ++i ) {
 			walls[i] = new THREE.Mesh( geometry, material );
 			scene.add( walls[i] );
@@ -384,18 +410,22 @@
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 1, 1 );
+		material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
 		// create all notes
 		for ( let i = 0; i < nn; ++i ) {
-			paper = new THREE.Mesh( geometry,
-										new THREE.MeshBasicMaterial( { map: texture,
-																	alphaTest: 0.5 } )
-									);
+			paper = new THREE.Mesh( geometry, material );
 			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
 			scene.add( paper );
 			notes.push( paper );
 			pickObjects.push( paper );
 		}
 		paper = null;
+		// create the hud imgs when notes are read
+		// img = document.createElement( 'img' );
+		// document.body.appendChild( img );
+		// img.style.cssText = 'width: 80vw; position: fixed; top: 10vh; left: 10vw; z-index: 100';
+		// img.src = './img/note1.png';
+		
 		
 
 	}
