@@ -602,7 +602,8 @@
 
 				// check doors
 				if ( id === door.uuid ) {
-					door.handle.toggle();
+					// door.handle.toggle();
+					door.body.open();
 				}
 
 				// check notes
