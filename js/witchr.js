@@ -805,6 +805,10 @@
 		windowHalfX = window.innerWidth / 2;
 		windowHalfY = window.innerHeight / 2;
 
+		// re-center all hud imgs
+		img.style.top = (((window.innerHeight - img.height ) / 2) >> 0) + 'px';
+		img.style.left = (((window.innerWidth - img.width) / 2) >> 0) + 'px';
+		
 	}
 
 
