@@ -70,9 +70,7 @@
 	function init() {
 
 		initEnums();
-
 		initCannon();
-
 		initThree();
 
 		// init stats
