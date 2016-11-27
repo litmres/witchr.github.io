@@ -421,10 +421,19 @@
 		}
 		paper = null;
 		// create the hud imgs when notes are read
-		// img = document.createElement( 'img' );
-		// document.body.appendChild( img );
-		// img.style.cssText = 'width: 80vw; position: fixed; top: 10vh; left: 10vw; z-index: 100';
-		// img.src = './img/note1.png';
+		// img = new Image();
+		img = document.createElement( 'img' );
+		img.src = './img/note2.png';
+		document.body.appendChild( img );
+		img.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 1s';
+		// set the top and left offsets once img is loaded
+		img.onload = function( e ) {
+			img.style.top = (((window.innerHeight - img.height ) / 2) >> 0) + 'px';
+			img.style.left = (((window.innerWidth - img.width) / 2) >> 0) + 'px';
+			img.style.opacity = 1;
+		}
+
+
 		
 		
 
