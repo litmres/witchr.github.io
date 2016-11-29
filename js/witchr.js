@@ -34,7 +34,7 @@
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
 	let floor, eye, door, wallDoor, walls;
-	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nf = ['note1.png', 'note2.png', 'news-min.jpg'], hud;
+	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nf = ['note1.png', 'note2.png', 'news-min.jpg'], hud, base = './img/';
 
 	// mouse and touch events
 	let rotX = 0;
@@ -86,7 +86,7 @@
 		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 		document.addEventListener( 'mouseup', onDocumentMouseUp, false);
-		document.addEventListener( 'mouseout', onDocumentMouseUp, false);
+		// document.addEventListener( 'mouseout', onDocumentMouseUp, false);
 		// disable contextmenu on right clicks (will be used to move)
 		window.oncontextmenu = function() { return false; };
 
@@ -230,13 +230,7 @@
 		// 	splash img, ending img, and notes
 		hud = document.createElement( 'img' );
 		document.body.appendChild( hud );
-		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 1s';
-		// set the top and left offsets once hud img is loaded
-		hud.onload = function( e ) {
-			hud.style.top = (((window.innerHeight - hud.height ) / 2) >> 0) + 'px';
-			hud.style.left = (((window.innerWidth - hud.width) / 2) >> 0) + 'px';
-			hud.style.opacity = 1;
-		}
+		initHUD( hud, base );
 
 
 		// init camera
@@ -426,7 +420,7 @@
 		for ( let i = 0; i < nf.length; ++i ) {
 			paper = new THREE.Mesh( geometry, material );
 			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
-			initPaper( paper, nf[i] );
+			initNote( paper, nf[i] );
 			scene.add( paper );
 			notes.push( paper );
 			pickObjects.push( paper );
@@ -583,6 +577,11 @@
 		e.preventDefault();
 		e.stopPropagation();
 
+		// if hud is showing something, only perform a hide on this click
+		if ( hud.showing ) {
+			hud.hide();
+		}
+
 		// capture mouse movement on all mouse button downs except...
 		// 	only raycast objects & rotate camera on mouse left button and
 		// 	only move player in z on mouse right button 
@@ -608,14 +607,15 @@
 
 				// check doors
 				if ( id === door.uuid ) {
-					// door.handle.toggle();
-					door.body.open();
+					// door.body.open();
+					door.handle.toggle();
 				}
 
 				// check notes
 				for ( let i = 0; i < notes.length; ++i ) {
 					if ( id === notes[i].uuid ) {
 						door.body.open();
+						hud.show( notes[i].src );
 					}
 				}
 				
@@ -662,7 +662,7 @@
 
 
 	function onDocumentMouseUp( e ) {
-		
+
 		if ( e.button === Mouse.LEFT ) { isMouseLeftDown = false; }
 		if ( e.button === Mouse.RIGHT ) { isMouseRightDown = false; }
 		
@@ -803,8 +803,7 @@
 		windowHalfY = window.innerHeight / 2;
 
 		// re-center all hud imgs
-		hud.style.top = (((window.innerHeight - hud.height ) / 2) >> 0) + 'px';
-		hud.style.left = (((window.innerWidth - hud.width) / 2) >> 0) + 'px';
+		hud.resize();
 		
 	}
 
@@ -905,25 +904,71 @@
 			}
 		}
 
-
 	}
 
 
-	// toggle hud when papers are read
-	function initPaper( note, noteFile ) {
+	// init all notes
+	function initNote( note, noteFile ) {
 
 		// check if note or noteFile defined
 		if ( !note || !noteFile ) {
-			de&&bug.log( 'initPaper() error: note / noteFile is undefined' );
+			de&&bug.log( 'initNote() error: note / noteFile is undefined' );
 		}
 
 		// check if overwriting existing property
+		if ( note.src ) {
+			de&&bug.log( 'initNote() error: existing note prop was overwritten.' );
+		}
 
-
-
-
+		note.src = noteFile;
 
 	}
+
+
+	// init hud that shows all hud imgs in game
+	function initHUD( hud, base ) {
+
+		// check if hud defined
+		if ( !hud && !base ) {
+			de&&bug.log( 'initHUD() error: hud / base is not defined.' );
+		}
+
+		// check if overwriting existing hud properties
+		if ( hud.resize || hud.onload || hud.showing || hud.show || hud.hide ) {
+			de&&bug.log( 'initHUD() error: existing hud prop was overwritten.' );
+		}
+
+		// set hud styled centered on screen with a opacity fade
+		hud.style.cssText = 'max-width: 98vw; max-height: 98vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 0.5s';
+		// is hud showing an img now?
+		hud.showing = false;
+
+		// re-center all hud imgs
+		hud.resize = function() {
+			hud.style.top = (((window.innerHeight - hud.height ) / 2) >> 0) + 'px';
+			hud.style.left = (((window.innerWidth - hud.width) / 2) >> 0) + 'px';
+		}
+
+		// set the top and left offsets once hud img is loaded
+		hud.onload = function( e ) {
+			hud.resize();
+		}
+
+		// show a new hud img
+		hud.show = function( src ) {
+			hud.src = base + src;
+			hud.style.opacity = 1;
+			hud.showing = true;
+		}
+
+		// hide currently displayed hud img
+		hud.hide = function() {
+			hud.style.opacity = 0;
+			hud.showing = false;
+		}
+
+	}
+
 
 
 }( window.witchr = window.witchr || {} ));
