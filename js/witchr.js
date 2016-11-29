@@ -956,14 +956,12 @@
 		}
 
 		// check if overwriting existing hud properties
-		if ( hud.resize || hud.onload || hud.showing || hud.show || hud.hide ) {
+		if ( hud.resize || hud.onload || hud.show || hud.hide ) {
 			de&&bug.log( 'initHUD() error: existing hud prop was overwritten.' );
 		}
 
 		// set hud styled centered on screen with a opacity fade
 		hud.style.cssText = 'max-width: 98vw; max-height: 98vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 0.5s';
-		// is hud showing an img now?
-		hud.showing = false;
 
 		// re-center all hud imgs
 		hud.resize = function() {
@@ -980,13 +978,11 @@
 		// show a new hud img
 		hud.show = function( src ) {
 			hud.src = base + src;
-			hud.showing = true;
 		};
 
 		// hide currently displayed hud img
 		hud.hide = function() {
 			hud.style.opacity = 0;
-			hud.showing = false;
 		};
 
 	}
