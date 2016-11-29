@@ -976,12 +976,12 @@
 		// set the top and left offsets once hud img is loaded
 		hud.onload = function( e ) {
 			hud.resize();
+			hud.style.opacity = 1;
 		};
 
 		// show a new hud img
 		hud.show = function( src ) {
 			hud.src = base + src;
-			hud.style.opacity = 1;
 			hud.showing = true;
 		};
 
