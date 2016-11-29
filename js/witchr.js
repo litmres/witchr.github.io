@@ -34,7 +34,7 @@
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
 	let floor, eye, door, wallDoor, walls;
-	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nf = ['note1.png', 'note2.png', 'news-min.jpg'], hud, base = './img/';
+	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, noteFiles = ['note1.png', 'note2.png', 'news-min.jpg'], readCount = 0, hud, base = './img/';
 
 	// mouse and touch events
 	let rotX = 0;
@@ -411,16 +411,16 @@
 		// create notes that will be spread all over room
 		geometry = new THREE.BoxGeometry( nw, nh, nd );
 		// create all notes
-		for ( let i = 0; i < nf.length; ++i ) {
+		for ( let i = 0; i < noteFiles.length; ++i ) {
 			// create texture for each note
-			texture = new THREE.TextureLoader().load( base + nf[i] );
+			texture = new THREE.TextureLoader().load( base + noteFiles[i] );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
 			texture.repeat.set( 1, 1 );
 			material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
 			paper = new THREE.Mesh( geometry, material );
 			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
-			initNote( paper, nf[i] );
+			initNote( paper, noteFiles[i] );
 			scene.add( paper );
 			notes.push( paper );
 			pickObjects.push( paper );
@@ -614,11 +614,16 @@
 				// check notes
 				for ( let i = 0; i < notes.length; ++i ) {
 					if ( id === notes[i].uuid ) {
-						door.body.open();
 						hud.show( notes[i].src );
+						notes[i].read();
+
+						// if all notes read, open door
+						if ( readCount === noteFiles.length ) {
+							door.body.open();
+						}
 					}
 				}
-				
+
 			}
 
 			isMouseLeftDown = true;
@@ -859,7 +864,7 @@
 			drb.applyImpulse( impulseForce, worldPoint );
 			// toggle door handle whenever door opens
 			dr.handle.toggle();
-		}
+		};
 		
 	}
 
@@ -895,14 +900,14 @@
 					}
 				}
 			}
-		}
+		};
 
 		// toggle door handle animation
 		dh.toggle = function() {
 			if ( !dh.animating ) {
 				dh.animating = true;
 			}
-		}
+		};
 
 	}
 
@@ -920,8 +925,15 @@
 			de&&bug.log( 'initNote() error: existing note prop was overwritten.' );
 		}
 
+		let alreadyRead = false;
 		note.src = noteFile;
-		note.read = false;
+
+		note.read = function() {
+			if ( !alreadyRead ) {
+				alreadyRead = true;
+				readCount++;
+			}
+		};
 
 	}
 
@@ -948,25 +960,25 @@
 		hud.resize = function() {
 			hud.style.top = (((window.innerHeight - hud.height ) / 2) >> 0) + 'px';
 			hud.style.left = (((window.innerWidth - hud.width) / 2) >> 0) + 'px';
-		}
+		};
 
 		// set the top and left offsets once hud img is loaded
 		hud.onload = function( e ) {
 			hud.resize();
-		}
+		};
 
 		// show a new hud img
 		hud.show = function( src ) {
 			hud.src = base + src;
 			hud.style.opacity = 1;
 			hud.showing = true;
-		}
+		};
 
 		// hide currently displayed hud img
 		hud.hide = function() {
 			hud.style.opacity = 0;
 			hud.showing = false;
-		}
+		};
 
 	}
 
