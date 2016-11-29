@@ -710,14 +710,17 @@
 		// don't handle 3+ touches
 		if ( e.touches.length > 1 ) { e.preventDefault(); e.stopPropagation(); return; }
 
-		// reset rotation tracking to position of last touch on screen
-		mouseXOnMouseDown = e.touches[0].clientX - windowHalfX;
-		mouseYOnMouseDown = e.touches[0].clientY - windowHalfY;
-		targetRotationOnMouseDownX = targetRotationX;
-		targetRotationOnMouseDownY = targetRotationY;
-
 		if ( e.touches.length === 0 ) { isMouseLeftDown = false; }
-		if ( e.touches.length === 1 ) { isMouseRightDown = false; }
+
+		if ( e.touches.length === 1 ) {
+			// reset rotation tracking to position of last touch on screen
+			mouseXOnMouseDown = e.touches[0].clientX - windowHalfX;
+			mouseYOnMouseDown = e.touches[0].clientY - windowHalfY;
+			targetRotationOnMouseDownX = targetRotationX;
+			targetRotationOnMouseDownY = targetRotationY;
+			
+			isMouseRightDown = false; 
+		}
 
 	}
 
