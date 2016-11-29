@@ -34,7 +34,7 @@
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
 	let floor, eye, door, wallDoor, walls;
-	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nn = 3, img;
+	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, nf = ['note1.png', 'note2.png', 'news-min.jpg'], hud;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -226,6 +226,19 @@
 		let doorHandle, wallDoorT, wallDoorL, wallDoorR, paper;
 		
 		
+		// create hud img that will display all hud screens for game such as
+		// 	splash img, ending img, and notes
+		hud = document.createElement( 'img' );
+		document.body.appendChild( hud );
+		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 1s';
+		// set the top and left offsets once hud img is loaded
+		hud.onload = function( e ) {
+			hud.style.top = (((window.innerHeight - hud.height ) / 2) >> 0) + 'px';
+			hud.style.left = (((window.innerWidth - hud.width) / 2) >> 0) + 'px';
+			hud.style.opacity = 1;
+		}
+
+
 		// init camera
 		camera = new THREE.PerspectiveCamera( 75, 
 											  window.innerWidth / window.innerHeight, 
@@ -315,7 +328,7 @@
 			// load door handle obj group (will be stuck to door)
 			doorHandle = JSON.parse( data );
 			doorHandle = loader.parse( doorHandle );
-			// setup door handle texture (from shiny metallic img)
+			// setup door handle texture (from shiny metallic texture)
 			texture = new THREE.TextureLoader().load( './img/door_handle-min.jpg' );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
@@ -410,29 +423,15 @@
 		texture.repeat.set( 1, 1 );
 		material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
 		// create all notes
-		for ( let i = 0; i < nn; ++i ) {
+		for ( let i = 0; i < nf.length; ++i ) {
 			paper = new THREE.Mesh( geometry, material );
 			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
+			initPaper( paper, nf[i] );
 			scene.add( paper );
 			notes.push( paper );
 			pickObjects.push( paper );
 		}
 		paper = null;
-		// create the hud imgs when notes are read
-		// img = new Image();
-		img = document.createElement( 'img' );
-		img.src = './img/note2.png';
-		document.body.appendChild( img );
-		img.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 1s';
-		// set the top and left offsets once img is loaded
-		img.onload = function( e ) {
-			img.style.top = (((window.innerHeight - img.height ) / 2) >> 0) + 'px';
-			img.style.left = (((window.innerWidth - img.width) / 2) >> 0) + 'px';
-			img.style.opacity = 1;
-		}
-
-
-		
 		
 
 	}
@@ -804,8 +803,8 @@
 		windowHalfY = window.innerHeight / 2;
 
 		// re-center all hud imgs
-		img.style.top = (((window.innerHeight - img.height ) / 2) >> 0) + 'px';
-		img.style.left = (((window.innerWidth - img.width) / 2) >> 0) + 'px';
+		hud.style.top = (((window.innerHeight - hud.height ) / 2) >> 0) + 'px';
+		hud.style.left = (((window.innerWidth - hud.width) / 2) >> 0) + 'px';
 		
 	}
 
@@ -905,6 +904,23 @@
 				dh.animating = true;
 			}
 		}
+
+
+	}
+
+
+	// toggle hud when papers are read
+	function initPaper( note, noteFile ) {
+
+		// check if note or noteFile defined
+		if ( !note || !noteFile ) {
+			de&&bug.log( 'initPaper() error: note / noteFile is undefined' );
+		}
+
+		// check if overwriting existing property
+
+
+
 
 
 	}
