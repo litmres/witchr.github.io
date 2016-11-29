@@ -607,8 +607,12 @@
 
 				// check doors
 				if ( id === door.uuid ) {
-					// door.body.open();
-					door.handle.toggle();
+					// open door only if it is already open (UX, easier to enter)
+					if ( door.open ) {
+						door.body.open();
+					} else {
+						door.handle.toggle();
+					}
 				}
 
 				// check notes
@@ -839,12 +843,14 @@
 		}
 
 		// check for existing props
-		if ( dr.body || drb.open ) {
+		if ( dr.body || dr.open || drb.open ) {
 			de&&bug.log( 'initDoor() error: an existing door body prop was overwritten' );
 		}
 
 		// attach door body to door
 		dr.body = drb;
+		// has this door been opened yet?
+		dr.open = false;
 
 		// open function will change door body's mass and open it via impulse
 		drb.open = function( openForce ) {
@@ -864,6 +870,8 @@
 			drb.applyImpulse( impulseForce, worldPoint );
 			// toggle door handle whenever door opens
 			dr.handle.toggle();
+			// set this door to open when clicked
+			dr.open = true;
 		};
 		
 	}
