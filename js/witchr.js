@@ -577,10 +577,8 @@
 		e.preventDefault();
 		e.stopPropagation();
 
-		// if hud is showing something, only perform a hide on this click
-		if ( hud.showing ) {
-			hud.hide();
-		}
+		// make sure hud is hidden on every click
+		hud.hide();
 
 		// capture mouse movement on all mouse button downs except...
 		// 	only raycast objects & rotate camera on mouse left button and
