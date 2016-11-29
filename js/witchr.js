@@ -410,14 +410,14 @@
 
 		// create notes that will be spread all over room
 		geometry = new THREE.BoxGeometry( nw, nh, nd );
-		// create note texture
-		texture = new THREE.TextureLoader().load( './img/note1.png' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 1, 1 );
-		material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
 		// create all notes
 		for ( let i = 0; i < nf.length; ++i ) {
+			// create texture for each note
+			texture = new THREE.TextureLoader().load( base + nf[i] );
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set( 1, 1 );
+			material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
 			paper = new THREE.Mesh( geometry, material );
 			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
 			initNote( paper, nf[i] );
@@ -916,11 +916,12 @@
 		}
 
 		// check if overwriting existing property
-		if ( note.src ) {
+		if ( note.src || note.read ) {
 			de&&bug.log( 'initNote() error: existing note prop was overwritten.' );
 		}
 
 		note.src = noteFile;
+		note.read = false;
 
 	}
 
