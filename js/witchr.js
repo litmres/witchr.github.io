@@ -394,26 +394,31 @@
 				doorFaceFrontTexture: './img/door_face_front-min.jpg',
 				doorFaceSideTexture: './img/door_face_side-min.jpg',
 				doorHandleModel: './model/door_handle.json',
-				doorHandleTexture: './img/door_handle-min.jpg' }
-		) );
-
+				doorHandleTexture: './img/door_handle-min.jpg',
+				doorOpenFunc: function () {
+					if ( readCount === noteFiles.length ) {
+						this.body.open();
+					}
+				}
+		} ) );
 		
-		room.checkDoorCondition = function() {
-			if ( readCount === noteFiles.length ) {
-				room.doors[0].body.open();
-			}
-		}
 		// check if player has exited room through a door
 		room.checkExitCondition = function() {
 			if ( eye.position.z < 0 ) {
 				room.state = Game.CORRECT_ANSWER;
 			}
 		};
+
+		// win and exit room
 		room.win = function() {
 			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
 		};
+
+		// lose room logic
 		room.lose = function() {
 		};
+
+		// add this room to the array of game rooms
 		game.rooms.push( room );
 
 		// setup more rooms...
@@ -629,7 +634,10 @@
 						notes[i].read();
 
 						// check if reading this note opens door
-						game.rooms[game.currRoom].checkDoorCondition();
+						let doors = game.rooms[game.currRoom].doors;
+						for ( let j = 0; j < doors.length; ++j ) {
+							doors[j].checkCanOpen();
+						}
 					}
 				}
 
@@ -933,7 +941,7 @@
 		scene.add( door );
 		pickObjects.push( door );
 		// add open function to door (via door body)
-		initDoor( door, da, doorBody, dm );
+		initDoor( door, da, doorBody, dm, ops.doorOpenFunc );
 
 		// create door handle via asynchronous load json file
 		XHR( ops.doorHandleModel, function( data ) {
@@ -961,20 +969,21 @@
 			}
 		} );
 
+
 		return door;
 	}
 
 
 	// toggle door body impulse (and change door mass so it can be opened)
-	function initDoor( dr, da, drb, dm ) {
+	function initDoor( dr, da, drb, dm, drOpenFunc ) {
 
 		// check if door and door body defined
-		if ( !dr && !da && !drb ) {
+		if ( !dr && !da && !drb && !drOpenFunc ) {
 			de&&bug.log( 'initDoor() error: door or door body undefined.' );
 		}
 
 		// check for existing props
-		if ( dr.body || dr.answer || dr.open || drb.open ) {
+		if ( dr.body || dr.answer || dr.open || drb.open || dr.checkCanOpen ) {
 			de&&bug.log( 'initDoor() error: an existing door body prop was overwritten' );
 		}
 
@@ -1006,6 +1015,9 @@
 			// set this door to open when clicked
 			dr.open = true;
 		};
+
+		// test whether conditions are met for door to open
+		dr.checkCanOpen = drOpenFunc.bind( dr );
 		
 	}
 
