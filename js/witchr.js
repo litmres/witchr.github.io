@@ -389,6 +389,7 @@
 		room.doors = [];
 		room.doors.push( createDoor( room, { doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
 				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
+				doorPosition: { x : 0, y : 0, z : 0 }, doorRotation: { x: 0, y: 0, z: 0 },
 				doorAnswer: Game.CORRECT_ANSWER,
 				doorFaceFrontTexture: './img/door_face_front-min.jpg',
 				doorFaceSideTexture: './img/door_face_side-min.jpg',
@@ -455,7 +456,6 @@
 
 	}
 
-
 	function updatePhysics() {
 
 		let room = game.rooms[game.currRoom];
@@ -466,11 +466,11 @@
 
 		// reset eye quaternion so we always rotate offset from origin
 		eyeBody.quaternion.set( 0, 0, 0, 1 );
-		// local rotation about the x-axis
+		// local rotation about the y-axis
 		let rotSide = new CANNON.Quaternion( 0, 0, 0, 1 );
 		rotSide.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotSide );
-		// local rotation about the y-axis
+		// local rotation about the x-axis
 		let rotUp = new CANNON.Quaternion( 0, 0, 0, 1 );
 		rotUp.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotUp );
@@ -848,7 +848,9 @@
 	// create a door, door body, and door handle objects
 	function createDoor( room, ops ) {
 
-		let door, doorBody, doorHandle, dw = ops.doorWidth, dh = ops.doorHeight, dd = ops.doorDepth, df = ops.doorOffset, dm = ops.doorMass, dld = ops.doorLinearDamping, da = ops.doorAnswer;
+		let door, doorBody, doorHandle, dw = ops.doorWidth, dh = ops.doorHeight, dd = ops.doorDepth, df = ops.doorOffset, dm = ops.doorMass, dld = ops.doorLinearDamping, da = ops.doorAnswer,
+		x = ops.doorPosition.x, y = ops.doorPosition.y, z = ops.doorPosition.z,
+		rotx = ops.doorRotation.x, roty = ops.doorRotation.y, rotz = ops.doorRotation.z;
 		let shape;
 		let geometry, material, texture, mats = [];
 
@@ -861,13 +863,28 @@
 		doorBody.mass = 0;
 		doorBody.updateMassProperties();
 		doorBody.linearDamping = dld;
-		doorBody.position.set( 0, dh/2, dd/2 );
+		// set initial door body position
+		doorBody.position.set( x, y + dh/2, z + dd/2 );
+		// set initial door body rotation in x,y,z
+		let rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+		let quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotx*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), roty*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 0, 0, 1 ), rotz*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		doorBody.quaternion = doorBody.quaternion.mult( rotation );
+		// add door body to world
 		doorBody.addShape( shape );
 		world.addBody( doorBody );
 		// create bottom hinge constraint on door
 		hingeBotBody = new CANNON.Body( { mass: 0 } );
 		// hingeBody must match position of doorBody!
-		hingeBotBody.position.set( 0, dh/2, 0 );
+		hingeBotBody.position.set( x, y + dh/2, z );
+		hingeBotBody.quaternion = hingeBotBody.quaternion.mult( rotation );
 		// note that pivotA & pivotB offsets should be the same if hingeBody
 		// 	position is not specified. we are basically specifying the offset
 		// 	of where the rotation axis is locally from bodyB (doorBody)
@@ -881,7 +898,8 @@
 		world.addConstraint( hingeConstraint );
 		// create top hinge constraint on door
 		hingeTopBody = new CANNON.Body( { mass: 0 } );
-		hingeTopBody.position.set( 0, dh/2, 0 );
+		hingeTopBody.position.set( x, y + dh/2, z );
+		hingeTopBody.quaternion = hingeTopBody.quaternion.mult( rotation );
 		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
 			pivotA: new CANNON.Vec3( -dw/2, +dh/2, dd/2 ), // pivot offsets should be same 
 			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
@@ -930,7 +948,7 @@
 			// add texture to door handle obj group (from .json loader)
 			doorHandle.children[0].material = new THREE.MeshBasicMaterial( { map: texture } )
 			// stick door handle appropriately on door
-			doorHandle.position.set( 0.41*dw, -0.06*dh, 0 );
+			doorHandle.position.set( x + 0.41*dw, y + -0.06*dh, 0 );
 			door.add( doorHandle );
 			// add update and toggle functions to door handle
 			initDoorHandle( door, doorHandle );
