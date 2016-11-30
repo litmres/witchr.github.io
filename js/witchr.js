@@ -404,6 +404,9 @@
 		
 		// check if player has exited room through a door
 		room.checkExitCondition = function() {
+			
+			// WIP: generally, best way to do this is to get the exit condition for the whole room and if it is true, run the exit function for the closest door to the player on exit.
+
 			if ( eye.position.z < 0 ) {
 				room.state = Game.CORRECT_ANSWER;
 			}
