@@ -24,6 +24,9 @@
 	// game and room stage logic
 	let game = {};
 
+	// hud and dimmer
+	let hud, base = './img/', dimmer;
+
 	// cannon.js
 	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
@@ -37,7 +40,7 @@
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
 	let floor, eye, door, wallDoor, walls;
-	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, noteFiles = ['note1.png', 'note2.png', 'news-min.jpg'], readCount = 0, hud, base = './img/';
+	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, noteFiles = ['note1.png', 'note2.png', 'news-min.jpg'], readCount = 0;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -229,6 +232,13 @@
 		let geometry, material, texture, mats = [];
 		let loader;
 		let doorHandle, wallDoorT, wallDoorL, wallDoorR, paper;
+		
+
+		// create dimmer div that will appear in front of canvas and act as a
+		// 	'lighting dimmer' when hud is being interacted with
+		dimmer = document.createElement( 'div' );
+		document.body.appendChild( dimmer );
+		dimmer.style.cssText = 'background: #000000; opacity: 0; transition: opacity 0.5s; width: 100vw; height: 100vh; position: fixed; z-index: 100;';
 		
 		
 		// create hud img that will display all hud screens for game such as
@@ -991,7 +1001,7 @@
 		}
 
 		// set hud styled centered on screen with a opacity fade
-		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 0.5s';
+		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 200; opacity: 0; transition: opacity 0.5s';
 
 		// re-center all hud imgs
 		hud.resize = function() {
@@ -1012,11 +1022,15 @@
 			let h = options && options.height? options.height : 'auto';
 			hud.style.width = w;
 			hud.style.height = h;
+			// dim background when showing something on hud
+			dimmer.style.opacity = 0.8;
 		};
 
 		// hide currently displayed hud img
 		hud.hide = function() {
 			hud.style.opacity = 0;
+			// undim background
+			dimmer.style.opacity = 0;
 		};
 
 	}
