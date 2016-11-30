@@ -21,8 +21,11 @@
 	// fps stats
 	let stats;
 
+	// game and room stage logic
+	let game = {};
+
 	// cannon.js
-	let game, world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
+	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
@@ -70,8 +73,8 @@
 	function init() {
 
 		// init game object
-		initGame();
 		initEnums();
+		initGame();
 		initCannon();
 		initThree();
 
@@ -735,7 +738,14 @@
 
 	// init all game objects and stages
 	function initGame() {
+
+		// window.cancelAnimationFrame( game.stopGameLoop ) can be called to stopGameLoop
+		// 	the main requestAnimationFrame() loop
 		game.stopGameLoop = 0;
+
+		// start game on it's initial room
+		game.room = Game.ROOM_0;
+
 	}
 
 
@@ -754,9 +764,9 @@
 		Game = {
 			WA : 0,
 			CA : 1,
-			STAGE_0 : 2,
-			STAGE_1 : 4,
-			STAGE_2 : 8,
+			ROOM_0 : 2,
+			ROOM_1 : 4,
+			ROOM_2 : 8,
 		};
 
 		// init player properties
