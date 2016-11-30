@@ -504,6 +504,12 @@
 
 		// update pickable objects
 		door.handle.update();
+		
+
+		// test for win conditions
+		if ( eye.position.z < 0 ) {
+			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
+		}
 
 
 	}
