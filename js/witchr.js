@@ -32,14 +32,14 @@
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
-	let doorBody, dw = 8, dh = 11, dd = 0.5, df = 0.5, dm = 10, dld = 0.66; // df (door offset in wall), dm (door mass), dld (door linear damping)
+	let physicsMaterial;
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let wallDoorBody;
 	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
-	let floor, eye, door, wallDoor, walls;
+	let floor, eye, wallDoor, walls;
 	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, noteFiles = ['note1.png', 'note2.png', 'news-min.jpg'], readCount = 0;
 
 	// mouse and touch events
@@ -63,9 +63,6 @@
 	let windowHalfY = window.innerHeight/2;
 
 
-	let modelsLoaded = false;
-	
-
 	window.onload = init();
 
 
@@ -77,9 +74,9 @@
 
 		// init game object
 		initEnums();
+		initCannon();	// init global cannonjs bodies
+		initThree();	// init global threejs meshes
 		initGame();
-		initCannon();
-		initThree();
 
 		// init stats
 		stats = witchr.Stats();
@@ -108,12 +105,13 @@
 
 	}
 
-
+	
+	// init global cannonjs logic, not including room specific stuff
 	function initCannon() {
 
 
 		wallsBody = [];
-		let physicsMaterial, physicsContactMaterial;
+		let physicsContactMaterial;
 		let shape;
 
 
@@ -154,48 +152,16 @@
 		world.addBody( eyeBody );
 
 
-		// setup door physics body in the scene (half extents)
-		shape = new CANNON.Box( new CANNON.Vec3( (dw-df)/2, (dh-df)/2, dd/2 ) );
-		doorBody = new CANNON.Body( { mass: dm, material: physicsMaterial } );
-		// door body starts with a mass so physics knows it is initially a
-		// 	moving body but it should start closed so let's freeze it via mass 0
-		doorBody.mass = 0;
-		doorBody.updateMassProperties();
-		doorBody.linearDamping = dld;
-		doorBody.position.set( 0, dh/2, dd/2 );
-		doorBody.addShape( shape );
-		world.addBody( doorBody );
-		// create bottom hinge constraint on door
-		hingeBotBody = new CANNON.Body( { mass: 0 } );
-		// hingeBody must match position of doorBody!
-		hingeBotBody.position.set( 0, dh/2, 0 );
-		// note that pivotA & pivotB offsets should be the same if hingeBody
-		// 	position is not specified. we are basically specifying the offset
-		// 	of where the rotation axis is locally from bodyB (doorBody)
-		// axis should also be the same
-		hingeConstraint = new CANNON.HingeConstraint( hingeBotBody, doorBody, {
-			pivotA: new CANNON.Vec3( -dw/2, -dh/2, dd/2 ), // pivot offsets should be same 
-			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
-			pivotB: new CANNON.Vec3( -dw/2, -dh/2, dd/2 ), // pivot offsets should be same
-			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
-		} );
-		world.addConstraint( hingeConstraint );
-		// create top hinge constraint on door
-		hingeTopBody = new CANNON.Body( { mass: 0 } );
-		hingeTopBody.position.set( 0, dh/2, 0 );
-		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
-			pivotA: new CANNON.Vec3( -dw/2, +dh/2, dd/2 ), // pivot offsets should be same 
-			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
-			pivotB: new CANNON.Vec3( -dw/2, +dh/2, dd/2 ), // pivot offsets should be same
-			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
-		} );
-		world.addConstraint( hingeConstraint );
 
-	
+
+
+
+
+		let dw = 8, dh = 11;
 		// create walls: first wall physics body that contains door
 		wallDoorBody = new CANNON.Body( { mass: wm } );
 		// wallDoor top box mesh
-		shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, dd/2 ) );
+		shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, wd/2 ) );
 		wallDoorBody.addShape( shape, new CANNON.Vec3( 0, ((wh-dh)/2)+dh, 0 ) );
 		// wallDoor left box mesh
 		shape = new CANNON.Box( new CANNON.Vec3( (ww-dw)/4, wh/2, wd/2 ) );
@@ -226,12 +192,12 @@
 	}
 
 
+	// init global threejs logic, not including room specific stuff
 	function initThree() {
 		
 		walls = [], pickObjects = [], notes = [];
 		let geometry, material, texture, mats = [];
-		let loader;
-		let doorHandle, wallDoorT, wallDoorL, wallDoorR, paper;
+		let wallDoorT, wallDoorL, wallDoorR, paper;
 		
 
 		// create dimmer div that will appear in front of canvas and act as a
@@ -306,58 +272,11 @@
 		eye.add( camera );
 		
 
-		// create door as a textured box mesh
-		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
-		// texture door sides
-		texture = new THREE.TextureLoader().load( './img/door_face_side-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 1, 1 );
-        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-		// texture door front & back
-		texture = new THREE.TextureLoader().load( './img/door_face_front-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 1, 1 );
-        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
-		// put all mats together and create door
-        material = new THREE.MeshFaceMaterial( mats );
-		door = new THREE.Mesh( geometry, material );
-		scene.add( door );
-		pickObjects.push( door );
-		// add open function to door (via door body)
-		initDoor( door, doorBody );
 
 
-		// create door handle via asynchronous load json file
-		XHR( './model/door_handle.json', function( data ) {
-			loader = new THREE.ObjectLoader();
-			// load door handle obj group (will be stuck to door)
-			doorHandle = JSON.parse( data );
-			doorHandle = loader.parse( doorHandle );
-			// setup door handle texture (from shiny metallic texture)
-			texture = new THREE.TextureLoader().load( './img/door_handle-min.jpg' );
-			texture.wrapS = THREE.RepeatWrapping;
-			texture.wrapT = THREE.RepeatWrapping;
-			texture.repeat.set( 1, 1 );
-			// add texture to door handle obj group (from .json loader)
-			doorHandle.children[0].material = new THREE.MeshBasicMaterial( { map: texture } )
-			// stick door handle appropriately on door
-			doorHandle.position.set( 0.41*dw, -0.06*dh, 0 );
-			door.add( doorHandle );
-			// add update and toggle functions to door handle
-			initDoorHandle( door, doorHandle );
 
 
-			// signal all models are loaded (if waiting for scene)
-			modelsLoaded = true;
-		} );
-
-
+		let dw = 8, dh = 11, dd = 0.5;
 		// create the wall door parts separately and add them to wall door
 		// 	(the wall that has a door in it)
 		wallDoor = new THREE.Mesh();
@@ -448,6 +367,59 @@
 	}
 
 
+	function initGame() {
+
+		let room = {};
+
+		// window.cancelAnimationFrame( game.stopGameLoop ) can be called to stopGameLoop
+		// 	the main requestAnimationFrame() loop
+		game.stopGameLoop = 0;
+		// start game on it's initial room
+		game.currRoom = 0;
+		// setup each room in the game, each room contains doors, walls, and notes
+		game.numRooms = Game.NUM_ROOMS;
+		game.rooms = [];
+
+
+		// setup room 0 doors, walls, notes
+		room.state = Game.NO_ANSWER;
+		room.NUM_DOORS = 1;
+		room.modelsLoaded = 0;
+		room.allModelsLoaded = false;
+		room.doors = [];
+		room.doors.push( createDoor( room, { doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
+				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
+				doorAnswer: Game.CORRECT_ANSWER,
+				doorFaceFrontTexture: './img/door_face_front-min.jpg',
+				doorFaceSideTexture: './img/door_face_side-min.jpg',
+				doorHandleModel: './model/door_handle.json',
+				doorHandleTexture: './img/door_handle-min.jpg' }
+		) );
+
+		
+		room.checkDoorCondition = function() {
+			if ( readCount === noteFiles.length ) {
+				room.doors[0].body.open();
+			}
+		}
+		// check if player has exited room through a door
+		room.checkExitCondition = function() {
+			if ( eye.position.z < 0 ) {
+				room.state = Game.CORRECT_ANSWER;
+			}
+		};
+		room.win = function() {
+			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
+		};
+		room.lose = function() {
+		};
+		game.rooms.push( room );
+
+		// setup more rooms...
+
+	}
+
+
 
 	/*********************************************************
 	 * main game loop
@@ -466,8 +438,11 @@
 
 		while ( accumulator >= dt ) {
 
-			handleInputs( dt );
-			updatePhysics();
+			// only handle inputs and update physics once all models are loaded
+			if ( game.rooms[game.currRoom].allModelsLoaded ) {
+				handleInputs( dt );
+				updatePhysics();
+			}
 
 			accumulator -= dt;
 			t += dt;
@@ -482,6 +457,8 @@
 
 
 	function updatePhysics() {
+
+		let room = game.rooms[game.currRoom];
 
 
 		world.step( dt );
@@ -499,15 +476,32 @@
 		eyeBody.quaternion = eyeBody.quaternion.mult( rotUp );
 
 
-		// set all of the meshes to their physics bodies
+		// update all of meshes to their physics bodies
 		eye.position.copy( eyeBody.position );
 		eye.quaternion.copy( eyeBody.quaternion );
 
 		floor.position.copy( floorBody.position );
 		floor.quaternion.copy( floorBody.quaternion );
 		
-		door.position.copy( doorBody.position );
-		door.quaternion.copy( doorBody.quaternion );
+		for ( let i = 0; i < room.doors.length; ++i ) {
+			let door = room.doors[i];
+			door.position.copy( door.body.position );
+			door.quaternion.copy( door.body.quaternion );
+			door.handle.update();
+			
+			// if a door is open, check if player exited
+			if ( door.open ) {
+				room.checkExitCondition();
+				if ( room.state ) {
+					if ( room.state === Game.CORRECT_ANSWER ) {
+						room.win();
+					}
+					if ( room.state === Game.WRONG_ANSWER ) {
+						room.lose();
+					}
+				}
+			}
+		}
 
 		wallDoor.position.copy( wallDoorBody.position );
 		wallDoor.quaternion.copy( wallDoorBody.quaternion );
@@ -515,25 +509,6 @@
 			walls[i].position.copy( wallsBody[i].position );
 			walls[i].quaternion.copy( wallsBody[i].quaternion );
 		}
-
-
-		// update pickable objects
-		door.handle.update();
-		
-
-		// if a door is open, check if player exited
-		if ( door.open ) {
-			game.rooms[game.currRoom].checkExitCondition();
-			if ( game.rooms[game.currRoom].state ) {
-				if ( game.rooms[game.currRoom].state === Game.CORRECT_ANSWER ) {
-					game.rooms[game.currRoom].win();
-				}
-				if ( game.rooms[game.currRoom].state === Game.WRONG_ANSWER ) {
-					game.rooms[game.currRoom].lose();
-				}
-			}
-		}
-
 
 	}
 
@@ -635,12 +610,15 @@
 				let id = intersects[0].object.uuid;
 
 				// check doors
-				if ( id === door.uuid ) {
-					// open door only if it is already open (UX, easier to enter)
-					if ( door.open ) {
-						door.body.open();
-					} else {
-						door.handle.toggle();
+				for ( let i = 0; i < game.rooms[game.currRoom].doors.length; ++i ) {
+					let door = game.rooms[game.currRoom].doors[i];
+					if ( id === door.uuid ) {
+						// open door only if it is already open (UX, easier to enter)
+						if ( door.open ) {
+							door.body.open();
+						} else {
+							door.handle.toggle();
+						}
 					}
 				}
 
@@ -748,47 +726,6 @@
 			
 			isMouseRightDown = false; 
 		}
-
-	}
-
-
-	// init all game objects and stages
-	function initGame() {
-
-		// window.cancelAnimationFrame( game.stopGameLoop ) can be called to stopGameLoop
-		// 	the main requestAnimationFrame() loop
-		game.stopGameLoop = 0;
-
-		// start game on it's initial room
-		game.currRoom = 0;
-
-		// setup each room in the game, each room contains doors, walls, and notes
-		game.numRooms = Game.NUM_ROOMS;
-		game.rooms = [];
-
-		// setup room 0 doors, walls, notes
-		let room = {};
-		room.state = Game.NO_ANSWER;
-		// room.doors = [];
-		room.checkDoorCondition = function() {
-			if ( readCount === noteFiles.length ) {
-				door.body.open();
-			}
-		}
-		// check if player has exited room through a door
-		room.checkExitCondition = function() {
-			if ( eye.position.z < 0 ) {
-				room.state = Game.CORRECT_ANSWER;
-			}
-		};
-		room.win = function() {
-			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
-		};
-		room.lose = function() {
-		};
-		game.rooms.push( room );
-
-		// setup more rooms...
 
 	}
 
@@ -908,16 +845,118 @@
 	}
 
 
+	// create a door, door body, and door handle objects
+	function createDoor( room, ops ) {
+
+		let door, doorBody, doorHandle, dw = ops.doorWidth, dh = ops.doorHeight, dd = ops.doorDepth, df = ops.doorOffset, dm = ops.doorMass, dld = ops.doorLinearDamping, da = ops.doorAnswer;
+		let shape;
+		let geometry, material, texture, mats = [];
+
+
+		// setup door physics body in the scene (half extents)
+		shape = new CANNON.Box( new CANNON.Vec3( (dw-df)/2, (dh-df)/2, dd/2 ) );
+		doorBody = new CANNON.Body( { mass: dm, material: physicsMaterial } );
+		// door body starts with a mass so physics knows it is initially a
+		// 	moving body but it should start closed so let's freeze it via mass 0
+		doorBody.mass = 0;
+		doorBody.updateMassProperties();
+		doorBody.linearDamping = dld;
+		doorBody.position.set( 0, dh/2, dd/2 );
+		doorBody.addShape( shape );
+		world.addBody( doorBody );
+		// create bottom hinge constraint on door
+		hingeBotBody = new CANNON.Body( { mass: 0 } );
+		// hingeBody must match position of doorBody!
+		hingeBotBody.position.set( 0, dh/2, 0 );
+		// note that pivotA & pivotB offsets should be the same if hingeBody
+		// 	position is not specified. we are basically specifying the offset
+		// 	of where the rotation axis is locally from bodyB (doorBody)
+		// axis should also be the same
+		hingeConstraint = new CANNON.HingeConstraint( hingeBotBody, doorBody, {
+			pivotA: new CANNON.Vec3( -dw/2, -dh/2, dd/2 ), // pivot offsets should be same 
+			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
+			pivotB: new CANNON.Vec3( -dw/2, -dh/2, dd/2 ), // pivot offsets should be same
+			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
+		} );
+		world.addConstraint( hingeConstraint );
+		// create top hinge constraint on door
+		hingeTopBody = new CANNON.Body( { mass: 0 } );
+		hingeTopBody.position.set( 0, dh/2, 0 );
+		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
+			pivotA: new CANNON.Vec3( -dw/2, +dh/2, dd/2 ), // pivot offsets should be same 
+			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
+			pivotB: new CANNON.Vec3( -dw/2, +dh/2, dd/2 ), // pivot offsets should be same
+			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
+		} );
+		world.addConstraint( hingeConstraint );
+		
+
+		// create door as a textured box mesh
+		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
+		// texture door sides
+		texture = new THREE.TextureLoader().load( ops.doorFaceSideTexture );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( 1, 1 );
+        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
+        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
+        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
+        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
+		// texture door front & back
+		texture = new THREE.TextureLoader().load( ops.doorFaceFrontTexture );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( 1, 1 );
+        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
+        mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
+		// put all mats together and create door
+        material = new THREE.MeshFaceMaterial( mats );
+		door = new THREE.Mesh( geometry, material );
+		scene.add( door );
+		pickObjects.push( door );
+		// add open function to door (via door body)
+		initDoor( door, da, doorBody, dm );
+
+		// create door handle via asynchronous load json file
+		XHR( ops.doorHandleModel, function( data ) {
+			// load door handle obj group (will be stuck to door)
+			doorHandle = JSON.parse( data );
+			doorHandle = (new THREE.ObjectLoader()).parse( doorHandle );
+			// setup door handle texture (from shiny metallic texture)
+			texture = new THREE.TextureLoader().load( ops.doorHandleTexture );
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set( 1, 1 );
+			// add texture to door handle obj group (from .json loader)
+			doorHandle.children[0].material = new THREE.MeshBasicMaterial( { map: texture } )
+			// stick door handle appropriately on door
+			doorHandle.position.set( 0.41*dw, -0.06*dh, 0 );
+			door.add( doorHandle );
+			// add update and toggle functions to door handle
+			initDoorHandle( door, doorHandle );
+
+			// increment another loaded door handle model and signal that all
+			//	models are loaded so gameloop can start taking input/updating
+			room.modelsLoaded++;
+			if ( room.modelsLoaded === room.NUM_DOORS ) {
+				room.allModelsLoaded = true;
+			}
+		} );
+
+		return door;
+	}
+
+
 	// toggle door body impulse (and change door mass so it can be opened)
-	function initDoor( dr, drb ) {
+	function initDoor( dr, da, drb, dm ) {
 
 		// check if door and door body defined
-		if ( !dr && !drb ) {
+		if ( !dr && !da && !drb ) {
 			de&&bug.log( 'initDoor() error: door or door body undefined.' );
 		}
 
 		// check for existing props
-		if ( dr.body || dr.open || drb.open ) {
+		if ( dr.body || dr.answer || dr.open || drb.open ) {
 			de&&bug.log( 'initDoor() error: an existing door body prop was overwritten' );
 		}
 
@@ -925,6 +964,8 @@
 		dr.body = drb;
 		// has this door been opened yet?
 		dr.open = false;
+		// is this the correct door to exit?
+		dr.answer = da;
 
 		// open function will change door body's mass and open it via impulse
 		drb.open = function( openForce ) {
