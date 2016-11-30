@@ -35,7 +35,6 @@
 	let physicsMaterial;
 	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
 	let wallDoorBody;
-	let impulseForce, worldPoint, hingeBotBody, hingeTopBody, hingeConstraint;
 	
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
@@ -863,6 +862,7 @@
 		x = ops.doorPosition.x, y = ops.doorPosition.y, z = ops.doorPosition.z,
 		rotx = ops.doorRotation.x, roty = ops.doorRotation.y, rotz = ops.doorRotation.z;
 		let shape;
+		let hingeBotBody, hingeTopBody, hingeConstraint;
 		let geometry, material, texture, mats = [];
 
 
@@ -979,6 +979,7 @@
 
 	// toggle door body impulse (and change door mass so it can be opened)
 	function initDoor( dr, da, drb, dm, drOpenFunc ) {
+		let impulseForce, worldPoint;
 
 		// check if door and door body defined
 		if ( !dr && !da && !drb && !drOpenFunc ) {
