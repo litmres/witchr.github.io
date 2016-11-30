@@ -231,6 +231,8 @@
 		hud = document.createElement( 'img' );
 		document.body.appendChild( hud );
 		initHUD( hud, base );
+		// show splash screen as the intro img
+		hud.show( 'splash-min.jpg', { width: '100vw', height: '100vh' } );
 
 
 		// init camera
@@ -961,7 +963,7 @@
 		}
 
 		// set hud styled centered on screen with a opacity fade
-		hud.style.cssText = 'max-width: 98vw; max-height: 98vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 0.5s';
+		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 100; opacity: 0; transition: opacity 0.5s';
 
 		// re-center all hud imgs
 		hud.resize = function() {
@@ -976,8 +978,12 @@
 		};
 
 		// show a new hud img
-		hud.show = function( src ) {
+		hud.show = function( src, options ) {
 			hud.src = base + src;
+			let w = options && options.width? options.width : 'auto';
+			let h = options && options.height? options.height : 'auto';
+			hud.style.width = w;
+			hud.style.height = h;
 		};
 
 		// hide currently displayed hud img
