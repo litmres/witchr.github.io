@@ -22,7 +22,7 @@
 	let stats;
 
 	// cannon.js
-	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
+	let game, world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
@@ -69,6 +69,8 @@
 	 */
 	function init() {
 
+		// init game object
+		initGame();
 		initEnums();
 		initCannon();
 		initThree();
@@ -440,7 +442,7 @@
 	 */
 	function gameloop() {
 
-		Game.stopGameLoop = requestAnimationFrame( gameloop );
+		game.stopGameLoop = requestAnimationFrame( gameloop );
 
 		newTime = performance.now();
 		frameTime = newTime - currTime;
@@ -731,6 +733,12 @@
 	}
 
 
+	// init all game objects and stages
+	function initGame() {
+		game.stopGameLoop = 0;
+	}
+
+
 	/*********************************************************
 	 * initialize all enumerated types
 	 *********************************************************
@@ -739,47 +747,51 @@
 		
 		// init canvas to not take up so much space (scrollbars appear) 
 		Canvas = {
-			SIZE: 1 
+			SIZE : 1 
 		};
 
 		// init game object and properties
 		Game = {
-			stopGameLoop: 0
+			WA : 0,
+			CA : 1,
+			STAGE_0 : 2,
+			STAGE_1 : 4,
+			STAGE_2 : 8,
 		};
 
 		// init player properties
 		Player = {
-			MOVE_SPEED: 66,
-			ROTATE_SPEED: 10,		// speed to reach desired rotation
-			ROTATE_OFFSET_DAMP: 0.002	// offset sensitivity
+			MOVE_SPEED : 66,
+			ROTATE_SPEED : 10,		// speed to reach desired rotation
+			ROTATE_OFFSET_DAMP : 0.002	// offset sensitivity
 		};
 
 		// init keyboard input keycodes
 		Key = {
-			LEFT: 37,
-			UP: 38,
-			RIGHT: 39,
-			DOWN: 40,
-			A: 65,
-			W: 87,
-			D: 68,
-			S: 83,
-			R: 82,
-			F: 70,
-			SPACE: 32,
-			CTRL: 17
+			LEFT : 37,
+			UP : 38,
+			RIGHT : 39,
+			DOWN : 40,
+			A : 65,
+			W : 87,
+			D : 68,
+			S : 83,
+			R : 82,
+			F : 70,
+			SPACE : 32,
+			CTRL : 17
 		};
 
 		// init handle keyboard input
 		Keyboard = {
-			keys: {},
-			keyPress: function( e ) {
+			keys : {},
+			keyPress : function( e ) {
 				// e.preventDefault();
 				if ( this.keys[e.keyCode] > 0 ) { return; }
 				this.keys[e.keyCode] = e.timeStamp || ( performance.now() );
 				e.stopPropagation();
 			},
-			keyRelease: function( e ) {
+			keyRelease : function( e ) {
 				// e.preventDefault();
 				this.keys[e.keyCode] = 0;
 				e.stopPropagation();
@@ -788,14 +800,14 @@
 
 		// init mouse clicks
 		Mouse = {
-			LEFT: 0,
-			MIDDLE: 1,
-			RIGHT: 2
+			LEFT : 0,
+			MIDDLE : 1,
+			RIGHT : 2
 		};
 
 		// non-door containing walls
 		Wall = {
-			BACK: 0, LEFT: 1, RIGHT: 2
+			BACK : 0, LEFT : 1, RIGHT : 2
 		};
 
 	}
