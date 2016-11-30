@@ -500,14 +500,14 @@
 
 
 		// set all of the meshes to their physics bodies
+		eye.position.copy( eyeBody.position );
+		eye.quaternion.copy( eyeBody.quaternion );
+
 		floor.position.copy( floorBody.position );
 		floor.quaternion.copy( floorBody.quaternion );
 		
 		door.position.copy( doorBody.position );
 		door.quaternion.copy( doorBody.quaternion );
-
-		eye.position.copy( eyeBody.position );
-		eye.quaternion.copy( eyeBody.quaternion );
 
 		wallDoor.position.copy( wallDoorBody.position );
 		wallDoor.quaternion.copy( wallDoorBody.quaternion );
@@ -521,9 +521,17 @@
 		door.handle.update();
 		
 
-		// test for win conditions
-		if ( eye.position.z < 0 ) {
-			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
+		// if a door is open, check if player exited
+		if ( door.open ) {
+			game.rooms[game.currRoom].checkExitCondition();
+			if ( game.rooms[game.currRoom].state ) {
+				if ( game.rooms[game.currRoom].state === Game.CORRECT_ANSWER ) {
+					game.rooms[game.currRoom].win();
+				}
+				if ( game.rooms[game.currRoom].state === Game.WRONG_ANSWER ) {
+					game.rooms[game.currRoom].lose();
+				}
+			}
 		}
 
 
@@ -636,16 +644,14 @@
 					}
 				}
 
-				// check notes
+				// check notes for possible door opening events
 				for ( let i = 0; i < notes.length; ++i ) {
 					if ( id === notes[i].uuid ) {
 						hud.show( notes[i].src );
 						notes[i].read();
 
-						// if all notes read, open door
-						if ( readCount === noteFiles.length ) {
-							door.body.open();
-						}
+						// check if reading this note opens door
+						game.rooms[game.currRoom].checkDoorCondition();
 					}
 				}
 
@@ -754,7 +760,35 @@
 		game.stopGameLoop = 0;
 
 		// start game on it's initial room
-		game.room = Game.ROOM_0;
+		game.currRoom = 0;
+
+		// setup each room in the game, each room contains doors, walls, and notes
+		game.numRooms = Game.NUM_ROOMS;
+		game.rooms = [];
+
+		// setup room 0 doors, walls, notes
+		let room = {};
+		room.state = Game.NO_ANSWER;
+		// room.doors = [];
+		room.checkDoorCondition = function() {
+			if ( readCount === noteFiles.length ) {
+				door.body.open();
+			}
+		}
+		// check if player has exited room through a door
+		room.checkExitCondition = function() {
+			if ( eye.position.z < 0 ) {
+				room.state = Game.CORRECT_ANSWER;
+			}
+		};
+		room.win = function() {
+			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
+		};
+		room.lose = function() {
+		};
+		game.rooms.push( room );
+
+		// setup more rooms...
 
 	}
 
@@ -772,11 +806,10 @@
 
 		// init game object and properties
 		Game = {
-			WA : 0,
-			CA : 1,
-			ROOM_0 : 2,
-			ROOM_1 : 4,
-			ROOM_2 : 8,
+			WRONG_ANSWER : -1,
+			NO_ANSWER : 0,
+			CORRECT_ANSWER : 1,
+			NUM_ROOMS : 3
 		};
 
 		// init player properties
