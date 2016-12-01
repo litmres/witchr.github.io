@@ -30,14 +30,14 @@
 	// cannon.js
 	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
-	let floorBody, fw = 10, fd = 10;
+	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
 	let physicsMaterial;
 	
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
 	let floor, eye;
-	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, noteFiles = ['note1.png', 'note2.png', 'news-min.jpg'], readCount = 0;
+	let pickObjects;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -154,9 +154,8 @@
 	// init global threejs logic, not including room specific stuff
 	function initThree() {
 		
-		pickObjects = [], notes = [];
+		pickObjects = [];
 		let geometry, material, texture, mats = [];
-		let paper;
 
 		// create dimmer div that will appear in front of canvas and act as a
 		// 	'lighting dimmer' when hud is being interacted with
@@ -233,26 +232,6 @@
 
 
 
-
-		let ww = 50, wd = 1, dh = 11;
-		// create notes that will be spread all over room
-		geometry = new THREE.BoxGeometry( nw, nh, nd );
-		// create all notes
-		for ( let i = 0; i < noteFiles.length; ++i ) {
-			// create texture for each note
-			texture = new THREE.TextureLoader().load( base + noteFiles[i] );
-			texture.wrapS = THREE.RepeatWrapping;
-			texture.wrapT = THREE.RepeatWrapping;
-			texture.repeat.set( 1, 1 );
-			material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
-			paper = new THREE.Mesh( geometry, material );
-			paper.position.set( ww/3*i - ww/3, dh/2, ww-wd );
-			initNote( paper, noteFiles[i] );
-			scene.add( paper );
-			notes.push( paper );
-			pickObjects.push( paper );
-		}
-		paper = null;
 		
 
 	}
@@ -290,53 +269,50 @@
 				doorHandleModel: './model/door_handle.json',
 				doorHandleTexture: './img/door_handle-min.jpg',
 				doorOpenFunc: function () {
-					if ( readCount === noteFiles.length ) {
+					if ( room.readCount === room.NUM_NOTES ) {
 						this.body.open();
 					}
 				}
 		} ) );
-
-		room.NUM_WALLS = 4;
+		// create walls
+		let wallsData = [
+			{ x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0, doors: [room.doors[0]] },
+			{ x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0, doors: [] },
+			{ x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0, doors: [] },
+			{ x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0, doors: [] },
+		];
+		room.NUM_WALLS = wallsData.length;
 		room.walls = [];
-
-		room.walls.push( createWall( {
-				wallWidth: 50, wallHeight: 20, wallDepth: 1,
-				wallPosition: { x: 0, y: 0, z: 0 },
-				wallRotation: { x: 0, y: 0, z: 0 },
-				wallMass: 0,
-				wallDoors: [room.doors[0]],
-				wallTexture: './img/wallpaper-min.jpg'
-		} ) );
-		room.walls.push( createWall( {
-				wallWidth: 50, wallHeight: 20, wallDepth: 1,
-				wallPosition: { x: 25, y: 0, z: 25 },
-				wallRotation: { x: 0, y: 90, z: 0 },
-				wallMass: 0,
-				wallDoors: [],
-				wallTexture: './img/wallpaper-min.jpg'
-		} ) );
-		room.walls.push( createWall( {
-				wallWidth: 50, wallHeight: 20, wallDepth: 1,
-				wallPosition: { x: 0, y: 0, z: 50 },
-				wallRotation: { x: 0, y: 0, z: 0 },
-				wallMass: 0,
-				wallDoors: [],
-				wallTexture: './img/wallpaper-min.jpg'
-		} ) );
-		room.walls.push( createWall( {
-				wallWidth: 50, wallHeight: 20, wallDepth: 1,
-				wallPosition: { x: -25, y: 0, z: 25 },
-				wallRotation: { x: 0, y: 90, z: 0 },
-				wallMass: 0,
-				wallDoors: [],
-				wallTexture: './img/wallpaper-min.jpg'
-		} ) );
-
-
-
+		for ( let i = 0; i < room.NUM_WALLS; ++i ) {
+			room.walls.push( createWall( {
+					wallWidth: 50, wallHeight: 20, wallDepth: 1,
+					wallPosition: { x: wallsData[i].x, y: wallsData[i].y, z: wallsData[i].z },
+					wallRotation: { x: wallsData[i].rX, y: wallsData[i].rY, z: wallsData[i].rZ },
+					wallMass: 0,
+					wallDoors: wallsData[i].doors,
+					wallTexture: './img/wallpaper-min.jpg'
+			} ) );
+		}
 		// create notes
-		
-
+		let notesData = [ 
+			{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+				fileName: 'note1.png' },
+			{ w: 3, h: 5, d: 0.001, x: 0, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+				fileName: 'note2.png' },
+			{ w: 11, h: 11, d: 0.001, x: +15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+				fileName: 'news-min.jpg' },
+		];
+		room.NUM_NOTES = notesData.length;
+		room.notes = []
+		room.readCount = 0;
+		for ( let i = 0; i < room.NUM_NOTES; ++i ) {
+			room.notes.push( createNote( room, {
+					noteWidth: notesData[i].w, noteHeight: notesData[i].h, noteDepth: notesData[i].d,
+					x: notesData[i].x, y: notesData[i].y, z: notesData[i].z,
+					rX: notesData[i].rX, rY: notesData[i].rY, rZ: notesData[i].rZ,
+					fileName: notesData[i].fileName
+			} ) );
+		}
 		
 		
 		
@@ -569,10 +545,11 @@
 				}
 
 				// check notes for possible door opening events
-				for ( let i = 0; i < notes.length; ++i ) {
-					if ( id === notes[i].uuid ) {
-						hud.show( notes[i].src );
-						notes[i].read();
+				for ( let i = 0; i < game.rooms[game.currRoom].notes.length; ++i ) {
+					let note = game.rooms[game.currRoom].notes[i];
+					if ( id === note.uuid ) {
+						hud.show( note.src );
+						note.read();
 
 						// check if reading this note opens door
 						let doors = game.rooms[game.currRoom].doors;
@@ -1190,12 +1167,46 @@
 	}
 
 
+	// create notes
+	function createNote( room, ops ) {
+
+		let note, nw = ops.noteWidth, nh = ops.noteHeight, nd = ops.noteDepth,
+		x = ops.x, y = ops.y, z = ops.z, rotx = ops.rX, roty = ops.rY, rotz = ops.rZ,
+		fileName = ops.fileName;
+		let geometry, material, texture;
+
+		// create notes that will be spread all over room
+		geometry = new THREE.BoxGeometry( nw, nh, nd );
+		// create texture for each note
+		texture = new THREE.TextureLoader().load( base + fileName );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( 1, 1 );
+		material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
+		note = new THREE.Mesh( geometry, material );
+		// set note position
+		note.position.set( x, y, z );
+		// set note rotation
+		note.rotateX( rotx );
+		note.rotateY( roty );
+		note.rotateZ( rotz );
+		// init note and add it to scene
+		initNote( note, fileName, room );
+		scene.add( note );
+		pickObjects.push( note );
+ 
+
+		return note;
+
+	}
+
+
 	// init all notes
-	function initNote( note, noteFile ) {
+	function initNote( note, noteFile, room ) {
 
 		// check if note or noteFile defined
-		if ( !note || !noteFile ) {
-			de&&bug.log( 'initNote() error: note / noteFile is undefined' );
+		if ( !note || !noteFile || !room ) {
+			de&&bug.log( 'initNote() error: some arg is undefined' );
 		}
 
 		// check if overwriting existing property
@@ -1209,7 +1220,7 @@
 		note.read = function() {
 			if ( !alreadyRead ) {
 				alreadyRead = true;
-				readCount++;
+				room.readCount++;
 			}
 		};
 
