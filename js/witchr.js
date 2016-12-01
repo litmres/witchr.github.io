@@ -282,7 +282,7 @@
 		room.doors.push( createDoor( room, {
 				doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
 				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
-				doorPosition: { x : 0, y : 0, z : 0 },
+				doorPosition: { x : -15, y : 0, z : 0 },
 				doorRotation: { x: 0, y: 0, z: 0 },
 				doorAnswer: Game.CORRECT_ANSWER,
 				doorFaceFrontTexture: './img/door_face_front-min.jpg',
@@ -912,7 +912,7 @@
 			// add texture to door handle obj group (from .json loader)
 			doorHandle.children[0].material = new THREE.MeshBasicMaterial( { map: texture } )
 			// stick door handle appropriately on door
-			doorHandle.position.set( x + 0.41*dw, y + -0.06*dh, 0 );
+			doorHandle.position.set( dw*0.41, dh*-0.06, 0 );
 			door.add( doorHandle );
 			// add update and toggle functions to door handle
 			initDoorHandle( door, doorHandle );
@@ -1091,7 +1091,7 @@
 				material = new THREE.MeshFaceMaterial( mats );
 				wallL = new THREE.Mesh( geometry, material );
 				wallL.position.set( -px + lww/2, wh/2, 0 );
-				wall.add( wallL );
+				// wall.add( wallL );
 				// create top part of wall door mesh (above door, full extents)
 				geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 				mats = [];
