@@ -228,15 +228,10 @@
 		camera.position.y += er;
 		eye.add( camera );
 		
-
-
-
-
-		
-
 	}
 
 
+	// initialize all game objects such as the rooms, doors, walls, notes
 	function initGame() {
 
 		let room = {};
