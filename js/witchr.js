@@ -234,143 +234,160 @@
 	// initialize all game objects such as the rooms, doors, walls, notes
 	function initGame() {
 
-		let room = {};
-
 		// window.cancelAnimationFrame( game.stopGameLoop ) can be called to stopGameLoop
 		// 	the main requestAnimationFrame() loop
 		game.stopGameLoop = 0;
 		// start game on it's initial room
 		game.currRoom = 0;
 		// setup each room in the game, each room contains doors, walls, and notes
-		game.numRooms = Game.NUM_ROOMS;
-		game.rooms = [];
-
-		
-		/**
-		8888888b.                                       .d8888b.  
-		888   Y88b                                     d88P  Y88b 
-		888    888                                     888    888 
-		888   d88P  .d88b.   .d88b.  88888b.d88b.      888    888 
-		8888888P"  d88""88b d88""88b 888 "888 "88b     888    888 
-		888 T88b   888  888 888  888 888  888  888     888    888 
-		888  T88b  Y88..88P Y88..88P 888  888  888     Y88b  d88P 
-		888   T88b  "Y88P"   "Y88P"  888  888  888      "Y8888P"  
-		 */
-		room.state = Game.NO_ANSWER;
-		// create doors
-		room.modelsLoaded = 0;
-		room.allModelsLoaded = false;
-		let dD, doorsData;
-		dD = doorsData = [
-			{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
-				answer: Game.CORRECT_ANSWER,
-				frontTexture: './img/door_face_front-min.jpg',
-				sideTexture: './img/door_face_side-min.jpg',
-				handleModel: './model/door_handle.json',
-				handleTexture: './img/door_handle-min.jpg' },
-			{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
-				answer: Game.WRONG_ANSWER,
-				frontTexture: './img/door_face_front-min.jpg',
-				sideTexture: './img/door_face_side-min.jpg',
-				handleModel: './model/door_handle.json',
-				handleTexture: './img/door_handle-min.jpg' }
-		];
-		room.NUM_DOORS = doorsData.length;
-		room.doors = [];
-		for ( let i = 0; i < room.NUM_DOORS; ++i ) {
-			room.doors.push( createDoor( room, {
-					doorWidth: dD[i].dw, doorHeight: dD[i].dh, doorDepth: dD[i].dd,
-					doorOffset: dD[i].df, doorMass: dD[i].dm, doorLinearDamping: dD[i].dld,
-					doorPosition: { x : dD[i].x, y : dD[i].y, z : dD[i].z },
-					doorRotation: { x: dD[i].rx, y: dD[i].ry, z: dD[i].rz },
-					doorAnswer: dD[i].answer,
-					doorFaceFrontTexture: dD[i].frontTexture,
-					doorFaceSideTexture: dD[i].sideTexture,
-					doorHandleModel: dD[i].handleModel,
-					doorHandleTexture:dD[i].handleTexture 
-			} ) );
-		}
-		// create walls
-		let wallsData = [
-			{ x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0, doors: [room.doors[0], room.doors[1]] },
-			{ x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0, doors: [] },
-			{ x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0, doors: [] },
-			{ x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0, doors: [] },
-		];
-		room.NUM_WALLS = wallsData.length;
-		room.walls = [];
-		for ( let i = 0; i < room.NUM_WALLS; ++i ) {
-			room.walls.push( createWall( {
-					wallWidth: 50, wallHeight: 20, wallDepth: 1,
-					wallPosition: { x: wallsData[i].x, y: wallsData[i].y, z: wallsData[i].z },
-					wallRotation: { x: wallsData[i].rX, y: wallsData[i].rY, z: wallsData[i].rZ },
-					wallMass: 0,
-					wallDoors: wallsData[i].doors,
-					wallTexture: './img/wallpaper-min.jpg'
-			} ) );
-		}
-		// create notes
-		let notesData = [ 
-			{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-				fileName: 'note1.png' },
-			{ w: 3, h: 5, d: 0.001, x: 0, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-				fileName: 'note2.png' },
-			{ w: 11, h: 11, d: 0.001, x: +15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-				fileName: 'news-min.jpg' },
-		];
-		room.NUM_NOTES = notesData.length;
-		room.notes = []
-		room.readCount = 0;
-		for ( let i = 0; i < room.NUM_NOTES; ++i ) {
-			room.notes.push( createNote( room, {
-					noteWidth: notesData[i].w, noteHeight: notesData[i].h, noteDepth: notesData[i].d,
-					x: notesData[i].x, y: notesData[i].y, z: notesData[i].z,
-					rX: notesData[i].rX, rY: notesData[i].rY, rZ: notesData[i].rZ,
-					fileName: notesData[i].fileName
-			} ) );
-		}
-		// check if player has exited room through a door
-		room.checkExitCondition = function() {
-			// generally, best way to do this is to check for the closest door
-			//	to the player on exit and grab the ca/wa from that door.
-			// test against exit condition
-			if ( eye.position.z < 0 ) {
-				// get the closest door to player
-				let closest = { door: room.doors[0], d: eye.position.distanceTo( room.doors[0].position ) };
-				for ( let i = 1; i < room.doors.length; ++i ) {
-					let dist = eye.position.distanceTo( room.doors[i].position );
-					closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
+		let rD, roomsData;
+		rD = roomsData = [
+			/**
+			8888888b.                                       .d8888b.  
+			888   Y88b                                     d88P  Y88b 
+			888    888                                     888    888 
+			888   d88P  .d88b.   .d88b.  88888b.d88b.      888    888 
+			8888888P"  d88""88b d88""88b 888 "888 "88b     888    888 
+			888 T88b   888  888 888  888 888  888  888     888    888 
+			888  T88b  Y88..88P Y88..88P 888  888  888     Y88b  d88P 
+			888   T88b  "Y88P"   "Y88P"  888  888  888      "Y8888P"  
+			*/
+			{
+				doorsData: [
+					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
+					answer: Game.CORRECT_ANSWER,
+					frontTexture: './img/door_face_front-min.jpg',
+					sideTexture: './img/door_face_side-min.jpg',
+					handleModel: './model/door_handle.json',
+					handleTexture: './img/door_handle-min.jpg' },
+					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
+					answer: Game.WRONG_ANSWER,
+					frontTexture: './img/door_face_front-min.jpg',
+					sideTexture: './img/door_face_side-min.jpg',
+					handleModel: './model/door_handle.json',
+					handleTexture: './img/door_handle-min.jpg' }
+				],
+				wallsData: [
+					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
+						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
+						wallTexture: './img/wallpaper-min.jpg' },
+					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
+						getDoors: function( room ) { return []; },
+						wallTexture: './img/wallpaper-min.jpg' },
+					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
+						getDoors: function( room ) { return []; },
+						wallTexture: './img/wallpaper-min.jpg' },
+					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
+						getDoors: function( room ) { return []; },
+						wallTexture: './img/wallpaper-min.jpg' },
+				],
+				notesData: [ 
+					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+						fileName: 'note1.png' },
+					{ w: 3, h: 5, d: 0.001, x: 0, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+						fileName: 'note2.png' },
+					{ w: 11, h: 11, d: 0.001, x: +15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+						fileName: 'news-min.jpg' },
+				],
+				checkExitConditionFunc: function() {
+					// generally, best way to do this is to check for the closest door
+					//	to the player on exit and grab the ca/wa from that door.
+					// test against exit condition
+					let room = this;
+					if ( eye.position.z < 0 ) {
+						// get the closest door to player
+						let closest = { door: room.doors[0], d: eye.position.distanceTo( room.doors[0].position ) };
+						for ( let i = 1; i < room.doors.length; ++i ) {
+							let dist = eye.position.distanceTo( room.doors[i].position );
+							closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
+						}
+						// set the room state to the closest door's answer
+						room.state = closest.door.answer;
+					}
+				},
+				winFunc: function() {
+					hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
+				},
+				loseFunc: function() {
+					console.log( 'YOU LOSE!!!!' );
 				}
-				// set the room state to the closest door's answer
-				room.state = closest.door.answer;
+			},
+			/**
+			8888888b.                                       d888   
+			888   Y88b                                     d8888   
+			888    888                                       888   
+			888   d88P  .d88b.   .d88b.  88888b.d88b.        888   
+			8888888P"  d88""88b d88""88b 888 "888 "88b       888   
+			888 T88b   888  888 888  888 888  888  888       888   
+			888  T88b  Y88..88P Y88..88P 888  888  888       888   
+			888   T88b  "Y88P"   "Y88P"  888  888  888     8888888 
+			*/
+		];
+		game.NUM_ROOMS = rD.length;
+		game.rooms = [];
+		for ( let r = 0; r < game.NUM_ROOMS; ++r ) {
+
+			let room = {};
+			let dD = rD[r].doorsData;
+			room = {};
+			room.state = Game.NO_ANSWER;
+			// create doors
+			room.modelsLoaded = 0;
+			room.allModelsLoaded = false;
+			room.NUM_DOORS = dD.length;
+			room.doors = [];
+			for ( let i = 0; i < room.NUM_DOORS; ++i ) {
+				room.doors.push( createDoor( room, {
+						doorWidth: dD[i].dw, doorHeight: dD[i].dh, doorDepth: dD[i].dd,
+						doorOffset: dD[i].df, doorMass: dD[i].dm, doorLinearDamping: dD[i].dld,
+						doorPosition: { x : dD[i].x, y : dD[i].y, z : dD[i].z },
+						doorRotation: { x: dD[i].rx, y: dD[i].ry, z: dD[i].rz },
+						doorAnswer: dD[i].answer,
+						doorFaceFrontTexture: dD[i].frontTexture,
+						doorFaceSideTexture: dD[i].sideTexture,
+						doorHandleModel: dD[i].handleModel,
+						doorHandleTexture:dD[i].handleTexture 
+				} ) );
 			}
-		};
-		// win and exit room
-		room.win = function() {
-			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
-		};
-		// lose room logic
-		room.lose = function() {
-			console.log( 'YOU LOSE!!!!' );
-		};
-		// add this room to the array of game rooms
-		game.rooms.push( room );
-
-
-		/**
-		8888888b.                                       d888   
-		888   Y88b                                     d8888   
-		888    888                                       888   
-		888   d88P  .d88b.   .d88b.  88888b.d88b.        888   
-		8888888P"  d88""88b d88""88b 888 "888 "88b       888   
-		888 T88b   888  888 888  888 888  888  888       888   
-		888  T88b  Y88..88P Y88..88P 888  888  888       888   
-		888   T88b  "Y88P"   "Y88P"  888  888  888     8888888 
-		 */
-
-		
-		
-		
+			// create walls
+			let wD = rD[r].wallsData;
+			room.NUM_WALLS = wD.length;
+			room.walls = [];
+			for ( let i = 0; i < room.NUM_WALLS; ++i ) {
+				room.walls.push( createWall( room, {
+						wallWidth: wD[i].w, wallHeight: wD[i].h, wallDepth: wD[i].d,
+						wallPosition: { x: wD[i].x, y: wD[i].y, z: wD[i].z },
+						wallRotation: { x: wD[i].rX, y: wD[i].rY, z: wD[i].rZ },
+						wallMass: wD[i].m,
+						getWallDoors: wD[i].getDoors,
+						wallTexture: wD[i].wallTexture 
+				} ) );
+			}
+			// create notes
+			let nD = rD[r].notesData;
+			room.NUM_NOTES = nD.length;
+			room.notes = []
+			room.readCount = 0;
+			for ( let i = 0; i < room.NUM_NOTES; ++i ) {
+				room.notes.push( createNote( room, {
+						noteWidth: nD[i].w, noteHeight: nD[i].h, noteDepth: nD[i].d,
+						x: nD[i].x, y: nD[i].y, z: nD[i].z,
+						rX: nD[i].rX, rY: nD[i].rY, rZ: nD[i].rZ,
+						fileName: nD[i].fileName
+				} ) );
+			}
+			// check if player has exited room through a door
+			room.checkExitCondition = rD[r].checkExitConditionFunc;
+			room.checkExitCondition.bind( room );
+			// win and exit room
+			room.win = rD[r].winFunc;
+			room.win.bind( room );
+			// lose room logic
+			room.lose = rD[r].loseFunc;
+			room.lose.bind( room );
+			// add this room to the array of game rooms
+			game.rooms.push( room );
+		}
 
 	}
 
@@ -412,7 +429,7 @@
 
 	function updatePhysics() {
 
-		let room = game.rooms[game.currRoom];
+		let room;
 
 
 		world.step( dt );
@@ -437,6 +454,7 @@
 		floor.position.copy( floorBody.position );
 		floor.quaternion.copy( floorBody.quaternion );
 		
+		room = game.rooms[game.currRoom];
 		for ( let i = 0; i < room.doors.length; ++i ) {
 			let door = room.doors[i];
 			door.position.copy( door.body.position );
@@ -696,8 +714,7 @@
 		Game = {
 			WRONG_ANSWER : -1,
 			NO_ANSWER : 0,
-			CORRECT_ANSWER : 1,
-			NUM_ROOMS : 3
+			CORRECT_ANSWER : 1
 		};
 
 		// init player properties
@@ -1010,7 +1027,7 @@
 
 
 	// create walls
-	function createWall( ops ) {
+	function createWall( room, ops ) {
 		
 		let wallBody, wall, ww = ops.wallWidth, wh = ops.wallHeight,
 		wd = ops.wallDepth, wm = ops.wallMass,
@@ -1018,8 +1035,7 @@
 		rotx = ops.wallRotation.x, roty = ops.wallRotation.y, rotz = ops.wallRotation.z;
 		let shape, rotation, quat;
 		let geometry, material, texture, mats = [];
-				
-		let doors = ops.wallDoors;
+		let doors = ops.getWallDoors( room );
 
 		// create wall with or without doors?
 		if ( doors.length ) {
