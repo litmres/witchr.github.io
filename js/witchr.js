@@ -35,7 +35,7 @@
 	let physicsMaterial;
 	
 	// three.js
-	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
+	let camera, scene, renderer, raycaster, mouse, pickDistance = 6;
 	let floor, eye;
 	let pickObjects;
 
