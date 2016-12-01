@@ -1064,9 +1064,9 @@
 				// wallDoor left box mesh (half extents)
 				shape = new CANNON.Box( new CANNON.Vec3( lww/2, wh/2, wd/2 ) );
 				wallBody.addShape( shape, new CANNON.Vec3( -px + lww/2, wh/2, 0 ) );
-				// // wallDoor top box mesh (half extents)
-				// shape = new CANNON.Box( new CANNON.Vec3( ww/2, (wh-dh)/2, wd/2 ) );
-				// wallBody.addShape( shape, new CANNON.Vec3( 0, ((wh-dh)/2)+dh, 0 ) );
+				// wallDoor top box mesh (half extents)
+				shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, wd/2 ) );
+				wallBody.addShape( shape, new CANNON.Vec3( x, ((wh-dh)/2)+dh, 0 ) );
 				
 				// create the wall door parts separately and add them to the
 				// 	complete wall
@@ -1092,31 +1092,32 @@
 				wallL = new THREE.Mesh( geometry, material );
 				wallL.position.set( -px + lww/2, wh/2, 0 );
 				wall.add( wallL );
-				// // create top part of wall door mesh (above door, full extents)
-				// geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
-				// mats = [];
-				// texture = new THREE.TextureLoader().load( ops.wallTexture );
-				// texture.wrapS = THREE.RepeatWrapping;
-				// texture.wrapT = THREE.RepeatWrapping;
-				// texture.repeat.set( dw*2/ww, dd/wh );
-				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				// texture = new THREE.TextureLoader().load( ops.wallTexture );
-				// texture.wrapS = THREE.RepeatWrapping;
-				// texture.wrapT = THREE.RepeatWrapping;
-				// texture.repeat.set( dw*2/ww, (dh-wh)/wh );
-				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				// material = new THREE.MeshFaceMaterial( mats );
-				// wallT = new THREE.Mesh( geometry, material );
-				// wallT.position.set( 0, ((wh-dh)/2)+dh, 0 );
-				// wall.add( wallT );
+				// create top part of wall door mesh (above door, full extents)
+				geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
+				mats = [];
+				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( dw*2/ww, dd/wh );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( dw*2/ww, (dh-wh)/wh );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				material = new THREE.MeshFaceMaterial( mats );
+				wallT = new THREE.Mesh( geometry, material );
+				wallT.position.set( x, ((wh-dh)/2)+dh, 0 );
+				wall.add( wallT );
 
 			}
 
 			// // wallDoor right box body (right of last door, half extents)
+			// shape = new CANNON.Box( new CANNON.Vec3( lww/2, wh/2, wd/2 ) );
 			// wallBody.addShape( shape, new CANNON.Vec3( +((ww-dw)/4)+dw/2, wh/2, 0 ) );
 			// // create right part of wallDoor mesh (right of last door, full extents)
 			// wallR = new THREE.Mesh( geometry, material );
@@ -1129,7 +1130,6 @@
 			shape = new CANNON.Box( new CANNON.Vec3( ww/2, wh/2, wd/2 ) );
 			wallBody = new CANNON.Body( { mass: wm } );
 			wallBody.addShape( shape );
-			world.addBody( wallBody );
 			// set initial position of wall
 			wallBody.position.set( x, y + wh/2, z );
 			// set initial rotation of wall
