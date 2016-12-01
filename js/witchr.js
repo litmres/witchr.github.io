@@ -33,12 +33,10 @@
 	let floorBody, fw = 50, fd = 50;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
 	let physicsMaterial;
-	let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
-	let wallDoorBody;
 	
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 5;
-	let floor, eye, wallDoor, walls;
+	let floor, eye;
 	let pickObjects, notes, nw = 3, nh = 3, nd = 0.001, noteFiles = ['note1.png', 'note2.png', 'news-min.jpg'], readCount = 0;
 
 	// mouse and touch events
@@ -109,7 +107,6 @@
 	function initCannon() {
 
 
-		wallsBody = [];
 		let physicsContactMaterial;
 		let shape;
 
@@ -150,43 +147,6 @@
 		eyeBody.position.set( 0, er, fd/2 );
 		world.addBody( eyeBody );
 
-
-
-
-
-
-
-		let dw = 8, dh = 11;
-		// create walls: first wall physics body that contains door
-		wallDoorBody = new CANNON.Body( { mass: wm } );
-		// wallDoor top box mesh
-		shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, wd/2 ) );
-		wallDoorBody.addShape( shape, new CANNON.Vec3( 0, ((wh-dh)/2)+dh, 0 ) );
-		// wallDoor left box mesh
-		shape = new CANNON.Box( new CANNON.Vec3( (ww-dw)/4, wh/2, wd/2 ) );
-		wallDoorBody.addShape( shape, new CANNON.Vec3( -((ww-dw)/4)-dw/2, wh/2, 0 ) );
-		// wallDoor right box mesh
-		wallDoorBody.addShape( shape, new CANNON.Vec3( +((ww-dw)/4)+dw/2, wh/2, 0 ) );
-		world.addBody( wallDoorBody );
-		
-		// create other walls physics bodies
-		shape = new CANNON.Box( new CANNON.Vec3( ww/2, wh/2, wd/2 ) );
-		for ( let i = 0; i < wn; ++i ) {
-			wallsBody[i] = new CANNON.Body( { mass: wm } );
-			wallsBody[i].addShape( shape );
-			world.addBody( wallsBody[i] );
-		}
-		// position the other walls: back wall, left side wall, right side wall
-		wallsBody[Wall.BACK].position.set( 0, wh/2, fd );
-		wallsBody[Wall.LEFT].quaternion.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), 
-														 -90*THREE.Math.DEG2RAD
-														);
-		wallsBody[Wall.LEFT].position.set( -fw/2, wh/2, fd/2 );
-		wallsBody[Wall.RIGHT].quaternion.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ),
-														  -90*THREE.Math.DEG2RAD
-														);
-		wallsBody[Wall.RIGHT].position.set( fw/2, wh/2, fd/2 );
-		
 		
 	}
 
@@ -194,10 +154,9 @@
 	// init global threejs logic, not including room specific stuff
 	function initThree() {
 		
-		walls = [], pickObjects = [], notes = [];
+		pickObjects = [], notes = [];
 		let geometry, material, texture, mats = [];
-		let wallDoorT, wallDoorL, wallDoorR, paper;
-		
+		let paper;
 
 		// create dimmer div that will appear in front of canvas and act as a
 		// 	'lighting dimmer' when hud is being interacted with
@@ -275,74 +234,7 @@
 
 
 
-		let dw = 8, dh = 11, dd = 0.5;
-		// create the wall door parts separately and add them to wall door
-		// 	(the wall that has a door in it)
-		wallDoor = new THREE.Mesh();
-		// create top part of wall door mesh (right above door)
-		geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
-		mats = [];
-		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( dw*2/ww, dd/wh );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( dw*2/ww, (dh-wh)/wh );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		material = new THREE.MeshFaceMaterial( mats );
-		wallDoorT = new THREE.Mesh( geometry, material );
-		wallDoorT.position.set( 0, ((wh-dh)/2)+dh, 0 );
-		wallDoor.add( wallDoorT );
-		// create left part of wall door mesh
-		geometry = new THREE.BoxGeometry( (ww-dw)/2, wh, wd );
-		mats = [];
-		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( wd*2/ww, dh/wh );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( (ww-dw)/ww, 1 );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-		material = new THREE.MeshFaceMaterial( mats );
-		wallDoorL = new THREE.Mesh( geometry, material );
-		wallDoorL.position.set( -((ww-dw)/4)-dw/2, wh/2, 0 );
-		wallDoor.add( wallDoorL );
-		// create right part of wall door mesh
-		wallDoorR = new THREE.Mesh( geometry, material );
-		wallDoorR.position.set( ((ww-dw)/4)+dw/2, wh/2, 0 );
-		wallDoor.add( wallDoorR );
-		// add the completed wall door to scene
-		scene.add( wallDoor );
-
-
-		// create other three wall meshes that make up the room
-		geometry = new THREE.BoxGeometry( ww, wh, wd );
-		// create full wall textures
-		texture = new THREE.TextureLoader().load( './img/wallpaper-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 2, 1 );
-		material = new THREE.MeshBasicMaterial( { map: texture } );
-		for ( let i = 0; i < wn; ++i ) {
-			walls[i] = new THREE.Mesh( geometry, material );
-			scene.add( walls[i] );
-		}
-
-
+		let ww = 50, wd = 1, dh = 11;
 		// create notes that will be spread all over room
 		geometry = new THREE.BoxGeometry( nw, nh, nd );
 		// create all notes
@@ -379,16 +271,19 @@
 		game.numRooms = Game.NUM_ROOMS;
 		game.rooms = [];
 
-
+		
 		// setup room 0 doors, walls, notes
 		room.state = Game.NO_ANSWER;
+		// create doors
 		room.NUM_DOORS = 1;
 		room.modelsLoaded = 0;
 		room.allModelsLoaded = false;
 		room.doors = [];
-		room.doors.push( createDoor( room, { doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
+		room.doors.push( createDoor( room, {
+				doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
 				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
-				doorPosition: { x : 0, y : 0, z : 0 }, doorRotation: { x: 0, y: 0, z: 0 },
+				doorPosition: { x : 0, y : 0, z : 0 },
+				doorRotation: { x: 0, y: 0, z: 0 },
 				doorAnswer: Game.CORRECT_ANSWER,
 				doorFaceFrontTexture: './img/door_face_front-min.jpg',
 				doorFaceSideTexture: './img/door_face_side-min.jpg',
@@ -400,6 +295,70 @@
 					}
 				}
 		} ) );
+
+		room.NUM_WALLS = 4;
+		room.walls = [];
+
+		room.walls.push( createWall( {
+				wallWidth: 50, wallHeight: 20, wallDepth: 1,
+				wallPosition: { x: 0, y: 0, z: 0 },
+				wallRotation: { x: 0, y: 0, z: 0 },
+				wallMass: 0,
+				wallDoors: [room.doors[0]],
+				wallTexture: './img/wallpaper-min.jpg'
+		} ) );
+		room.walls.push( createWall( {
+				wallWidth: 50, wallHeight: 20, wallDepth: 1,
+				wallPosition: { x: 25, y: 0, z: 25 },
+				wallRotation: { x: 0, y: 90, z: 0 },
+				wallMass: 0,
+				wallDoors: [],
+				wallTexture: './img/wallpaper-min.jpg'
+		} ) );
+		room.walls.push( createWall( {
+				wallWidth: 50, wallHeight: 20, wallDepth: 1,
+				wallPosition: { x: 0, y: 0, z: 50 },
+				wallRotation: { x: 0, y: 0, z: 0 },
+				wallMass: 0,
+				wallDoors: [],
+				wallTexture: './img/wallpaper-min.jpg'
+		} ) );
+		room.walls.push( createWall( {
+				wallWidth: 50, wallHeight: 20, wallDepth: 1,
+				wallPosition: { x: -25, y: 0, z: 25 },
+				wallRotation: { x: 0, y: 90, z: 0 },
+				wallMass: 0,
+				wallDoors: [],
+				wallTexture: './img/wallpaper-min.jpg'
+		} ) );
+
+
+
+		// let wallsBody, ww = fd, wh = 20, wd = 1, wm = 0, wn = 3; // wm (wall mass), wn (# of non-door walls)
+		// let wallDoorBody, wallDoor;
+		// wallsBody = [];
+		// let shape;
+
+		// let geometry, material, texture, mats = [];
+		// let walls = [],  wallDoorT, wallDoorL, wallDoorR;
+
+		// let dw = 8, dh = 11, dd = 0.5;
+
+
+
+
+
+
+
+
+
+
+		// create notes
+		
+
+		
+		
+		
 		
 		// check if player has exited room through a door
 		room.checkExitCondition = function() {
@@ -510,11 +469,10 @@
 			}
 		}
 
-		wallDoor.position.copy( wallDoorBody.position );
-		wallDoor.quaternion.copy( wallDoorBody.quaternion );
-		for ( let i = 0; i < wn; ++i ) {
-			walls[i].position.copy( wallsBody[i].position );
-			walls[i].quaternion.copy( wallsBody[i].quaternion );
+		for ( let i = 0; i < room.walls.length; ++i ) {
+			let wall = room.walls[i];
+			wall.position.copy( wall.body.position );
+			wall.quaternion.copy( wall.body.quaternion );
 		}
 
 	}
@@ -805,11 +763,6 @@
 			RIGHT : 2
 		};
 
-		// non-door containing walls
-		Wall = {
-			BACK : 0, LEFT : 1, RIGHT : 2
-		};
-
 	}
 
 
@@ -861,7 +814,7 @@
 		let door, doorBody, doorHandle, dw = ops.doorWidth, dh = ops.doorHeight, dd = ops.doorDepth, df = ops.doorOffset, dm = ops.doorMass, dld = ops.doorLinearDamping, da = ops.doorAnswer,
 		x = ops.doorPosition.x, y = ops.doorPosition.y, z = ops.doorPosition.z,
 		rotx = ops.doorRotation.x, roty = ops.doorRotation.y, rotz = ops.doorRotation.z;
-		let shape;
+		let shape, rotation, quat;
 		let hingeBotBody, hingeTopBody, hingeConstraint;
 		let geometry, material, texture, mats = [];
 
@@ -877,8 +830,8 @@
 		// set initial door body position
 		doorBody.position.set( x, y + dh/2, z + dd/2 );
 		// set initial door body rotation in x,y,z
-		let rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
-		let quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
 		quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotx*THREE.Math.DEG2RAD );
 		rotation = rotation.mult( quat );
 		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
@@ -944,7 +897,7 @@
 		scene.add( door );
 		pickObjects.push( door );
 		// add open function to door (via door body)
-		initDoor( door, da, doorBody, dm, ops.doorOpenFunc );
+		initDoor( door, da, doorBody, dm, ops.doorOpenFunc, dw, dh, dd, x, y, z );
 
 		// create door handle via asynchronous load json file
 		XHR( ops.doorHandleModel, function( data ) {
@@ -978,7 +931,7 @@
 
 
 	// toggle door body impulse (and change door mass so it can be opened)
-	function initDoor( dr, da, drb, dm, drOpenFunc ) {
+	function initDoor( dr, da, drb, dm, drOpenFunc, dw, dh, dd, dx, dy, dz ) {
 		let impulseForce, worldPoint;
 
 		// check if door and door body defined
@@ -987,7 +940,8 @@
 		}
 
 		// check for existing props
-		if ( dr.body || dr.answer || dr.open || drb.open || dr.checkCanOpen ) {
+		if ( dr.body || dr.answer || dr.open || drb.open || dr.checkCanOpen ||
+			dr.dim || dr.pos ) {
 			de&&bug.log( 'initDoor() error: an existing door body prop was overwritten' );
 		}
 
@@ -997,6 +951,9 @@
 		dr.open = false;
 		// is this the correct door to exit?
 		dr.answer = da;
+		// set initial door dimension and position (used in wall door calculation)
+		dr.dim = { w: dw, h: dh, d: dd };
+		dr.pos = { x: dx, y: dy, z: dz };
 
 		// open function will change door body's mass and open it via impulse
 		drb.open = function( openForce ) {
@@ -1065,6 +1022,165 @@
 				dh.animating = true;
 			}
 		};
+
+	}
+
+
+	// create walls
+	function createWall( ops ) {
+		
+		let wallBody, wall, ww = ops.wallWidth, wh = ops.wallHeight,
+		wd = ops.wallDepth, wm = ops.wallMass,
+		x = ops.wallPosition.x, y = ops.wallPosition.y, z = ops.wallPosition.z,
+		rotx = ops.wallRotation.x, roty = ops.wallRotation.y, rotz = ops.wallRotation.z;
+		let shape, rotation, quat;
+		let geometry, material, texture, mats = [];
+				
+		let doors = ops.wallDoors;
+
+		// create wall with or without doors?
+		if ( doors.length ) {
+
+			let wallT, wallL, wallR;
+
+			// the complete wall body and mesh
+			wallBody = new CANNON.Body( { mass: wm } );
+			wall = new THREE.Mesh();
+
+			for ( let i = 0; i < doors.length; ++i ) {
+
+				// doors must be in ascending x order for proper wall creation
+				if ( doors[i+1] && doors[i].pos.x > doors[i+1].pos.x ) {
+					de&&bug.log( 'createWall() error: doors must be in ascending x order' );
+				}
+
+				let dr = doors[i];
+				let dw = dr.dim.w, dh = dr.dim.h, dd = dr.dim.d;
+				let x = dr.pos.x; // this door's x value
+				let px = ( doors[i-1] )? doors[i-1].pos.x : ww/2; // prev door's x value
+				let lww = (abs(x - px) - dw/2); // left wall width
+
+
+				// wallDoor left box mesh (half extents)
+				shape = new CANNON.Box( new CANNON.Vec3( lww/2, wh/2, wd/2 ) );
+				wallBody.addShape( shape, new CANNON.Vec3( -px + lww/2, wh/2, 0 ) );
+				// // wallDoor top box mesh (half extents)
+				// shape = new CANNON.Box( new CANNON.Vec3( ww/2, (wh-dh)/2, wd/2 ) );
+				// wallBody.addShape( shape, new CANNON.Vec3( 0, ((wh-dh)/2)+dh, 0 ) );
+				
+				// create the wall door parts separately and add them to the
+				// 	complete wall
+				// create left part of wall door mesh (left of door, full extents)
+				// get previous x position if it exists
+				geometry = new THREE.BoxGeometry( lww, wh, wd );
+				mats = [];
+				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( wd*2/ww, dh/wh );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set( lww*2/ww, 1 );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				material = new THREE.MeshFaceMaterial( mats );
+				wallL = new THREE.Mesh( geometry, material );
+				wallL.position.set( -px + lww/2, wh/2, 0 );
+				wall.add( wallL );
+				// // create top part of wall door mesh (above door, full extents)
+				// geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
+				// mats = [];
+				// texture = new THREE.TextureLoader().load( ops.wallTexture );
+				// texture.wrapS = THREE.RepeatWrapping;
+				// texture.wrapT = THREE.RepeatWrapping;
+				// texture.repeat.set( dw*2/ww, dd/wh );
+				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				// texture = new THREE.TextureLoader().load( ops.wallTexture );
+				// texture.wrapS = THREE.RepeatWrapping;
+				// texture.wrapT = THREE.RepeatWrapping;
+				// texture.repeat.set( dw*2/ww, (dh-wh)/wh );
+				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				// mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+				// material = new THREE.MeshFaceMaterial( mats );
+				// wallT = new THREE.Mesh( geometry, material );
+				// wallT.position.set( 0, ((wh-dh)/2)+dh, 0 );
+				// wall.add( wallT );
+
+			}
+
+			// // wallDoor right box body (right of last door, half extents)
+			// wallBody.addShape( shape, new CANNON.Vec3( +((ww-dw)/4)+dw/2, wh/2, 0 ) );
+			// // create right part of wallDoor mesh (right of last door, full extents)
+			// wallR = new THREE.Mesh( geometry, material );
+			// wallR.position.set( ((ww-dw)/4)+dw/2, wh/2, 0 );
+			// wall.add( wallR );
+
+		} else {
+
+			// create wall physics body
+			shape = new CANNON.Box( new CANNON.Vec3( ww/2, wh/2, wd/2 ) );
+			wallBody = new CANNON.Body( { mass: wm } );
+			wallBody.addShape( shape );
+			world.addBody( wallBody );
+			// set initial position of wall
+			wallBody.position.set( x, y + wh/2, z );
+			// set initial rotation of wall
+			rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotx*THREE.Math.DEG2RAD );
+			rotation = rotation.mult( quat );
+			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), roty*THREE.Math.DEG2RAD );
+			rotation = rotation.mult( quat );
+			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat.setFromAxisAngle( new CANNON.Vec3( 0, 0, 1 ), rotz*THREE.Math.DEG2RAD );
+			rotation = rotation.mult( quat );
+			wallBody.quaternion = wallBody.quaternion.mult( rotation );
+
+			// create wall mesh
+			geometry = new THREE.BoxGeometry( ww, wh, wd );
+			// create full wall textures
+			texture = new THREE.TextureLoader().load( ops.wallTexture );
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set( 2, 1 );
+			material = new THREE.MeshBasicMaterial( { map: texture } );
+			wall = new THREE.Mesh( geometry, material );
+			
+		}
+
+		// add the completed wall to the scene and attach body to mesh
+		world.addBody( wallBody );
+		scene.add( wall );
+		initWall( wall, wallBody );
+
+
+		return wall;
+
+	}
+
+	// init wall
+	function initWall( wall, wallBody ) {
+		
+		// check if args defined
+		if ( !wall && !wallBody ) {
+			de&&bug.log( 'initWall() error: some args are undefined.' );
+		}
+
+		// check if overwriting existing properties
+		if ( wall.body ) {
+			de&&bug.log( 'initWall() error: an existing prop was overwritten.' );
+		}
+
+		wall.body = wallBody;
 
 	}
 
@@ -1141,6 +1257,12 @@
 			dimmer.style.opacity = 0;
 		};
 
+	}
+
+
+	// return the absolute value of a number
+	function abs( n ) {
+		return ( n < 0 )? -n : n;
 	}
 
 
