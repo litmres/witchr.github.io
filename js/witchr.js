@@ -246,35 +246,50 @@
 		game.rooms = [];
 
 		
-		// setup room 0 doors, walls, notes
+		/**
+		8888888b.                                       .d8888b.  
+		888   Y88b                                     d88P  Y88b 
+		888    888                                     888    888 
+		888   d88P  .d88b.   .d88b.  88888b.d88b.      888    888 
+		8888888P"  d88""88b d88""88b 888 "888 "88b     888    888 
+		888 T88b   888  888 888  888 888  888  888     888    888 
+		888  T88b  Y88..88P Y88..88P 888  888  888     Y88b  d88P 
+		888   T88b  "Y88P"   "Y88P"  888  888  888      "Y8888P"  
+		 */
 		room.state = Game.NO_ANSWER;
 		// create doors
-		room.NUM_DOORS = 1;
 		room.modelsLoaded = 0;
 		room.allModelsLoaded = false;
+		let dD, doorsData;
+		dD = doorsData = [
+			{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
+				answer: Game.CORRECT_ANSWER,
+				frontTexture: './img/door_face_front-min.jpg',
+				sideTexture: './img/door_face_side-min.jpg',
+				handleModel: './model/door_handle.json',
+				handleTexture: './img/door_handle-min.jpg' },
+			{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
+				answer: Game.WRONG_ANSWER,
+				frontTexture: './img/door_face_front-min.jpg',
+				sideTexture: './img/door_face_side-min.jpg',
+				handleModel: './model/door_handle.json',
+				handleTexture: './img/door_handle-min.jpg' }
+		];
+		room.NUM_DOORS = doorsData.length;
 		room.doors = [];
-		room.doors.push( createDoor( room, {
-				doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
-				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
-				doorPosition: { x : 0, y : 0, z : 0 },
-				doorRotation: { x: 0, y: 0, z: 0 },
-				doorAnswer: Game.CORRECT_ANSWER,
-				doorFaceFrontTexture: './img/door_face_front-min.jpg',
-				doorFaceSideTexture: './img/door_face_side-min.jpg',
-				doorHandleModel: './model/door_handle.json',
-				doorHandleTexture: './img/door_handle-min.jpg'
-		} ) );
-		room.doors.push( createDoor( room, {
-				doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
-				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
-				doorPosition: { x : 20, y : 0, z : 0 },
-				doorRotation: { x: 0, y: 0, z: 0 },
-				doorAnswer: Game.WRONG_ANSWER,
-				doorFaceFrontTexture: './img/door_face_front-min.jpg',
-				doorFaceSideTexture: './img/door_face_side-min.jpg',
-				doorHandleModel: './model/door_handle.json',
-				doorHandleTexture: './img/door_handle-min.jpg'
-		} ) );
+		for ( let i = 0; i < room.NUM_DOORS; ++i ) {
+			room.doors.push( createDoor( room, {
+					doorWidth: dD[i].dw, doorHeight: dD[i].dh, doorDepth: dD[i].dd,
+					doorOffset: dD[i].df, doorMass: dD[i].dm, doorLinearDamping: dD[i].dld,
+					doorPosition: { x : dD[i].x, y : dD[i].y, z : dD[i].z },
+					doorRotation: { x: dD[i].rx, y: dD[i].ry, z: dD[i].rz },
+					doorAnswer: dD[i].answer,
+					doorFaceFrontTexture: dD[i].frontTexture,
+					doorFaceSideTexture: dD[i].sideTexture,
+					doorHandleModel: dD[i].handleModel,
+					doorHandleTexture:dD[i].handleTexture 
+			} ) );
+		}
 		// create walls
 		let wallsData = [
 			{ x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0, doors: [room.doors[0], room.doors[1]] },
@@ -314,13 +329,8 @@
 					fileName: notesData[i].fileName
 			} ) );
 		}
-		
-		
-		
-		
 		// check if player has exited room through a door
 		room.checkExitCondition = function() {
-			
 			// generally, best way to do this is to check for the closest door
 			//	to the player on exit and grab the ca/wa from that door.
 			// test against exit condition
@@ -335,21 +345,32 @@
 				room.state = closest.door.answer;
 			}
 		};
-
 		// win and exit room
 		room.win = function() {
 			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
 		};
-
 		// lose room logic
 		room.lose = function() {
 			console.log( 'YOU LOSE!!!!' );
 		};
-
 		// add this room to the array of game rooms
 		game.rooms.push( room );
 
-		// setup more rooms...
+
+		/**
+		8888888b.                                       d888   
+		888   Y88b                                     d8888   
+		888    888                                       888   
+		888   d88P  .d88b.   .d88b.  88888b.d88b.        888   
+		8888888P"  d88""88b d88""88b 888 "888 "88b       888   
+		888 T88b   888  888 888  888 888  888  888       888   
+		888  T88b  Y88..88P Y88..88P 888  888  888       888   
+		888   T88b  "Y88P"   "Y88P"  888  888  888     8888888 
+		 */
+
+		
+		
+		
 
 	}
 
