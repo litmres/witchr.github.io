@@ -96,15 +96,6 @@
 		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
 		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
 
-		// document.addEventListener( 'click', function( e ) {
-		// 	let doors = game.rooms[game.currRoom].doors;
-		// 	for ( let i = 0; i < doors.length; ++i ) {
-		// 		console.log( 'door', i, doors[i].position );
-		// 	}
-		// 	console.log( 'eye', eye.position );
-
-		// });
-
 
 		// start an rAF for the gameloop
 		requestAnimationFrame( gameloop );
@@ -273,9 +264,20 @@
 				doorHandleModel: './model/door_handle.json',
 				doorHandleTexture: './img/door_handle-min.jpg'
 		} ) );
+		room.doors.push( createDoor( room, {
+				doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
+				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
+				doorPosition: { x : 20, y : 0, z : 0 },
+				doorRotation: { x: 0, y: 0, z: 0 },
+				doorAnswer: Game.WRONG_ANSWER,
+				doorFaceFrontTexture: './img/door_face_front-min.jpg',
+				doorFaceSideTexture: './img/door_face_side-min.jpg',
+				doorHandleModel: './model/door_handle.json',
+				doorHandleTexture: './img/door_handle-min.jpg'
+		} ) );
 		// create walls
 		let wallsData = [
-			{ x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0, doors: [room.doors[0]] },
+			{ x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0, doors: [room.doors[0], room.doors[1]] },
 			{ x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0, doors: [] },
 			{ x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0, doors: [] },
 			{ x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0, doors: [] },
@@ -319,10 +321,18 @@
 		// check if player has exited room through a door
 		room.checkExitCondition = function() {
 			
-			// WIP: generally, best way to do this is to get the exit condition for the whole room and if it is true, run the exit function for the closest door to the player on exit.
-
+			// generally, best way to do this is to check for the closest door
+			//	to the player on exit and grab the ca/wa from that door.
+			// test against exit condition
 			if ( eye.position.z < 0 ) {
-				room.state = Game.CORRECT_ANSWER;
+				// get the closest door to player
+				let closest = { door: room.doors[0], d: eye.position.distanceTo( room.doors[0].position ) };
+				for ( let i = 1; i < room.doors.length; ++i ) {
+					let dist = eye.position.distanceTo( room.doors[i].position );
+					closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
+				}
+				// set the room state to the closest door's answer
+				room.state = closest.door.answer;
 			}
 		};
 
@@ -333,6 +343,7 @@
 
 		// lose room logic
 		room.lose = function() {
+			console.log( 'YOU LOSE!!!!' );
 		};
 
 		// add this room to the array of game rooms
@@ -765,6 +776,7 @@
 		let door, doorBody, doorHandle, dw = ops.doorWidth, dh = ops.doorHeight, dd = ops.doorDepth, df = ops.doorOffset, dm = ops.doorMass, dld = ops.doorLinearDamping, da = ops.doorAnswer,
 		x = ops.doorPosition.x, y = ops.doorPosition.y, z = ops.doorPosition.z,
 		rotx = ops.doorRotation.x, roty = ops.doorRotation.y, rotz = ops.doorRotation.z;
+		let answer = ops.doorAnswer;
 		let shape, rotation, quat;
 		let hingeBotBody, hingeTopBody, hingeConstraint;
 		let geometry, material, texture, mats = [];
@@ -848,7 +860,7 @@
 		scene.add( door );
 		pickObjects.push( door );
 		// add open function to door (via door body)
-		initDoor( door, da, doorBody, dm, dw, dh, dd, x, y, z );
+		initDoor( door, da, doorBody, dm, dw, dh, dd, x, y, z, answer );
 
 		// create door handle via asynchronous load json file
 		XHR( ops.doorHandleModel, function( data ) {
@@ -882,17 +894,18 @@
 
 
 	// toggle door body impulse (and change door mass so it can be opened)
-	function initDoor( dr, da, drb, dm, dw, dh, dd, dx, dy, dz ) {
+	function initDoor( dr, da, drb, dm, dw, dh, dd, dx, dy, dz, answer ) {
 		let impulseForce, worldPoint;
 
 		// check if door and door body defined
 		if ( !dr && !da && !drb ) {
-			de&&bug.log( 'initDoor() error: door or door body undefined.' );
+			de&&bug.log( 'initDoor() error: some arg is undefined.' );
 		}
 
 		// check for existing props
-		if ( dr.body || dr.answer || dr.open || drb.open || dr.dim || dr.pos ) {
-			de&&bug.log( 'initDoor() error: an existing door body prop was overwritten' );
+		if ( dr.body || dr.answer || dr.open || drb.open || dr.dim || dr.pos,
+			dr.answer ) {
+			de&&bug.log( 'initDoor() error: an existing prop was overwritten' );
 		}
 
 		// attach door body to door
@@ -904,6 +917,8 @@
 		// set initial door dimension and position (used in wall door calculation)
 		dr.dim = { w: dw, h: dh, d: dd };
 		dr.pos = { x: dx, y: dy, z: dz };
+		// set the answer to this door on exit
+		dr.answer = answer;
 
 		// open function will change door body's mass and open it via impulse
 		drb.open = function( openForce ) {
