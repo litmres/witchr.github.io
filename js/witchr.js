@@ -30,7 +30,7 @@
 	// cannon.js
 	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
-	let floorBody, fw = 50, fd = 50;
+	let floorBody, fw = 10, fd = 10;
 	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
 	let physicsMaterial;
 	
