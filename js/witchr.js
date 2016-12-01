@@ -282,7 +282,7 @@
 		room.doors.push( createDoor( room, {
 				doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
 				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
-				doorPosition: { x : 10, y : 0, z : 0 },
+				doorPosition: { x : 0, y : 0, z : 0 },
 				doorRotation: { x: 0, y: 0, z: 0 },
 				doorAnswer: Game.CORRECT_ANSWER,
 				doorFaceFrontTexture: './img/door_face_front-min.jpg',
