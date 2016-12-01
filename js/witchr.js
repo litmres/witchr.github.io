@@ -282,7 +282,7 @@
 		room.doors.push( createDoor( room, {
 				doorWidth: 8, doorHeight: 11, doorDepth: 0.5,
 				doorOffset: 0.5, doorMass: 10, doorLinearDamping: 0.66,
-				doorPosition: { x : -15, y : 0, z : 0 },
+				doorPosition: { x : 20.5, y : 0, z : 0 },
 				doorRotation: { x: 0, y: 0, z: 0 },
 				doorAnswer: Game.CORRECT_ANSWER,
 				doorFaceFrontTexture: './img/door_face_front-min.jpg',
@@ -1057,13 +1057,13 @@
 				let dr = doors[i];
 				let dw = dr.dim.w, dh = dr.dim.h, dd = dr.dim.d;
 				let x = dr.pos.x; // this door's x value
-				let px = ( doors[i-1] )? doors[i-1].pos.x : ww/2; // prev door's x value
+				let px = ( doors[i-1] )? doors[i-1].pos.x : -ww/2; // prev door's x value
 				let lww = (abs(x - px) - dw/2); // left wall width
 
 
 				// wallDoor left box mesh (half extents)
 				shape = new CANNON.Box( new CANNON.Vec3( lww/2, wh/2, wd/2 ) );
-				wallBody.addShape( shape, new CANNON.Vec3( -px + lww/2, wh/2, 0 ) );
+				wallBody.addShape( shape, new CANNON.Vec3( px + lww/2, wh/2, 0 ) );
 				// wallDoor top box mesh (half extents)
 				shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, wd/2 ) );
 				wallBody.addShape( shape, new CANNON.Vec3( x, ((wh-dh)/2)+dh, 0 ) );
@@ -1090,8 +1090,8 @@
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				material = new THREE.MeshFaceMaterial( mats );
 				wallL = new THREE.Mesh( geometry, material );
-				wallL.position.set( -px + lww/2, wh/2, 0 );
-				// wall.add( wallL );
+				wallL.position.set( px + lww/2, wh/2, 0 );
+				wall.add( wallL );
 				// create top part of wall door mesh (above door, full extents)
 				geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 				mats = [];
