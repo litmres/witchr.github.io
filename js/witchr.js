@@ -288,6 +288,12 @@
 					hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
 				},
 				loseFunc: function() {
+					let room = this, player = game.player;
+					// reset player BODY's position for this room
+					player.body.position.x = 0;
+					player.body.position.z = 25;
+					// reset room state
+					room.state = Game.NO_ANSWER;
 					console.log( 'YOU LOSE!!!!' );
 				}
 			},
@@ -814,6 +820,7 @@
 												  opacity: eo 
 											  } );
 		eye = new THREE.Mesh( geometry, material );
+		eye.name = 'player';
 		scene.add( eye );
 		camera.position.copy( eye.position );
 		// place camera at the very top of eye mesh
