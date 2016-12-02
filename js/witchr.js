@@ -88,6 +88,7 @@
 		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 		document.addEventListener( 'mouseup', onDocumentMouseUp, false);
+		document.addEventListener( 'mouseenter', onDocumentMouseUp, false);
 		// document.addEventListener( 'mouseout', onDocumentMouseUp, false);
 		// disable contextmenu on right clicks (will be used to move)
 		window.oncontextmenu = function() { return false; };
