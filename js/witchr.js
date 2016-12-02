@@ -1307,6 +1307,8 @@
 		hud.show = function( src, options ) {
 			if ( hud.transitioning ) { return; }
 			hud.transitioning = true;
+			// display hud dom element (display: none when opacity 0)
+			hud.style.display = 'block';
 			hud.src = base + src;
 			let w = options && options.width? options.width : 'auto';
 			let h = options && options.height? options.height : 'auto';
@@ -1329,6 +1331,10 @@
 		hud.transitioning = false;
 		hud.addEventListener( 'transitionend', function( e ) {
 			hud.transitioning = false;
+			// do not display hud dom element if opacity is 0
+			if ( e.propertyName === 'opacity' && e.srcElement.style.opacity === '0' ) {
+				e.srcElement.style.display = 'none';
+			}
 		});
 
 	}
