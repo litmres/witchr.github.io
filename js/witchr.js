@@ -25,7 +25,7 @@
 	let game = {};
 
 	// hud and dimmer
-	let hud, base = './img/', dimmer;
+	let hud, base = './img/', dimmer, transitionLength = '0.5s';
 
 	// cannon.js
 	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
@@ -152,7 +152,7 @@
 		// 	'lighting dimmer' when hud is being interacted with
 		dimmer = document.createElement( 'div' );
 		document.body.appendChild( dimmer );
-		dimmer.style.cssText = 'background: #000000; opacity: 0; transition: opacity 0.5s; width: 100vw; height: 100vh; position: fixed; z-index: 100;';
+		dimmer.style.cssText = 'background: #000000; opacity: 0; transition: opacity ' + transitionLength + '; width: 100vw; height: 100vh; position: fixed; z-index: 100;';
 		
 		
 		// create hud img that will display all hud screens for game such as
@@ -1333,7 +1333,7 @@
 		}
 
 		// set hud styled centered on screen with a opacity fade
-		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 200; opacity: 0; transition: opacity 0.5s';
+		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 200; opacity: 0; transition: opacity ' + transitionLength;
 
 		// re-center all hud imgs
 		hud.resize = function() {
