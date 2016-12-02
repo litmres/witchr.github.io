@@ -255,6 +255,12 @@
 			*/
 			{
 				doorsData: [
+					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
+					answer: Game.CORRECT_ANSWER,
+					frontTexture: './img/door_face_front-min.jpg',
+					sideTexture: './img/door_face_side-min.jpg',
+					handleModel: './model/door_handle.json',
+					handleTexture: './img/door_handle-min.jpg' },
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.WRONG_ANSWER,
 					frontTexture: './img/door_face_front-min.jpg',
