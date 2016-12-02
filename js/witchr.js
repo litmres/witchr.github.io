@@ -647,6 +647,10 @@
 
 	function onDocumentMouseUp( e ) {
 
+		let p = document.createElement( 'p' );
+		p.innerHTML = e.button;
+		p.style.cssText = 'position: fixed; top: 30vh; left: 30vw; color: white; z-index: 999999';
+		document.body.appendChild( p );
 		if ( e.button === Mouse.LEFT ) { isMouseLeftDown = false; }
 		if ( e.button === Mouse.RIGHT ) { isMouseRightDown = false; }
 		
