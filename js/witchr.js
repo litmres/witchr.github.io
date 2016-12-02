@@ -31,12 +31,11 @@
 	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
 	let floorBody, fw = 50, fd = 50;
-	let eyeBody, er = 3, em = 10, eld = 0.99; // er (eye radius), em (eye mass), eld (eye linear damping)
 	let physicsMaterial;
 	
 	// three.js
 	let camera, scene, renderer, raycaster, mouse, pickDistance = 6;
-	let floor, eye;
+	let floor;
 	let pickObjects;
 
 	// mouse and touch events
@@ -139,15 +138,6 @@
 		world.addBody( floorBody );
 		floorBody.position.z += fd/2;
 		
-
-		// setup eye physics body that simulates and positions player
-		shape = new CANNON.Sphere( er );
-		eyeBody = new CANNON.Body( { mass: em, material: physicsMaterial } );
-		eyeBody.addShape( shape );
-		eyeBody.linearDamping = eld;
-		eyeBody.position.set( 0, er, fd/2 );
-		world.addBody( eyeBody );
-
 		
 	}
 
@@ -215,20 +205,6 @@
 		scene.add( floor );
 
 
-		// create eye mesh to render eye body for troubleshooting
-		geometry = new THREE.SphereGeometry( er, 16, 16 );
-		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
-												  wireframe: true, 
-												  transparent: true, 
-												  opacity: 0.1 
-											  } );
-		eye = new THREE.Mesh( geometry, material );
-		scene.add( eye );
-		camera.position.copy( eye.position );
-		// place camera at the very top of eye mesh
-		camera.position.y += er;
-		eye.add( camera );
-		
 	}
 
 
@@ -240,6 +216,8 @@
 		game.stopGameLoop = 0;
 		// start game on it's initial room
 		game.currRoom = 0;
+		// setup the player
+		game.player = createPlayer( { eyeRadius: 3, eyeMass: 10, eyeLinearDamping: 0.99, eyeOpacity: 0.1 });
 		// setup each room in the game, each room contains doors, walls, and notes
 		let rD, roomsData;
 		rD = roomsData = [
@@ -295,11 +273,11 @@
 					//	to the player on exit and grab the ca/wa from that door.
 					// test against exit condition
 					let room = this;
-					if ( eye.position.z < 0 ) {
+					if ( game.player.position.z < 0 ) {
 						// get the closest door to player
-						let closest = { door: room.doors[0], d: eye.position.distanceTo( room.doors[0].position ) };
+						let closest = { door: room.doors[0], d: game.player.position.distanceTo( room.doors[0].position ) };
 						for ( let i = 1; i < room.doors.length; ++i ) {
-							let dist = eye.position.distanceTo( room.doors[i].position );
+							let dist = game.player.position.distanceTo( room.doors[i].position );
 							closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
 						}
 						// set the room state to the closest door's answer
@@ -430,32 +408,32 @@
 
 	function updatePhysics() {
 
-		let room;
+		let player = game.player;
+		let room = game.rooms[game.currRoom];
 
 
 		world.step( dt );
 
 
-		// reset eye quaternion so we always rotate offset from origin
-		eyeBody.quaternion.set( 0, 0, 0, 1 );
+		// reset player quaternion so we always rotate offset from origin
+		player.body.quaternion.set( 0, 0, 0, 1 );
 		// local rotation about the y-axis
 		let rotSide = new CANNON.Quaternion( 0, 0, 0, 1 );
 		rotSide.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
-		eyeBody.quaternion = eyeBody.quaternion.mult( rotSide );
+		player.body.quaternion = player.body.quaternion.mult( rotSide );
 		// local rotation about the x-axis
 		let rotUp = new CANNON.Quaternion( 0, 0, 0, 1 );
 		rotUp.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
-		eyeBody.quaternion = eyeBody.quaternion.mult( rotUp );
+		player.body.quaternion = player.body.quaternion.mult( rotUp );
 
 
 		// update all of meshes to their physics bodies
-		eye.position.copy( eyeBody.position );
-		eye.quaternion.copy( eyeBody.quaternion );
+		player.position.copy( player.body.position );
+		player.quaternion.copy( player.body.quaternion );
 
 		floor.position.copy( floorBody.position );
 		floor.quaternion.copy( floorBody.quaternion );
 		
-		room = game.rooms[game.currRoom];
 		for ( let i = 0; i < room.doors.length; ++i ) {
 			let door = room.doors[i];
 			door.position.copy( door.body.position );
@@ -491,6 +469,8 @@
 	 */
 	function handleInputs( deltaTime ) {
 
+		let inputVelocity, euler, quat;
+
 		// get the rotation offset values from mouse and touch input
 		rotX += ( targetRotationX - rotX ) * Player.ROTATE_SPEED * deltaTime;
 		rotY += ( targetRotationY - rotY ) * Player.ROTATE_SPEED * deltaTime;
@@ -498,7 +478,6 @@
 		// get the input velocity for translation, euler angle that describes
 		// 	the current rotation transformation and quaternion to apply the
 		// 	euler angle transform to the input vector
-		let inputVelocity, euler, quat;
 		inputVelocity = new THREE.Vector3( 0, 0, 0 );
 		euler = new THREE.Euler( 0, rotY, 0, 'XYZ' );
 		quat = new THREE.Quaternion();
@@ -543,8 +522,8 @@
 		// apply the euler angle quaternion to the velocity vector so we can add
 		// 	the appropriate amount for each x and z component to translate
 		inputVelocity.applyQuaternion( quat );
-		eyeBody.velocity.x += inputVelocity.x * deltaTime;
-		eyeBody.velocity.z += inputVelocity.z * deltaTime;
+		game.player.body.velocity.x += inputVelocity.x * deltaTime;
+		game.player.body.velocity.z += inputVelocity.z * deltaTime;
 
 	}
 	
@@ -806,6 +785,60 @@
 		xhr.open( 'GET', file, true );
 		xhr.send();
 
+	}
+
+
+	// create player from camera eye
+	function createPlayer( ops ) {
+
+		let eye, eyeBody, er = ops.eyeRadius, em = ops.eyeMass, eld = ops.eyeLinearDamping, eo = ops.eyeOpacity;
+		let shape;
+		let geometry, material;
+
+		// setup eye physics body that simulates and positions player
+		shape = new CANNON.Sphere( er );
+		eyeBody = new CANNON.Body( { mass: em, material: physicsMaterial } );
+		eyeBody.addShape( shape );
+		eyeBody.linearDamping = eld;
+		eyeBody.position.set( 0, er, fd/2 );
+		world.addBody( eyeBody );
+
+		// create eye mesh to render eye body for troubleshooting
+		geometry = new THREE.SphereGeometry( er, 16, 16 );
+		material = new THREE.MeshBasicMaterial( { color: 0xff0000, 
+												  wireframe: true, 
+												  transparent: true, 
+												  opacity: eo 
+											  } );
+		eye = new THREE.Mesh( geometry, material );
+		scene.add( eye );
+		camera.position.copy( eye.position );
+		// place camera at the very top of eye mesh
+		camera.position.y += er;
+		eye.add( camera );
+		initEye( eye, eyeBody );
+		
+		return eye;
+
+	}
+
+
+	// initialize the player's eye
+	function initEye( e, eb ) {
+
+		// check args defined
+		if ( !e && !eb ) {
+			de&&bug.log( 'initEye() error: some arg is not defined.' );
+		}
+
+		// check if overwriting an existing property
+		if ( e.body ) {
+			de&&bug.log( 'initEye() error: an existing prop was overwritten.' );
+		}
+
+		// attach physics body to mesh
+		e.body = eb;
+		
 	}
 
 
