@@ -217,7 +217,7 @@
 		// start game on it's initial room
 		game.currRoom = 0;
 		// setup the player
-		game.player = createPlayer( { eyeRadius: 3, eyeMass: 10, eyeLinearDamping: 0.99, eyeOpacity: 0.1 });
+		game.player = createPlayer( { eyeRadius: 3, eyeMass: 10, eyeLinearDamping: 0.99, eyeOpacity: 0.1, eyeStartPos: { x: 0, y: 0, z: 25 } } );
 		// setup each room in the game, each room contains doors, walls, and notes
 		let rD, roomsData;
 		rD = roomsData = [
@@ -231,7 +231,7 @@
 			888  T88b  Y88..88P Y88..88P 888  888  888     Y88b  d88P 
 			888   T88b  "Y88P"   "Y88P"  888  888  888      "Y8888P"  
 			*/
-			{
+			{	
 				doorsData: [
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.CORRECT_ANSWER,
@@ -410,6 +410,7 @@
 
 		let player = game.player;
 		let room = game.rooms[game.currRoom];
+		let rotation;
 
 
 		world.step( dt );
@@ -418,13 +419,12 @@
 		// reset player quaternion so we always rotate offset from origin
 		player.body.quaternion.set( 0, 0, 0, 1 );
 		// local rotation about the y-axis
-		let rotSide = new CANNON.Quaternion( 0, 0, 0, 1 );
-		rotSide.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
-		player.body.quaternion = player.body.quaternion.mult( rotSide );
-		// local rotation about the x-axis
-		let rotUp = new CANNON.Quaternion( 0, 0, 0, 1 );
-		rotUp.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
-		player.body.quaternion = player.body.quaternion.mult( rotUp );
+		rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+		rotation.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
+		player.body.quaternion = player.body.quaternion.mult( rotation );
+		rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+		rotation.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
+		player.body.quaternion = player.body.quaternion.mult( rotation );
 
 
 		// update all of meshes to their physics bodies
@@ -791,8 +791,8 @@
 	// create player from camera eye
 	function createPlayer( ops ) {
 
-		let eye, eyeBody, er = ops.eyeRadius, em = ops.eyeMass, eld = ops.eyeLinearDamping, eo = ops.eyeOpacity;
-		let shape;
+		let eye, eyeBody, er = ops.eyeRadius, em = ops.eyeMass, eld = ops.eyeLinearDamping, eo = ops.eyeOpacity, x = ops.eyeStartPos.x, y = ops.eyeStartPos.y, z = ops.eyeStartPos.z;
+		let shape, rotation, quat;
 		let geometry, material;
 
 		// setup eye physics body that simulates and positions player
@@ -800,7 +800,10 @@
 		eyeBody = new CANNON.Body( { mass: em, material: physicsMaterial } );
 		eyeBody.addShape( shape );
 		eyeBody.linearDamping = eld;
-		eyeBody.position.set( 0, er, fd/2 );
+		// init position
+		eyeBody.position.set( x, y + er, z );
+		// local rotation is determined by mouse position so no need to set
+		// add body to world
 		world.addBody( eyeBody );
 
 		// create eye mesh to render eye body for troubleshooting
