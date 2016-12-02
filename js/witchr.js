@@ -270,7 +270,7 @@
 				],
 				wallsData: [
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
-						getDoors: function( room ) { return [room.doors[0]]; },
+						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
 						wallTexture: './img/wallpaper-min.jpg' },
 					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
