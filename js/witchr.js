@@ -1284,7 +1284,7 @@
 		}
 
 		// check if overwriting existing hud properties
-		if ( hud.resize || hud.onload || hud.show || hud.hide ) {
+		if ( hud.resize || hud.onload || hud.show || hud.hide || hud.transitioning ) {
 			de&&bug.log( 'initHUD() error: existing hud prop was overwritten.' );
 		}
 
@@ -1303,8 +1303,10 @@
 			hud.style.opacity = 1;
 		};
 
-		// show a new hud img
+		// show a new hud img if not already transitioning
 		hud.show = function( src, options ) {
+			if ( hud.transitioning ) { return; }
+			hud.transitioning = true;
 			hud.src = base + src;
 			let w = options && options.width? options.width : 'auto';
 			let h = options && options.height? options.height : 'auto';
@@ -1314,12 +1316,20 @@
 			dimmer.style.opacity = 0.8;
 		};
 
-		// hide currently displayed hud img
+		// hide currently displayed hud img if not already transitioning
 		hud.hide = function() {
+			if ( hud.transitioning || hud.style.opacity === '0' ) { return; }
+			hud.transitioning = true;
 			hud.style.opacity = 0;
 			// undim background
 			dimmer.style.opacity = 0;
 		};
+
+		// add a flag so hud cannot be stopped while it is transitioning
+		hud.transitioning = false;
+		hud.addEventListener( 'transitionend', function( e ) {
+			hud.transitioning = false;
+		});
 
 	}
 
