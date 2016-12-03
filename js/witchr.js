@@ -214,6 +214,11 @@
 		// window.cancelAnimationFrame( game.stopGameLoop ) can be called to stopGameLoop
 		// 	the main requestAnimationFrame() loop
 		game.stopGameLoop = 0;
+		// lock input logic
+		game.inputLocked = false;
+		game.lockInput = function() { game.inputLocked = true; };
+		game.unlockInput = function() { game.inputLocked = false; };
+
 		// start game on it's initial room
 		game.currRoom = 0;
 		// setup the player
@@ -397,7 +402,9 @@
 
 			// only handle inputs and update physics once all models are loaded
 			if ( game.rooms[game.currRoom].allModelsLoaded ) {
-				handleInputs( dt );
+				if ( !game.inputLocked ) {
+					handleInputs( dt );
+				}
 				updatePhysics();
 			}
 
@@ -540,6 +547,10 @@
 		e.preventDefault();
 		e.stopPropagation();
 
+		if ( game.inputLocked ) {
+			return;
+		}
+
 		// make sure hud is hidden on every click
 		hud.hide();
 
@@ -605,6 +616,10 @@
 
 	function onDocumentMouseMove( e ) {
 
+		if ( game.inputLocked ) {
+			return;
+		}
+
 		mouseX = e.clientX - windowHalfX;
 		mouseY = e.clientY - windowHalfY;
 
@@ -632,6 +647,10 @@
 
 	function onDocumentMouseUp( e ) {
 
+		if ( game.inputLocked ) {
+			return;
+		}
+
 		if ( e.button === Mouse.LEFT ) { isMouseLeftDown = false; }
 		if ( e.button === Mouse.RIGHT ) { isMouseRightDown = false; }
 		
@@ -639,7 +658,7 @@
 
 
 	function onDocumentTouchStart( e ) {
-		
+
 		// don't handle 3+ touches
 		if ( e.touches.length > 2 ) { e.preventDefault(); e.stopPropagation(); return; }
 
@@ -666,6 +685,10 @@
 
 
 	function onDocumentTouchEnd( e ) {
+
+		if ( game.inputLocked ) {
+			return;
+		}
 
 		// don't handle 3+ touches
 		if ( e.touches.length > 1 ) { e.preventDefault(); e.stopPropagation(); return; }
