@@ -153,6 +153,20 @@
 		dimmer = document.createElement( 'div' );
 		document.body.appendChild( dimmer );
 		dimmer.style.cssText = 'background: #000000; opacity: 0; transition: opacity ' + transitionLength + '; width: 100vw; height: 100vh; position: fixed; z-index: 100;';
+		dimmer.addEventListener( 'transitionend', function( e ) {
+			let room = game.rooms[game.currRoom];
+			// if dimmer transitionend with opacity 1 then this is a room exit transition
+			if ( dimmer.style.opacity === '1' ) {
+				// handle wrong answer exits
+				if ( room.state === Game.WRONG_ANSWER ) {
+					room.reset();
+				}
+				// handle correct answer exits
+				if ( room.state === Game.CORRECT_ANSWER ) {
+					// room.next();
+				}
+			} 
+		} );
 		
 		
 		// create hud img that will display all hud screens for game such as
@@ -218,11 +232,16 @@
 		game.inputLocked = false;
 		game.lockInput = function() { game.inputLocked = true; };
 		game.unlockInput = function() { game.inputLocked = false; };
-
-		// start game on it's initial room
-		game.currRoom = 0;
 		// setup the player
 		game.player = createPlayer( { eyeRadius: 3, eyeMass: 10, eyeLinearDamping: 0.99, eyeOpacity: 0.1, eyeStartPos: { x: 0, y: 0, z: 25 } } );
+		// start game on it's initial room
+		game.currRoom = 0;
+		// game begins each room's reset logic and then rooms's run their own reset logic
+		game.startRoomReset = function( room ) {
+			// dim the scene, dimmer calls room.reset() on opacity: 1 && room.state === CORRECT/WRONG_ANSWER
+			dimmer.style.opacity = 1.0;
+			game.lockInput();
+		};
 		// setup each room in the game, each room contains doors, walls, and notes
 		let rD, roomsData;
 		rD = roomsData = [
@@ -294,12 +313,19 @@
 				},
 				loseFunc: function() {
 					let room = this, player = game.player;
+					// start resetting this room
+					game.startRoomReset( room );
+				},
+				resetFunc: function() {
+					let room = this, player = game.player;
 					// reset player BODY's position for this room
 					player.body.position.x = 0;
 					player.body.position.z = 25;
 					// reset room state
 					room.state = Game.NO_ANSWER;
-					console.log( 'YOU LOSE!!!!' );
+					// clear dimmer black screen
+					dimmer.style.opacity = 0;
+					game.unlockInput();
 				}
 			},
 			/**
@@ -375,6 +401,9 @@
 			// lose room logic
 			room.lose = rD[r].loseFunc;
 			room.lose.bind( room );
+			// reset room logic
+			room.reset = rD[r].resetFunc;
+			room.reset.bind( room );
 			// add this room to the array of game rooms
 			game.rooms.push( room );
 		}
