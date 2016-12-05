@@ -99,6 +99,11 @@
 		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
 
 
+		document.addEventListener( 'click', function( e ) {
+			game.openDoors();
+		});
+
+
 		// start an rAF for the gameloop
 		requestAnimationFrame( gameloop );
 
@@ -250,7 +255,7 @@
 					// generally, best way to do this is to check for the closest door
 					//	to the player on exit and grab the ca/wa from that door.
 					// test against exit condition
-					let room = this;
+					let room = game.room;
 					if ( game.player.position.z < 0 ) {
 						// get the closest door to player
 						let closest = { door: room.doors[0], d: game.player.position.distanceTo( room.doors[0].position ) };
@@ -265,7 +270,7 @@
 				previousFunc: function() {
 				},
 				resetFunc: function() {
-					let room = this, player = game.player;
+					let room = game.room, player = game.player;
 					// reset player BODY's position for this room
 					player.body.position.set( 0, game.player.height, 25 );
 					// reset room state
@@ -275,14 +280,20 @@
 					game.unlockInput();
 				},
 				nextFunc: function() {
-					let room = this, player = game.player;
+
+					// remove all bodies and meshes in current room
+					game.destroyRoom();
+
+					game.currRoom++;
+					// create the new room
+					game.room = game.createRoom( game.currRoom );
+
 					// reset player BODY's position for this room
-					player.body.position.set( 0, game.player.height, 25 );
-					// reset room state
-					room.state = Game.NO_ANSWER;
+					game.player.body.position.set( 0, game.player.height, 25 );
 					// clear dimmer black screen
 					dimmer.style.opacity = 0;
 					game.unlockInput();
+
 				}
 			},
 			/**
@@ -295,6 +306,84 @@
 			888  T88b  Y88..88P Y88..88P 888  888  888       888   
 			888   T88b  "Y88P"   "Y88P"  888  888  888     8888888 
 			*/
+			{	
+				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
+					floorTexture: './img/old_wood-min.jpg',
+					piecewise: false
+				},
+				doorsData: [
+					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
+					answer: Game.CORRECT_ANSWER,
+					frontTexture: './img/door_face_front-min.jpg',
+					sideTexture: './img/door_face_side-min.jpg',
+					handleModel: './model/door_handle.json',
+					handleTexture: './img/door_handle-min.jpg' },
+					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
+					answer: Game.WRONG_ANSWER,
+					frontTexture: './img/door_face_front-min.jpg',
+					sideTexture: './img/door_face_side-min.jpg',
+					handleModel: './model/door_handle.json',
+					handleTexture: './img/door_handle-min.jpg' }
+				],
+				wallsData: [
+					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
+						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
+						wallTexture: './img/wallpaper-min.jpg' },
+					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
+						getDoors: function( room ) { return []; },
+						wallTexture: './img/wallpaper-min.jpg' },
+					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
+						getDoors: function( room ) { return []; },
+						wallTexture: './img/wallpaper-min.jpg' },
+					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
+						getDoors: function( room ) { return []; },
+						wallTexture: './img/wallpaper-min.jpg' },
+				],
+				notesData: [ 
+					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+						fileName: 'note1.png' },
+					{ w: 3, h: 5, d: 0.001, x: 0, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+						fileName: 'note2.png' },
+					{ w: 11, h: 11, d: 0.001, x: +15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+						fileName: 'news-min.jpg' },
+				],
+				checkExitConditionFunc: function() {
+					// generally, best way to do this is to check for the closest door
+					//	to the player on exit and grab the ca/wa from that door.
+					// test against exit condition
+					let room = game.room;
+					if ( game.player.position.z < 0 ) {
+						// get the closest door to player
+						let closest = { door: room.doors[0], d: game.player.position.distanceTo( room.doors[0].position ) };
+						for ( let i = 1; i < room.doors.length; ++i ) {
+							let dist = game.player.position.distanceTo( room.doors[i].position );
+							closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
+						}
+						// set the room state to the closest door's answer
+						room.state = closest.door.answer;
+					}
+				},
+				previousFunc: function() {
+				},
+				resetFunc: function() {
+				},
+				nextFunc: function() {
+
+					// remove all bodies and meshes in current room
+					game.destroyRoom();
+
+					game.currRoom--;
+					// create the new room
+					game.room = game.createRoom( game.currRoom );
+
+					// reset player BODY's position for this room
+					game.player.body.position.set( 0, game.player.height, 25 );
+					// clear dimmer black screen
+					dimmer.style.opacity = 0;
+					game.unlockInput();
+
+				}
+			},
 		];
 		game.NUM_ROOMS = rD.length;
 		game.rooms = [];
@@ -364,16 +453,12 @@
 			}
 			// check if player has exited room through a door
 			room.checkExitCondition = rD[r].checkExitConditionFunc;
-			room.checkExitCondition.bind( room );
 			// go to previous room logic
 			room.previous = rD[r].previousFunc;
-			room.previous.bind( room );
 			// reset room logic
 			room.reset = rD[r].resetFunc;
-			room.reset.bind( room );
 			// go to next room logic
 			room.next = rD[r].nextFunc;
-			room.next.bind( room );
 
 			return room;
 		}
@@ -388,9 +473,33 @@
 			// flag current room for all doors open
 			game.rooms[game.currRoom] = true;
 		}
-
+		// destroy room's bodies and meshes before a new one can be created
+		game.destroyRoom = function() {
+			// destroy floor
+			deleteMesh( game.room.floor );
+			deleteBody( game.room.floor.body );
+			// destroy doors
+			for ( let i = 0; i < game.room.NUM_DOORS; ++i ) {
+				deleteMesh( game.room.doors[i].handle );
+				deleteMesh( game.room.doors[i] );
+				deleteBody( game.room.doors[i].body );
+			}
+			for ( let i = 0; i < game.room.NUM_WALLS; ++i ) {
+				deleteMesh( game.room.walls[i] );
+				deleteBody( game.room.walls[i].body );
+			}
+			for ( let i = 0; i < game.room.NUM_NOTES; ++i ) {
+				deleteMesh( game.room.notes[i] );
+			}
+			// delete pick objects and set size to 0
+			for ( let i = 0; i < pickObjects.length; ++i ) {
+				pickObjects[i] = null;
+			}
+			pickObjects = [];
+		}
 
 	}
+
 
 
 
@@ -947,6 +1056,12 @@
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
 		world.addConstraint( hingeConstraint );
+		// check if an existing prop will be overwritten
+		if ( doorBody.constraints ) {
+			de&&bug.log( 'createDoor() error: an existing prop was overwritten.' );
+		}
+		doorBody.constraints = [];
+		doorBody.constraints.push( hingeConstraint );
 		// create top hinge constraint on door
 		hingeTopBody = new CANNON.Body( { mass: 0 } );
 		hingeTopBody.position.set( x, y + dh/2, z );
@@ -958,6 +1073,7 @@
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
 		world.addConstraint( hingeConstraint );
+		doorBody.constraints.push( hingeConstraint );
 		
 
 		// create door as a textured box mesh
@@ -1369,6 +1485,60 @@
 	}
 
 
+	// remove a mesh from scene
+	function deleteMesh( mesh ) {
+		if ( mesh instanceof THREE.Mesh ) {
+			// remove mesh from scene
+			scene.remove( mesh );
+			// dispose of mesh geometry
+			mesh.geometry.dispose();
+			// dispose of mesh material and texture for a MeshBasicMaterial
+			if ( mesh.material instanceof THREE.MeshBasicMaterial ) { 
+				if ( mesh.material.map ) { mesh.material.map.dispose(); }
+				if ( mesh.material.lightMap ) { mesh.material.lightMap.dispose(); }
+				if ( mesh.material.bumpMap ) { mesh.material.bumpMap.dispose(); }
+				if ( mesh.material.normalMap ) { mesh.material.normalMap.dispose(); }
+				if ( mesh.material.specularMap ) { mesh.material.specularMap.dispose(); }
+				if ( mesh.material.envMap ) { mesh.material.envMap.dispose(); }
+				mesh.material.dispose();
+			}
+			// dispose of mesh material and texture for a MultiMaterial
+			if ( mesh.material instanceof THREE.MultiMaterial ) {
+				for ( let i = 0; i < mesh.material.materials.length; ++i ) {
+					if ( mesh.material.materials[i].map ) { mesh.material.materials[i].map.dispose(); }
+					if ( mesh.material.materials[i].lightMap ) { mesh.material.materials[i].lightMap.dispose(); }
+					if ( mesh.material.materials[i].bumpMap ) { mesh.material.materials[i].bumpMap.dispose(); }
+					if ( mesh.material.materials[i].normalMap ) { mesh.material.materials[i].normalMap.dispose(); }
+					if ( mesh.material.materials[i].specularMap ) { mesh.material.materials[i].specularMap.dispose(); }
+					if ( mesh.material.materials[i].envMap ) { mesh.material.materials[i].envMap.dispose(); }
+					mesh.material.materials[i].dispose();
+				}
+			}
+		}
+		// handle any meshes added to this mesh (or group)
+		if ( mesh.children.length ) {
+			for ( let i = 0; i < mesh.children.length; ++i ) {
+				deleteMesh( mesh.children[i] );
+			}			
+		}
+	}
+	
+
+	// remove a body from physics world
+	function deleteBody( body ) {
+		if ( body instanceof CANNON.Body ) {
+			// first remove any existing constraints
+			if ( body.constraints ) {
+				for ( let i = 0; i < body.constraints.length; ++i ) {
+					world.removeConstraint( body.constraints[i] );
+				}
+			}
+			// remove body from physics world
+			world.removeBody( body );
+		}
+	}
+
+	
 	// init hud that shows all hud imgs in game
 	function initHUD() {
 
