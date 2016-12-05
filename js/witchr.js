@@ -13,30 +13,26 @@
 	// debugging toggle
 	let de = true;
 	let bug = console;
-
 	
-	// enums
-	let Canvas, Game, Player, Keyboard, Key, Mouse, Wall;
+	// game and room stage logic
+	let game = {};
 
 	// fps stats
 	let stats;
 
-	// game and room stage logic
-	let game = {};
+	// enums
+	let Canvas, Game, Player, Key, Keyboard, Mouse;
 
 	// hud and dimmer
 	let hud, base = './img/', dimmer, transitionLength = '0.5s';
 
 	// cannon.js
-	let world, wf = 0.0, wr = 0.0; // wf (world friction), wr (world restitution)
+	let world, physicsMaterial, worldFriction = 0.0, worldRestitution = 0.0;
 	let t = 0, dt = 1/240, newTime, frameTime, currTime = performance.now(), accumulator = 0;
-	let floorBody, fw = 50, fd = 50;
-	let physicsMaterial;
 	
 	// three.js
-	let camera, scene, renderer, raycaster, mouse, pickDistance = 6;
-	let floor;
-	let pickObjects;
+	let camera, scene, renderer;
+	let raycaster, mouse, pickObjects = [], pickDistance = 6;
 
 	// mouse and touch events
 	let rotX = 0;
@@ -59,7 +55,7 @@
 	let windowHalfY = window.innerHeight/2;
 
 
-	window.onload = init();
+	document.onload = init();
 
 
 	/*********************************************************
@@ -70,8 +66,14 @@
 
 		// init game object
 		initEnums();
-		initCannon();	// init global cannonjs bodies
-		initThree();	// init global threejs meshes
+		// init hud and show splash screen as the intro img
+		initHUD();
+		hud.show( 'splash-min.jpg', { width: '100vw', height: '100vh' } );
+		// setup world
+		initCannon();
+		// setup camera, scene, renderer, raycaster
+		initThree();
+		// init game and room specific bodies, meshes, and logic
 		initGame();
 
 		// init stats
@@ -106,10 +108,7 @@
 	// init global cannonjs logic, not including room specific stuff
 	function initCannon() {
 
-
 		let physicsContactMaterial;
-		let shape;
-
 
 		// setup world of physics
 		world = new CANNON.World();
@@ -117,67 +116,21 @@
 		world.solver.iterations = 1;
 		world.gravity.set( 0, -10, 0 );
 
-
-		// setup floor physics body
-		// create a slippery material
-		physicsMaterial = new CANNON.Material( 'floorMaterial' );
+		// create slippery/bouncy material for object contact friction/restitution
+		physicsMaterial = new CANNON.Material( 'worldMaterial' );
 		physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, 
 															 physicsMaterial, 
-														   { friction: wf,
-															 restitution: wr
+														   { friction: worldFriction,
+															 restitution:worldRestitution 
 														   } );
 		world.addContactMaterial( physicsContactMaterial );
-		// floor plane body which acts as room floor
-		// floor will be on y=0 and all bodies will be init with that in mind
-		shape = new CANNON.Plane();
-		floorBody = new CANNON.Body( { mass: 0, material: physicsMaterial } );
-		floorBody.addShape( shape );
-		floorBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), 
-											   -90*THREE.Math.DEG2RAD
-											 );
-		world.addBody( floorBody );
-		floorBody.position.z += fd/2;
-		
-		
+
 	}
 
 
 	// init global threejs logic, not including room specific stuff
 	function initThree() {
 		
-		pickObjects = [];
-		let geometry, material, texture, mats = [];
-
-		// create dimmer div that will appear in front of canvas and act as a
-		// 	'lighting dimmer' when hud is being interacted with
-		dimmer = document.createElement( 'div' );
-		document.body.appendChild( dimmer );
-		dimmer.style.cssText = 'background: #000000; opacity: 0; transition: opacity ' + transitionLength + '; width: 100vw; height: 100vh; position: fixed; z-index: 100;';
-		dimmer.addEventListener( 'transitionend', function( e ) {
-			let room = game.rooms[game.currRoom];
-			// if dimmer transitionend with opacity 1 then this is a room exit transition
-			if ( dimmer.style.opacity === '1' ) {
-				// handle wrong answer exits
-				if ( room.state === Game.WRONG_ANSWER ) {
-					room.reset();
-				}
-				// handle correct answer exits
-				if ( room.state === Game.CORRECT_ANSWER ) {
-					// room.next();
-				}
-			} 
-		} );
-		
-		
-		// create hud img that will display all hud screens for game such as
-		// 	splash img, ending img, and notes
-		hud = document.createElement( 'img' );
-		document.body.appendChild( hud );
-		initHUD( hud, base );
-		// show splash screen as the intro img
-		hud.show( 'splash-min.jpg', { width: '100vw', height: '100vh' } );
-
-
 		// init camera
 		camera = new THREE.PerspectiveCamera( 75, 
 											  window.innerWidth / window.innerHeight, 
@@ -185,18 +138,13 @@
 											  220 
 											);
 		camera.lookAt( 0, 0, 0 );
-
-
+		
 		// init scene
 		scene = new THREE.Scene();
 		// scene.fog = new THREE.Fog( 0x000000, 0.01, 3 );
 		// scene.fog = new THREE.FogExp2( 0x000000, 0.8 );
 		scene.add( camera );
-		// raycaster used in picking objects
-		raycaster = new THREE.Raycaster();
-		mouse = new THREE.Vector2();
-
-
+		
 		// init renderer
 		renderer = new THREE.WebGLRenderer( { antialias: true } );
 		renderer.setSize( window.innerWidth * Canvas.SIZE, 
@@ -205,19 +153,9 @@
 		renderer.setClearColor( 0x000000 );
 		document.body.appendChild( renderer.domElement );
 
-
-		// create floor mesh that acts as the room floor
-		geometry = new THREE.PlaneGeometry( fw, fd, 1, 1 );
-		texture = new THREE.TextureLoader().load( './img/old_wood-min.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 2, 1 );
-		material = new THREE.MeshBasicMaterial( { map: texture, 
-												  side: THREE.DoubleSide 
-												} );
-		floor =  new THREE.Mesh( geometry, material );
-		scene.add( floor );
-
+		// raycaster used in picking objects
+		raycaster = new THREE.Raycaster();
+		mouse = new THREE.Vector2();
 
 	}
 
@@ -256,6 +194,10 @@
 			888   T88b  "Y88P"   "Y88P"  888  888  888      "Y8888P"  
 			*/
 			{	
+				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
+					floorTexture: './img/old_wood-min.jpg',
+					piecewise: false
+				},
 				doorsData: [
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.CORRECT_ANSWER,
@@ -319,8 +261,7 @@
 				resetFunc: function() {
 					let room = this, player = game.player;
 					// reset player BODY's position for this room
-					player.body.position.x = 0;
-					player.body.position.z = 25;
+					player.body.position.set( 0, game.player.height, 25 );
 					// reset room state
 					room.state = Game.NO_ANSWER;
 					// clear dimmer black screen
@@ -344,12 +285,21 @@
 		for ( let r = 0; r < game.NUM_ROOMS; ++r ) {
 
 			let room = {};
-			let dD = rD[r].doorsData;
 			room = {};
 			room.state = Game.NO_ANSWER;
+			// create floor
+			let fD = rD[r].floorData;
+			room.floor = createFloor( {
+				floorWidth: fD.fw, floorHeight: fD.fh, floorDepth: fD.fd, floorMass: fD.fm,
+				floorPosition: { x: fD.x, y: fD.y, z: fD.z },
+				floorRotation: { rx: fD.rx, ry: fD.ry, rz: fD.rz },
+				floorTexture: fD.floorTexture,
+				floorIsPiecewise: fD.piecewise
+			} );
 			// create doors
 			room.modelsLoaded = 0;
 			room.allModelsLoaded = false;
+			let dD = rD[r].doorsData;
 			room.NUM_DOORS = dD.length;
 			room.doors = [];
 			for ( let i = 0; i < room.NUM_DOORS; ++i ) {
@@ -452,6 +402,7 @@
 
 		let player = game.player;
 		let room = game.rooms[game.currRoom];
+		let floor = room.floor;
 		let rotation;
 
 
@@ -473,8 +424,8 @@
 		player.position.copy( player.body.position );
 		player.quaternion.copy( player.body.quaternion );
 
-		floor.position.copy( floorBody.position );
-		floor.quaternion.copy( floorBody.quaternion );
+		floor.position.copy( floor.body.position );
+		floor.quaternion.copy( floor.body.quaternion );
 		
 		for ( let i = 0; i < room.doors.length; ++i ) {
 			let door = room.doors[i];
@@ -738,73 +689,6 @@
 
 
 	/*********************************************************
-	 * initialize all enumerated types
-	 *********************************************************
-	 */
-	function initEnums() {
-		
-		// init canvas to not take up so much space (scrollbars appear) 
-		Canvas = {
-			SIZE : 1 
-		};
-
-		// init game object and properties
-		Game = {
-			WRONG_ANSWER : -1,
-			NO_ANSWER : 0,
-			CORRECT_ANSWER : 1
-		};
-
-		// init player properties
-		Player = {
-			MOVE_SPEED : 66,
-			ROTATE_SPEED : 10,		// speed to reach desired rotation
-			ROTATE_OFFSET_DAMP : 0.002	// offset sensitivity
-		};
-
-		// init keyboard input keycodes
-		Key = {
-			LEFT : 37,
-			UP : 38,
-			RIGHT : 39,
-			DOWN : 40,
-			A : 65,
-			W : 87,
-			D : 68,
-			S : 83,
-			R : 82,
-			F : 70,
-			SPACE : 32,
-			CTRL : 17
-		};
-
-		// init handle keyboard input
-		Keyboard = {
-			keys : {},
-			keyPress : function( e ) {
-				// e.preventDefault();
-				if ( this.keys[e.keyCode] > 0 ) { return; }
-				this.keys[e.keyCode] = e.timeStamp || ( performance.now() );
-				e.stopPropagation();
-			},
-			keyRelease : function( e ) {
-				// e.preventDefault();
-				this.keys[e.keyCode] = 0;
-				e.stopPropagation();
-			}
-		};
-
-		// init mouse clicks
-		Mouse = {
-			LEFT : 0,
-			MIDDLE : 1,
-			RIGHT : 2
-		};
-
-	}
-
-
-	/*********************************************************
 	 * helper functions
 	 *********************************************************
 	 */
@@ -878,7 +762,7 @@
 		// place camera at the very top of eye mesh
 		camera.position.y += er;
 		eye.add( camera );
-		initEye( eye, eyeBody );
+		initEye( eye, eyeBody, er );
 		
 		return eye;
 
@@ -886,21 +770,97 @@
 
 
 	// initialize the player's eye
-	function initEye( e, eb ) {
+	function initEye( e, eb, er ) {
 
 		// check args defined
-		if ( !e && !eb ) {
+		if ( !e && !eb && !er ) {
 			de&&bug.log( 'initEye() error: some arg is not defined.' );
 		}
 
 		// check if overwriting an existing property
-		if ( e.body ) {
+		if ( e.body || e.height ) {
 			de&&bug.log( 'initEye() error: an existing prop was overwritten.' );
 		}
 
 		// attach physics body to mesh
 		e.body = eb;
+
+		// set the player height for room inits
+		e.height = er;
 		
+	}
+
+
+	// create floor for each room
+	function createFloor( ops ) {
+		
+		let floorBody, floor;
+		let fw = ops.floorWidth, fh = ops.floorHeight, fd = ops.floorDepth, fm = ops.floorMass, x = ops.floorPosition.x, y = ops.floorPosition.y, z = ops.floorPosition.z, rx = ops.floorRotation.rx, ry = ops.floorRotation.ry, rz = ops.floorRotation.rz, floorTexture = ops.floorTexture, isPiecewise = ops.floorIsPiecewise;
+		let shape, rotation, quat;
+		let geometry, texture, material;
+		
+		// setup floor physics body, very thin x,y (half extents) box will act as floor
+		// floor will be rotated onto y=0 to keep on proper axis as texture and
+		// all other world bodies will be init with that in mind
+		if ( isPiecewise ) {
+			// floor is made up of several different pieces... good for jumping levels
+		} else {
+			// floor is one contiguous piece
+			shape = new CANNON.Box( new CANNON.Vec3( fw/2, fh/2, fd/2 ) );
+			floorBody = new CANNON.Body( { mass: fm, material: physicsMaterial } );
+			floorBody.addShape( shape );
+			// init floor position
+			floorBody.position.set( x, y -fd/2, z );
+			// init floor rotation
+			rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rx*THREE.Math.DEG2RAD );
+			rotation = rotation.mult( quat );
+			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), ry*THREE.Math.DEG2RAD );
+			rotation = rotation.mult( quat );
+			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+			quat.setFromAxisAngle( new CANNON.Vec3( 0, 0, 1 ), rz*THREE.Math.DEG2RAD );
+			rotation = rotation.mult( quat );
+			floorBody.quaternion = floorBody.quaternion.mult( rotation );
+			// add floor body to physics world
+			world.addBody( floorBody );
+			
+			// create floor mesh that acts as the room floor
+			geometry = new THREE.PlaneGeometry( fw, fh, 1, 1 );
+			texture = new THREE.TextureLoader().load( floorTexture );
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set( 2, 1 );
+			material = new THREE.MeshBasicMaterial( { map: texture, 
+													side: THREE.DoubleSide 
+													} );
+			floor =  new THREE.Mesh( geometry, material );
+		}
+		floor.name = 'floor';
+		scene.add( floor );
+		initFloor( floor, floorBody );
+
+		return floor;
+
+	}
+
+
+	// init floor properties
+	function initFloor( floor, floorBody ) {
+
+		// check args defined
+		if ( !floor && !floorBody ) {
+			de&&bug.log( 'initFloor() error: some arg is not defined.' );
+		}
+
+		// check overwritting floor properties
+		if ( floor.body ) {
+			de&&bug.log( 'initFloor() error: an existing prop was overwritten.' );
+		}
+
+		floor.body = floorBody;
+
 	}
 
 
@@ -919,6 +879,7 @@
 		// setup door physics body in the scene (half extents)
 		shape = new CANNON.Box( new CANNON.Vec3( (dw-df)/2, (dh-df)/2, dd/2 ) );
 		doorBody = new CANNON.Body( { mass: dm, material: physicsMaterial } );
+		doorBody.addShape( shape );
 		// door body starts with a mass so physics knows it is initially a
 		// 	moving body but it should start closed so let's freeze it via mass 0
 		doorBody.mass = 0;
@@ -939,7 +900,6 @@
 		rotation = rotation.mult( quat );
 		doorBody.quaternion = doorBody.quaternion.mult( rotation );
 		// add door body to world
-		doorBody.addShape( shape );
 		world.addBody( doorBody );
 		// create bottom hinge constraint on door
 		hingeBotBody = new CANNON.Body( { mass: 0 } );
@@ -991,6 +951,7 @@
 		// put all mats together and create door
         material = new THREE.MeshFaceMaterial( mats );
 		door = new THREE.Mesh( geometry, material );
+		door.name = 'door_' + x + ',' + y + ',' + z + '_' + answer;
 		scene.add( door );
 		pickObjects.push( door );
 		// add open function to door (via door body)
@@ -1024,6 +985,7 @@
 
 
 		return door;
+
 	}
 
 
@@ -1275,6 +1237,7 @@
 			wall = new THREE.Mesh( geometry, material );
 			
 		}
+		wall.name = 'wall_' + x + ',' + y + ',' + z;
 
 		// add the completed wall to the scene and attach body to mesh
 		world.addBody( wallBody );
@@ -1321,6 +1284,7 @@
 		texture.repeat.set( 1, 1 );
 		material = new THREE.MeshBasicMaterial( { map: texture, alphaTest: 0.5 } );
 		note = new THREE.Mesh( geometry, material );
+		note.name = 'note_' + fileName;
 		// set note position
 		note.position.set( x, y, z );
 		// set note rotation
@@ -1371,21 +1335,53 @@
 	}
 
 
+	// return the absolute value of a number
+	function abs( n ) {
+		return ( n < 0 )? -n : n;
+	}
+
+
 	// init hud that shows all hud imgs in game
-	function initHUD( hud, base ) {
+	function initHUD() {
 
-		// check if hud defined
-		if ( !hud && !base ) {
-			de&&bug.log( 'initHUD() error: hud / base is not defined.' );
+
+		// create dimmer div that will appear in front of canvas and act as a
+		// 	'lighting dimmer' when hud is being interacted with
+		dimmer = document.createElement( 'div' );
+		document.body.appendChild( dimmer );
+		dimmer.style.cssText = 'width: 100vw; height: 100vh; position: fixed; z-index: 100; background: #000000; opacity: 0; transition: opacity ' + transitionLength + ';';
+
+		// add an event handler for opacity: 1 transitionends (room exit condition)
+		dimmer.addEventListener( 'transitionend', function( e ) {
+			let room = game.rooms[game.currRoom];
+			// if dimmer transitionend with opacity 1 then this is a room exit transition
+			if ( dimmer.style.opacity === '1' ) {
+				// handle wrong answer exits
+				if ( room.state === Game.WRONG_ANSWER ) {
+					room.reset();
+				}
+				// handle correct answer exits
+				if ( room.state === Game.CORRECT_ANSWER ) {
+					// room.next();
+				}
+			} 
+		} );
+
+		
+		// create hud img that will display all hud screens for game such as
+		// 	splash img, ending img, and notes
+		hud = document.createElement( 'img' );
+		document.body.appendChild( hud );
+		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 200; opacity: 0; transition: opacity ' + transitionLength + ';';
+
+		// check if base defined
+		if ( !base ) {
+			de&&bug.log( 'initHUD() error: base is not defined.' );
 		}
-
 		// check if overwriting existing hud properties
 		if ( hud.resize || hud.onload || hud.show || hud.hide || hud.transitioning ) {
 			de&&bug.log( 'initHUD() error: existing hud prop was overwritten.' );
 		}
-
-		// set hud styled centered on screen with a opacity fade
-		hud.style.cssText = 'max-width: 100vw; max-height: 100vh; position: fixed; z-index: 200; opacity: 0; transition: opacity ' + transitionLength;
 
 		// re-center all hud imgs
 		hud.resize = function() {
@@ -1399,6 +1395,9 @@
 			hud.style.opacity = 1;
 		};
 
+		// add a flag so hud cannot be stopped while it is transitioning
+		hud.transitioning = false;
+		
 		// show a new hud img if not already transitioning
 		hud.show = function( src, options ) {
 			if ( hud.transitioning ) { return; }
@@ -1423,8 +1422,6 @@
 			dimmer.style.opacity = 0;
 		};
 
-		// add a flag so hud cannot be stopped while it is transitioning
-		hud.transitioning = false;
 		hud.addEventListener( 'transitionend', function( e ) {
 			hud.transitioning = false;
 			// do not display hud dom element if opacity is 0
@@ -1433,14 +1430,76 @@
 			}
 		});
 
+
 	}
 
 
-	// return the absolute value of a number
-	function abs( n ) {
-		return ( n < 0 )? -n : n;
-	}
+	/*********************************************************
+	 * initialize all enumerated types
+	 *********************************************************
+	 */
+	function initEnums() {
+		
 
+		// init canvas to not take up so much space (scrollbars appear) 
+		Canvas = {
+			SIZE : 1 
+		};
+
+		// init game object and properties
+		Game = {
+			WRONG_ANSWER : -1,
+			NO_ANSWER : 0,
+			CORRECT_ANSWER : 1
+		};
+
+		// init player properties
+		Player = {
+			MOVE_SPEED : 66,
+			ROTATE_SPEED : 10,		// speed to reach desired rotation
+			ROTATE_OFFSET_DAMP : 0.002	// offset sensitivity
+		};
+
+		// init keyboard input keycodes
+		Key = {
+			LEFT : 37,
+			UP : 38,
+			RIGHT : 39,
+			DOWN : 40,
+			A : 65,
+			W : 87,
+			D : 68,
+			S : 83,
+			R : 82,
+			F : 70,
+			SPACE : 32,
+			CTRL : 17
+		};
+
+		// init handle keyboard input
+		Keyboard = {
+			keys : {},
+			keyPress : function( e ) {
+				// e.preventDefault();
+				if ( this.keys[e.keyCode] > 0 ) { return; }
+				this.keys[e.keyCode] = e.timeStamp || ( performance.now() );
+				e.stopPropagation();
+			},
+			keyRelease : function( e ) {
+				// e.preventDefault();
+				this.keys[e.keyCode] = 0;
+				e.stopPropagation();
+			}
+		};
+
+		// init mouse clicks
+		Mouse = {
+			LEFT : 0,
+			MIDDLE : 1,
+			RIGHT : 2
+		};
+
+	}
 
 
 }( window.witchr = window.witchr || {} ));
