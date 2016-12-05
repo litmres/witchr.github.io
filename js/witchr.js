@@ -181,7 +181,7 @@
 			game.lockInput();
 		};
 		game.finishRoomReset = function() {
-			let room = game.rooms[game.currRoom];
+			let room = game.room;
 			if ( room.state === Game.PREVIOUS_ROOM ) {
 				room.previous();
 			}
@@ -298,10 +298,14 @@
 		];
 		game.NUM_ROOMS = rD.length;
 		game.rooms = [];
+		// start all rooms with complete values === false
 		for ( let r = 0; r < game.NUM_ROOMS; ++r ) {
+			game.rooms.push( false );
+		}
+		// create a room given a room number
+		game.createRoom = function( roomNumber ) {
 
-			let room = {};
-			room = {};
+			let room = {}, r = roomNumber;
 			room.state = Game.NO_ANSWER;
 			// create floor
 			let fD = rD[r].floorData;
@@ -370,9 +374,21 @@
 			// go to next room logic
 			room.next = rD[r].nextFunc;
 			room.next.bind( room );
-			// add this room to the array of game rooms
-			game.rooms.push( room );
+
+			return room;
 		}
+		// init the first room
+		game.room = game.createRoom( game.currRoom );
+		// open all doors of the current room and flag it as 'completed' true
+		game.openDoors = function() {
+			// open all doors for current room
+			for ( let i = 0; i < game.room.doors.length; ++i ) {
+				game.room.doors[i].body.open();
+			}
+			// flag current room for all doors open
+			game.rooms[game.currRoom] = true;
+		}
+
 
 	}
 
@@ -396,7 +412,7 @@
 		while ( accumulator >= dt ) {
 
 			// only handle inputs and update physics once all models are loaded
-			if ( game.rooms[game.currRoom].allModelsLoaded ) {
+			if ( game.room.allModelsLoaded ) {
 				if ( !game.inputLocked ) {
 					handleInputs( dt );
 				}
@@ -417,7 +433,7 @@
 	function updatePhysics() {
 
 		let player = game.player;
-		let room = game.rooms[game.currRoom];
+		let room = game.room;
 		let floor = room.floor;
 		let rotation;
 
@@ -569,8 +585,8 @@
 				let id = intersects[0].object.uuid;
 
 				// check doors
-				for ( let i = 0; i < game.rooms[game.currRoom].doors.length; ++i ) {
-					let door = game.rooms[game.currRoom].doors[i];
+				for ( let i = 0; i < game.room.doors.length; ++i ) {
+					let door = game.room.doors[i];
 					if ( id === door.uuid ) {
 						// open door only if it is already open (UX, easier to enter)
 						if ( door.open ) {
@@ -582,8 +598,8 @@
 				}
 
 				// check notes for possible door opening events
-				for ( let i = 0; i < game.rooms[game.currRoom].notes.length; ++i ) {
-					let note = game.rooms[game.currRoom].notes[i];
+				for ( let i = 0; i < game.room.notes.length; ++i ) {
+					let note = game.room.notes[i];
 					if ( id === note.uuid ) {
 						// read notes only if hud is not already reading something
 						if ( !hud.isDisplaying() ) {
@@ -1340,9 +1356,7 @@
 
 			// if all notes read, open all doors
 			if ( room.readCount === room.NUM_NOTES ) {
-				for ( let i = 0; i < room.doors.length; ++i ) {
-					room.doors[i].body.open();
-				}
+				game.openDoors();
 			}
 		};
 
@@ -1367,7 +1381,7 @@
 
 		// add an event handler for opacity: 1 transitionends (room exit condition)
 		dimmer.addEventListener( 'transitionend', function( e ) {
-			let room = game.rooms[game.currRoom];
+			let room = game.room;
 			// if dimmer transitionend with opacity 1 then this is a room exit transition
 			if ( dimmer.style.opacity === '1' ) {
 				game.finishRoomReset();
