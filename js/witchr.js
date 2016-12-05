@@ -175,11 +175,23 @@
 		// start game on it's initial room
 		game.currRoom = 0;
 		// game begins each room's reset logic and then rooms's run their own reset logic
-		game.startRoomReset = function( room ) {
+		game.startRoomReset = function() {
 			// dim the scene, dimmer calls room.reset() on opacity: 1 && room.state === CORRECT/WRONG_ANSWER
 			dimmer.style.opacity = 1.0;
 			game.lockInput();
 		};
+		game.finishRoomReset = function() {
+			let room = game.rooms[game.currRoom];
+			if ( room.state === Game.PREVIOUS_ROOM ) {
+				room.previous();
+			}
+			if ( room.state === Game.WRONG_ANSWER ) {
+				room.reset();
+			}
+			if ( room.state === Game.CORRECT_ANSWER ) {
+				room.next();
+			}
+		}
 		// setup each room in the game, each room contains doors, walls, and notes
 		let rD, roomsData;
 		rD = roomsData = [
@@ -250,15 +262,19 @@
 						room.state = closest.door.answer;
 					}
 				},
-				winFunc: function() {
-					hud.show( 'end-min.jpg', { width: '100vw', height: '100vh' } );
-				},
-				loseFunc: function() {
-					let room = this, player = game.player;
-					// start resetting this room
-					game.startRoomReset( room );
+				previousFunc: function() {
 				},
 				resetFunc: function() {
+					let room = this, player = game.player;
+					// reset player BODY's position for this room
+					player.body.position.set( 0, game.player.height, 25 );
+					// reset room state
+					room.state = Game.NO_ANSWER;
+					// clear dimmer black screen
+					dimmer.style.opacity = 0;
+					game.unlockInput();
+				},
+				nextFunc: function() {
 					let room = this, player = game.player;
 					// reset player BODY's position for this room
 					player.body.position.set( 0, game.player.height, 25 );
@@ -345,15 +361,15 @@
 			// check if player has exited room through a door
 			room.checkExitCondition = rD[r].checkExitConditionFunc;
 			room.checkExitCondition.bind( room );
-			// win and exit room
-			room.win = rD[r].winFunc;
-			room.win.bind( room );
-			// lose room logic
-			room.lose = rD[r].loseFunc;
-			room.lose.bind( room );
+			// go to previous room logic
+			room.previous = rD[r].previousFunc;
+			room.previous.bind( room );
 			// reset room logic
 			room.reset = rD[r].resetFunc;
 			room.reset.bind( room );
+			// go to next room logic
+			room.next = rD[r].nextFunc;
+			room.next.bind( room );
 			// add this room to the array of game rooms
 			game.rooms.push( room );
 		}
@@ -437,12 +453,7 @@
 			if ( door.open ) {
 				room.checkExitCondition();
 				if ( room.state ) {
-					if ( room.state === Game.CORRECT_ANSWER ) {
-						room.win();
-					}
-					if ( room.state === Game.WRONG_ANSWER ) {
-						room.lose();
-					}
+					game.startRoomReset();
 				}
 			}
 		}
@@ -574,8 +585,11 @@
 				for ( let i = 0; i < game.rooms[game.currRoom].notes.length; ++i ) {
 					let note = game.rooms[game.currRoom].notes[i];
 					if ( id === note.uuid ) {
+						// read notes only if hud is not already reading something
+						if ( !hud.isDisplaying() ) {
+							note.read();
+						}
 						hud.show( note.src );
-						note.read();
 					}
 				}
 
@@ -1020,7 +1034,7 @@
 		drb.open = function( openForce ) {
 			// check acting force on door body exists
 			if ( !openForce ) {
-				openForce = 100;
+				openForce = 66;
 			}
 			// toggle mass so door is movable
 			drb.mass = dm;
@@ -1356,14 +1370,7 @@
 			let room = game.rooms[game.currRoom];
 			// if dimmer transitionend with opacity 1 then this is a room exit transition
 			if ( dimmer.style.opacity === '1' ) {
-				// handle wrong answer exits
-				if ( room.state === Game.WRONG_ANSWER ) {
-					room.reset();
-				}
-				// handle correct answer exits
-				if ( room.state === Game.CORRECT_ANSWER ) {
-					// room.next();
-				}
+				game.finishRoomReset();
 			} 
 		} );
 
@@ -1397,6 +1404,11 @@
 
 		// add a flag so hud cannot be stopped while it is transitioning
 		hud.transitioning = false;
+
+		// add a check to see if hud is currently displaying anything
+		hud.isDisplaying = function() {
+			return hud.style.display !== 'none';
+		}
 		
 		// show a new hud img if not already transitioning
 		hud.show = function( src, options ) {
@@ -1448,9 +1460,10 @@
 
 		// init game object and properties
 		Game = {
+			PREVIOUS_ROOM : -2,
 			WRONG_ANSWER : -1,
 			NO_ANSWER : 0,
-			CORRECT_ANSWER : 1
+			CORRECT_ANSWER : 1,
 		};
 
 		// init player properties
