@@ -478,24 +478,27 @@
 			// destroy floor
 			deleteMesh( game.room.floor );
 			deleteBody( game.room.floor.body );
+			deleteFloor( game.room.floor );
 			// destroy doors
 			for ( let i = 0; i < game.room.NUM_DOORS; ++i ) {
 				deleteMesh( game.room.doors[i].handle );
 				deleteMesh( game.room.doors[i] );
 				deleteBody( game.room.doors[i].body );
+				deleteDoor( game.room.doors[i] );
 			}
+			// destroy walls
 			for ( let i = 0; i < game.room.NUM_WALLS; ++i ) {
 				deleteMesh( game.room.walls[i] );
 				deleteBody( game.room.walls[i].body );
+				deleteWall( game.room.walls[i] );
 			}
+			// destroy notes
 			for ( let i = 0; i < game.room.NUM_NOTES; ++i ) {
 				deleteMesh( game.room.notes[i] );
+				deleteNote( game.room.notes[i] );
 			}
 			// delete pick objects and set size to 0
-			for ( let i = 0; i < pickObjects.length; ++i ) {
-				pickObjects[i] = null;
-			}
-			pickObjects = [];
+			deletePickObjects();
 		}
 
 	}
@@ -1003,6 +1006,14 @@
 	}
 
 
+	// delete floor properties
+	function deleteFloor( floor ) {
+
+		if ( floor.body ) { floor.body = null; }
+
+	}
+
+
 	// create a door, door body, and door handle objects
 	function createDoor( room, ops ) {
 
@@ -1011,7 +1022,7 @@
 		rotx = ops.doorRotation.x, roty = ops.doorRotation.y, rotz = ops.doorRotation.z;
 		let answer = ops.doorAnswer;
 		let shape, rotation, quat;
-		let hingeBotBody, hingeTopBody, hingeConstraint;
+		let hingeBodyBot, hingeBodyTop, hingeConstraintBot, hingeConstraintTop;
 		let geometry, material, texture, mats = [];
 
 
@@ -1041,40 +1052,32 @@
 		// add door body to world
 		world.addBody( doorBody );
 		// create bottom hinge constraint on door
-		hingeBotBody = new CANNON.Body( { mass: 0 } );
+		hingeBodyBot = new CANNON.Body( { mass: 0 } );
 		// hingeBody must match position of doorBody!
-		hingeBotBody.position.set( x, y + dh/2, z );
-		hingeBotBody.quaternion = hingeBotBody.quaternion.mult( rotation );
+		hingeBodyBot.position.set( x, y + dh/2, z );
+		hingeBodyBot.quaternion = hingeBodyBot.quaternion.mult( rotation );
 		// note that pivotA & pivotB offsets should be the same if hingeBody
 		// 	position is not specified. we are basically specifying the offset
 		// 	of where the rotation axis is locally from bodyB (doorBody)
 		// axis should also be the same
-		hingeConstraint = new CANNON.HingeConstraint( hingeBotBody, doorBody, {
+		hingeConstraintBot = new CANNON.HingeConstraint( hingeBodyBot, doorBody, {
 			pivotA: new CANNON.Vec3( -dw/2, -dh/2, dd/2 ), // pivot offsets should be same 
 			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
 			pivotB: new CANNON.Vec3( -dw/2, -dh/2, dd/2 ), // pivot offsets should be same
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
-		world.addConstraint( hingeConstraint );
-		// check if an existing prop will be overwritten
-		if ( doorBody.constraints ) {
-			de&&bug.log( 'createDoor() error: an existing prop was overwritten.' );
-		}
-		doorBody.constraints = [];
-		doorBody.constraints.push( hingeConstraint );
+		world.addConstraint( hingeConstraintBot );
 		// create top hinge constraint on door
-		hingeTopBody = new CANNON.Body( { mass: 0 } );
-		hingeTopBody.position.set( x, y + dh/2, z );
-		hingeTopBody.quaternion = hingeTopBody.quaternion.mult( rotation );
-		hingeConstraint = new CANNON.HingeConstraint( hingeTopBody, doorBody, {
+		hingeBodyTop = new CANNON.Body( { mass: 0 } );
+		hingeBodyTop.position.set( x, y + dh/2, z );
+		hingeBodyTop.quaternion = hingeBodyTop.quaternion.mult( rotation );
+		hingeConstraintTop = new CANNON.HingeConstraint( hingeBodyTop, doorBody, {
 			pivotA: new CANNON.Vec3( -dw/2, +dh/2, dd/2 ), // pivot offsets should be same 
 			axisA: new CANNON.Vec3( 0, 1, 0 ), // axis offsets should be same 
 			pivotB: new CANNON.Vec3( -dw/2, +dh/2, dd/2 ), // pivot offsets should be same
 			axisB: new CANNON.Vec3( 0, 1, 0 ) // axis offsets should be same
 		} );
-		world.addConstraint( hingeConstraint );
-		doorBody.constraints.push( hingeConstraint );
-		
+		world.addConstraint( hingeConstraintTop );
 
 		// create door as a textured box mesh
 		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
@@ -1101,7 +1104,7 @@
 		scene.add( door );
 		pickObjects.push( door );
 		// add open function to door (via door body)
-		initDoor( door, da, doorBody, dm, dw, dh, dd, x, y, z, answer );
+		initDoor( door, da, doorBody, dm, dw, dh, dd, x, y, z, answer, hingeConstraintBot, hingeConstraintTop );
 
 		// create door handle via asynchronous load json file
 		XHR( ops.doorHandleModel, function( data ) {
@@ -1136,17 +1139,16 @@
 
 
 	// toggle door body impulse (and change door mass so it can be opened)
-	function initDoor( dr, da, drb, dm, dw, dh, dd, dx, dy, dz, answer ) {
+	function initDoor( dr, da, drb, dm, dw, dh, dd, dx, dy, dz, answer, hingeCBot, hingeCTop ) {
 		let impulseForce, worldPoint;
 
 		// check if door and door body defined
-		if ( !dr && !da && !drb ) {
+		if ( !dr && !da && !drb && !dm && !dw && !dh && !dd && !dx && !dy && !dz && !answer && !hingeCBot && !hingeCTop ) {
 			de&&bug.log( 'initDoor() error: some arg is undefined.' );
 		}
 
 		// check for existing props
-		if ( dr.body || dr.answer || dr.open || drb.open || dr.dim || dr.pos,
-			dr.answer ) {
+		if ( dr.body || drb.open || drb.constraints || dr.answer || dr.open || dr.dim || dr.pos ) {
 			de&&bug.log( 'initDoor() error: an existing prop was overwritten' );
 		}
 
@@ -1183,6 +1185,10 @@
 			// set this door to open when clicked
 			dr.open = true;
 		};
+
+		// add constraints to the door body for future destruction
+		drb.constraints = [];
+		drb.constraints.push( hingeCBot, hingeCTop );
 
 	}
 
@@ -1226,6 +1232,28 @@
 				dh.animating = true;
 			}
 		};
+
+	}
+	
+	
+	// delete door properties
+	function deleteDoor( dr ) {
+
+		if ( dr.body && dr.body.open) { dr.body.open = null; }
+		if ( dr.body && dr.body.constraints ) {
+			for ( let i = 0; i < dr.body.constraints.length; ++i ) {
+				dr.body.constraints[i] = null;
+			}
+			dr.body.constraints = null;
+		}
+		if ( dr.body ) { dr.body = null; }
+		if ( dr.answer ) { dr.answer = null; }
+		if ( dr.open ) { dr.open = null; }
+		if ( dr.dim ) { dr.dim = null; }
+		if ( dr.pos ) { dr.pos = null; }
+		if ( dr.handle && dr.handle.animating ) { dr.handle.animating = null; }
+		if ( dr.handle && dr.handle.update ) { dr.handle.update = null; }
+		if ( dr.handle && dr.handle.toggle ) { dr.handle.toggle = null; }
 
 	}
 
@@ -1413,6 +1441,14 @@
 	}
 
 
+	// delete wall properties
+	function deleteWall( wall ) {
+
+		if ( wall.body ) { wall.body = null; }
+
+	}
+
+
 	// create notes
 	function createNote( room, ops ) {
 
@@ -1457,16 +1493,20 @@
 		}
 
 		// check if overwriting existing property
-		if ( note.src || note.read ) {
+		if ( note.src || note.alreadyRead || note.read ) {
 			de&&bug.log( 'initNote() error: existing note prop was overwritten.' );
 		}
 
-		let alreadyRead = false;
+		// note src file
 		note.src = noteFile;
 
+		// has this note been read
+		note.alreadyRead = false;
+
+		// logic for reading notes
 		note.read = function() {
-			if ( !alreadyRead ) {
-				alreadyRead = true;
+			if ( !note.alreadyRead ) {
+				note.alreadyRead = true;
 				room.readCount++;
 			}
 
@@ -1476,6 +1516,27 @@
 			}
 		};
 
+	}
+
+
+	// delete note properties
+	function deleteNote( note ) {
+
+		if ( note.src ) { note.src = null; }
+		if ( note.alreadyRead ) { note.alreadyRead = null; }
+		if ( note.read ) { note.read = null; }
+
+	}
+
+
+	// delete all pick objects and set size to 0
+	function deletePickObjects() {
+	
+		for ( let i = 0; i < pickObjects.length; ++i ) {
+			pickObjects[i] = null;
+		}
+		pickObjects = [];
+		
 	}
 
 
