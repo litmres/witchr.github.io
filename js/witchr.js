@@ -212,36 +212,36 @@
 			*/
 			{	
 				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
-					floorTexture: './img/old_wood-min.jpg',
+					floorTexture: './img/floor-wood-dirty-min.jpg', u: 4, v: 1,
 					piecewise: false
 				},
 				doorsData: [
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.CORRECT_ANSWER,
-					frontTexture: './img/door_face_front-min.jpg',
-					sideTexture: './img/door_face_side-min.jpg',
-					handleModel: './model/door_handle.json',
-					handleTexture: './img/door_handle-min.jpg' },
+					frontTexture: './img/door-face-front-min.jpg',
+					sideTexture: './img/door-face-side-min.jpg',
+					handleModel: './model/door-handle.json',
+					handleTexture: './img/door-handle-min.jpg' },
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.WRONG_ANSWER,
-					frontTexture: './img/door_face_front-min.jpg',
-					sideTexture: './img/door_face_side-min.jpg',
-					handleModel: './model/door_handle.json',
-					handleTexture: './img/door_handle-min.jpg' }
+					frontTexture: './img/door-face-front-min.jpg',
+					sideTexture: './img/door-face-side-min.jpg',
+					handleModel: './model/door-handle.json',
+					handleTexture: './img/door-handle-min.jpg' }
 				],
 				wallsData: [
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg' },
 					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg' },
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg' },
 					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg' },
 				],
 				notesData: [ 
 					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
@@ -308,22 +308,22 @@
 			*/
 			{	
 				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
-					floorTexture: './img/old_wood-min.jpg',
+					floorTexture: './img/old-wood-min.jpg', u: 2, v: 1,
 					piecewise: false
 				},
 				doorsData: [
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.CORRECT_ANSWER,
-					frontTexture: './img/door_face_front-min.jpg',
-					sideTexture: './img/door_face_side-min.jpg',
-					handleModel: './model/door_handle.json',
-					handleTexture: './img/door_handle-min.jpg' },
+					frontTexture: './img/door-face-front-min.jpg',
+					sideTexture: './img/door-face-side-min.jpg',
+					handleModel: './model/door-handle.json',
+					handleTexture: './img/door-handle-min.jpg' },
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.WRONG_ANSWER,
-					frontTexture: './img/door_face_front-min.jpg',
-					sideTexture: './img/door_face_side-min.jpg',
-					handleModel: './model/door_handle.json',
-					handleTexture: './img/door_handle-min.jpg' }
+					frontTexture: './img/door-face-front-min.jpg',
+					sideTexture: './img/door-face-side-min.jpg',
+					handleModel: './model/door-handle.json',
+					handleTexture: './img/door-handle-min.jpg' }
 				],
 				wallsData: [
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
@@ -402,7 +402,7 @@
 				floorWidth: fD.fw, floorHeight: fD.fh, floorDepth: fD.fd, floorMass: fD.fm,
 				floorPosition: { x: fD.x, y: fD.y, z: fD.z },
 				floorRotation: { rx: fD.rx, ry: fD.ry, rz: fD.rz },
-				floorTexture: fD.floorTexture,
+				floorTexture: fD.floorTexture, u: fD.u, v: fD.v,
 				floorIsPiecewise: fD.piecewise
 			} );
 			// create doors
@@ -937,7 +937,7 @@
 	function createFloor( ops ) {
 		
 		let floorBody, floor;
-		let fw = ops.floorWidth, fh = ops.floorHeight, fd = ops.floorDepth, fm = ops.floorMass, x = ops.floorPosition.x, y = ops.floorPosition.y, z = ops.floorPosition.z, rx = ops.floorRotation.rx, ry = ops.floorRotation.ry, rz = ops.floorRotation.rz, floorTexture = ops.floorTexture, isPiecewise = ops.floorIsPiecewise;
+		let fw = ops.floorWidth, fh = ops.floorHeight, fd = ops.floorDepth, fm = ops.floorMass, x = ops.floorPosition.x, y = ops.floorPosition.y, z = ops.floorPosition.z, rx = ops.floorRotation.rx, ry = ops.floorRotation.ry, rz = ops.floorRotation.rz, floorTexture = ops.floorTexture, u = ops.u, v = ops.v, isPiecewise = ops.floorIsPiecewise;
 		let shape, rotation, quat;
 		let geometry, texture, material;
 		
@@ -973,7 +973,7 @@
 			texture = new THREE.TextureLoader().load( floorTexture );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
-			texture.repeat.set( 2, 1 );
+			texture.repeat.set( u, v );
 			material = new THREE.MeshBasicMaterial( { map: texture, 
 													side: THREE.DoubleSide 
 													} );
