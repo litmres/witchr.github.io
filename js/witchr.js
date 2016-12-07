@@ -764,6 +764,13 @@
 
 		}
 
+		// ensure mouseup/touchend is called on move (better UX, sometimes the
+		//	mouse/touch interface gets stuck and mouseup/touchend is not called)
+		if ( e.button !== Mouse.LEFT && e.button !== Mouse.RIGHT ) {
+			isMouseLeftDown = false;
+			isMouseRightDown = false;
+		}
+		
 	}
 
 
@@ -802,6 +809,11 @@
 		if ( e.touches.length === 1 ) { e.button = Mouse.LEFT; }
 		if ( e.touches.length === 2 ) { e.button = Mouse.RIGHT; }
 		onDocumentMouseMove( e );
+
+		// ensure mouseup/touchend is called on move (better UX, sometimes the
+		//	mouse/touch interface gets stuck and mouseup/touchend is not called)
+		if ( e.touches.length < 2 ) { isMouseRightDown = false; }
+		if ( e.touches.length < 1 ) { isMouseLeftDown = false; }
 
 	}
 
