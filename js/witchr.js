@@ -212,7 +212,7 @@
 			*/
 			{	
 				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
-					floorTexture: './img/floor-wood-dirty-min.jpg', u: 4, v: 1,
+					floorTexture: './img/floor-wood-min.jpg', u: 2, v: 1,
 					piecewise: false
 				},
 				doorsData: [
@@ -232,16 +232,16 @@
 				wallsData: [
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
-						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
+						wallTexture: './img/wallpaper-purple-min.jpg', u: 1, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
+						wallTexture: './img/wallpaper-purple-min.jpg', u: 1, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
+						wallTexture: './img/wallpaper-purple-min.jpg', u: 1, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
+						wallTexture: './img/wallpaper-purple-min.jpg', u: 1, v: 1 },
 				],
 				notesData: [ 
 					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
