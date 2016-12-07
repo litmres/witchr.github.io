@@ -308,7 +308,7 @@
 			*/
 			{	
 				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
-					floorTexture: './img/old-wood-min.jpg', u: 2, v: 1,
+					floorTexture: './img/floor-wood-min.jpg', u: 2, v: 1,
 					piecewise: false
 				},
 				doorsData: [
