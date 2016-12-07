@@ -64,7 +64,7 @@
 	 */
 	function init() {
 
-		// init game object
+		// init constants
 		initEnums();
 		// init hud and show splash screen as the intro img
 		initHUD();
