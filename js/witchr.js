@@ -232,16 +232,16 @@
 				wallsData: [
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
-						wallTexture: './img/wallpaper-beige-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
 					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-beige-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-beige-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
 					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-beige-min.jpg' },
+						wallTexture: './img/wallpaper-beige-min.jpg', u: 8, v: 2 },
 				],
 				notesData: [ 
 					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
@@ -328,16 +328,16 @@
 				wallsData: [
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
-						wallTexture: './img/wallpaper-min.jpg' },
+						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 				],
 				notesData: [ 
 					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
@@ -435,7 +435,7 @@
 						wallRotation: { x: wD[i].rX, y: wD[i].rY, z: wD[i].rZ },
 						wallMass: wD[i].m,
 						getWallDoors: wD[i].getDoors,
-						wallTexture: wD[i].wallTexture 
+						wallTexture: wD[i].wallTexture, u: wD[i].u, v: wD[i].v
 				} ) );
 			}
 			// create notes
@@ -1265,6 +1265,7 @@
 		wd = ops.wallDepth, wm = ops.wallMass,
 		x = ops.wallPosition.x, y = ops.wallPosition.y, z = ops.wallPosition.z,
 		rotx = ops.wallRotation.x, roty = ops.wallRotation.y, rotz = ops.wallRotation.z;
+		let wallTexture = ops.wallTexture, u = ops.u, v = ops.v;
 		let shape, rotation, quat;
 		let geometry, material, texture, mats = [];
 		let doors = ops.getWallDoors( room );
@@ -1301,18 +1302,18 @@
 				// create left part of wall door mesh (left of door, full extents)
 				geometry = new THREE.BoxGeometry( lww, wh, wd );
 				mats = [];
-				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
-				texture.repeat.set( wd*2/ww, dh/wh );
+				texture.repeat.set( wd*u/ww, dh*v/wh );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
-				texture.repeat.set( lww*2/ww, 1 );
+				texture.repeat.set( lww*u/ww, v );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				material = new THREE.MeshFaceMaterial( mats );
@@ -1326,18 +1327,18 @@
 				// create top part of wall door mesh (above door, full extents)
 				geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 				mats = [];
-				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
-				texture.repeat.set( dw*2/ww, dd/wh );
+				texture.repeat.set( dw*u/ww, dd*v/wh );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				texture = new THREE.TextureLoader().load( ops.wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
-				texture.repeat.set( dw*2/ww, (dh-wh)/wh );
+				texture.repeat.set( dw*u/ww, (dh-wh)*v/wh );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				material = new THREE.MeshFaceMaterial( mats );
@@ -1354,30 +1355,30 @@
 			let px = doors[doors.length-1].pos.x; // prev door's x value
 			let rww = abs(x - px) -pdw/2; // right wall width
 
-			// wallDoor left box mesh (half extents)
+			// wallDoor right box mesh (half extents)
 			shape = new CANNON.Box( new CANNON.Vec3( rww/2, wh/2, wd/2 ) );
 			wallBody.addShape( shape, new CANNON.Vec3( px +rww/2 +pdw/2, wh/2, 0 ) );
-			// create left part of wall door mesh (left of door, full extents)
+			// create right part of wall door mesh (right of door, full extents)
 			geometry = new THREE.BoxGeometry( rww, wh, wd );
 			mats = [];
-			texture = new THREE.TextureLoader().load( ops.wallTexture );
+			texture = new THREE.TextureLoader().load( wallTexture );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
-			texture.repeat.set( wd*2/ww, dh/wh );
+			texture.repeat.set( wd*u/ww, dh*v/wh );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-			texture = new THREE.TextureLoader().load( ops.wallTexture );
+			texture = new THREE.TextureLoader().load( wallTexture );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
-			texture.repeat.set( rww*2/ww, 1 );
+			texture.repeat.set( rww*u/ww, v );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			material = new THREE.MeshFaceMaterial( mats );
-			wallL = new THREE.Mesh( geometry, material );
-			wallL.position.set( px +rww/2 +pdw/2, wh/2, 0 );
-			wall.add( wallL );
+			wallR = new THREE.Mesh( geometry, material );
+			wallR.position.set( px +rww/2 +pdw/2, wh/2, 0 );
+			wall.add( wallR );
 
 		} else {
 
@@ -1403,10 +1404,10 @@
 			// create wall mesh
 			geometry = new THREE.BoxGeometry( ww, wh, wd );
 			// create full wall textures
-			texture = new THREE.TextureLoader().load( ops.wallTexture );
+			texture = new THREE.TextureLoader().load( wallTexture );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
-			texture.repeat.set( 2, 1 );
+			texture.repeat.set( u, v );
 			material = new THREE.MeshBasicMaterial( { map: texture } );
 			wall = new THREE.Mesh( geometry, material );
 			
