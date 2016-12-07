@@ -182,7 +182,7 @@
 		// game begins each room's reset logic and then rooms's run their own reset logic
 		game.startRoomReset = function() {
 			// dim the scene, dimmer calls room.reset() on opacity: 1 && room.state === CORRECT/WRONG_ANSWER
-			dimmer.style.opacity = 1.0;
+			dimmer.set( 1 );
 			game.lockInput();
 		};
 		game.finishRoomReset = function() {
@@ -276,7 +276,7 @@
 					// reset room state
 					room.state = Game.NO_ANSWER;
 					// clear dimmer black screen
-					dimmer.style.opacity = 0;
+					dimmer.set( 0 );
 					game.unlockInput();
 				},
 				nextFunc: function() {
@@ -291,7 +291,7 @@
 					// reset player BODY's position for this room
 					game.player.body.position.set( 0, game.player.height, 25 );
 					// clear dimmer black screen
-					dimmer.style.opacity = 0;
+					dimmer.set( 0, '2s' );
 					game.unlockInput();
 
 				}
@@ -379,7 +379,7 @@
 					// reset player BODY's position for this room
 					game.player.body.position.set( 0, game.player.height, 25 );
 					// clear dimmer black screen
-					dimmer.style.opacity = 0;
+					dimmer.set( 0 );
 					game.unlockInput();
 
 				}
@@ -1632,6 +1632,15 @@
 			} 
 		} );
 
+		// function that makes dimming scene easier
+		dimmer.set = function( opacity, time ) {
+			if ( time === undefined ) {
+				time = transitionLength;
+			}
+			dimmer.style.transition = 'opacity ' + time;
+			dimmer.style.opacity = opacity;
+		}
+
 		
 		// create hud img that will display all hud screens for game such as
 		// 	splash img, ending img, and notes
@@ -1680,7 +1689,7 @@
 			hud.style.width = w;
 			hud.style.height = h;
 			// dim background when showing something on hud
-			dimmer.style.opacity = 0.8;
+			dimmer.set( 0.8 );
 		};
 
 		// hide currently displayed hud img if not already transitioning
@@ -1689,7 +1698,7 @@
 			hud.transitioning = true;
 			hud.style.opacity = 0;
 			// undim background
-			dimmer.style.opacity = 0;
+			dimmer.set( 0 );
 		};
 
 		hud.addEventListener( 'transitionend', function( e ) {
