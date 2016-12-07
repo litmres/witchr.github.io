@@ -226,7 +226,6 @@
 				checkExitConditionFunc: function() {
 					// generally, best way to do this is to check for the closest door
 					//	to the player on exit and grab the ca/wa from that door.
-					// test against exit condition
 					let room = game.room;
 					if ( game.player.position.z < 0 ) {
 						// get the closest door to player
@@ -259,7 +258,7 @@
 					// create the new room
 					game.room = game.createRoom( game.currRoom );
 					// reset player BODY's position for this room
-					game.player.body.position.set( 0, game.player.height, 25 );
+					game.player.body.position.set( 0, game.player.height, 40 );
 				}
 			},
 			/**
@@ -284,8 +283,8 @@
 					sideTexture: './img/door-face-side-min.jpg',
 					handleModel: './model/door-handle.json',
 					handleTexture: './img/door-handle-min.jpg' },
-					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 20, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
-					answer: Game.WRONG_ANSWER,
+					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 50, rx: 0, ry: 180, rz: 0,
+					answer: Game.PREVIOUS_ROOM,
 					frontTexture: './img/door-face-front-min.jpg',
 					sideTexture: './img/door-face-side-min.jpg',
 					handleModel: './model/door-handle.json',
@@ -293,13 +292,13 @@
 				],
 				wallsData: [
 					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 0, rX: 0, rY: 0, rZ: 0,
-						getDoors: function( room ) { return [room.doors[0], room.doors[1]]; },
+						getDoors: function( room ) { return [room.doors[0]]; },
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
-					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
-						getDoors: function( room ) { return []; },
+					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 180, rZ: 0,
+						getDoors: function( room ) { return [room.doors[1]]; },
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
@@ -316,9 +315,8 @@
 				checkExitConditionFunc: function() {
 					// generally, best way to do this is to check for the closest door
 					//	to the player on exit and grab the ca/wa from that door.
-					// test against exit condition
 					let room = game.room;
-					if ( game.player.position.z < 0 ) {
+					if ( game.player.position.z < 0 || game.player.position.z > 50 ) {
 						// get the closest door to player
 						let closest = { door: room.doors[0], d: game.player.position.distanceTo( room.doors[0].position ) };
 						for ( let i = 1; i < room.doors.length; ++i ) {
@@ -330,14 +328,22 @@
 					}
 				},
 				previousFunc: function() {
+					// remove all bodies and meshes in current room
+					game.destroyRoom();
+					// player moving to next room, increment currRoom
+					game.currRoom--;
+					// create the new room
+					game.room = game.createRoom( game.currRoom );
+					// reset player BODY's position for this room
+					game.player.body.position.set( 0, game.player.height, 10 );
 				},
 				resetFunc: function() {
 				},
 				nextFunc: function() {
-
 					// remove all bodies and meshes in current room
 					game.destroyRoom();
-					game.currRoom--;
+					// player moving to next room, increment currRoom
+					game.currRoom++;
 					// create the new room
 					game.room = game.createRoom( game.currRoom );
 					// reset player BODY's position for this room
