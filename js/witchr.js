@@ -98,9 +98,10 @@
 		document.addEventListener( 'touchmove', onDocumentTouchMove, false );
 		document.addEventListener( 'touchend', onDocumentTouchEnd, false );
 
-
-		document.addEventListener( 'click', function( e ) {
-			game.openDoors();
+		document.addEventListener( 'mousedown', function( e ) {
+			if ( e.button === 2 ) {
+				game.openDoors();
+			}
 		});
 
 
@@ -168,35 +169,6 @@
 	// initialize all game objects such as the rooms, doors, walls, notes
 	function initGame() {
 
-		// window.cancelAnimationFrame( game.stopGameLoop ) can be called to stopGameLoop
-		// 	the main requestAnimationFrame() loop
-		game.stopGameLoop = 0;
-		// lock input logic
-		game.inputLocked = false;
-		game.lockInput = function() { game.inputLocked = true; };
-		game.unlockInput = function() { game.inputLocked = false; };
-		// setup the player
-		game.player = createPlayer( { eyeRadius: 3, eyeMass: 10, eyeLinearDamping: 0.99, eyeOpacity: 0.1, eyeStartPos: { x: 0, y: 0, z: 25 } } );
-		// start game on it's initial room
-		game.currRoom = 0;
-		// game begins each room's reset logic and then rooms's run their own reset logic
-		game.startRoomReset = function() {
-			// dim the scene, dimmer calls room.reset() on opacity: 1 && room.state === CORRECT/WRONG_ANSWER
-			dimmer.set( 1 );
-			game.lockInput();
-		};
-		game.finishRoomReset = function() {
-			let room = game.room;
-			if ( room.state === Game.PREVIOUS_ROOM ) {
-				room.previous();
-			}
-			if ( room.state === Game.WRONG_ANSWER ) {
-				room.reset();
-			}
-			if ( room.state === Game.CORRECT_ANSWER ) {
-				room.next();
-			}
-		}
 		// setup each room in the game, each room contains doors, walls, and notes
 		let rD, roomsData;
 		rD = roomsData = [
@@ -211,10 +183,10 @@
 			888   T88b  "Y88P"   "Y88P"  888  888  888      "Y8888P"  
 			*/
 			{	
-				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
-					floorTexture: './img/floor-wood-min.jpg', u: 2, v: 1,
-					piecewise: false
-				},
+				floorsData: [
+					{ fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
+					floorTexture: './img/floor-wood-min.jpg', u: 2, v: 1 }
+				],
 				doorsData: [
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.CORRECT_ANSWER,
@@ -280,20 +252,14 @@
 					game.unlockInput();
 				},
 				nextFunc: function() {
-
 					// remove all bodies and meshes in current room
 					game.destroyRoom();
-
+					// player moving to next room, increment currRoom
 					game.currRoom++;
 					// create the new room
 					game.room = game.createRoom( game.currRoom );
-
 					// reset player BODY's position for this room
 					game.player.body.position.set( 0, game.player.height, 25 );
-					// clear dimmer black screen
-					dimmer.set( 0, '2s' );
-					game.unlockInput();
-
 				}
 			},
 			/**
@@ -307,10 +273,10 @@
 			888   T88b  "Y88P"   "Y88P"  888  888  888     8888888 
 			*/
 			{	
-				floorData: { fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
-					floorTexture: './img/floor-wood-min.jpg', u: 2, v: 1,
-					piecewise: false
-				},
+				floorsData: [
+					{ fw: 50, fh: 50, fd: 0.0001, fm: 0, x: 0, y: 0, z: 25, rx: -90, ry: 0, rz: 0,
+					floorTexture: './img/floor-wood-min.jpg', u: 2, v: 1 }
+				],
 				doorsData: [
 					{ dw: 8, dh: 11, dd: 0.5, df: 0.5, dm: 10, dld: 0.66, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0,
 					answer: Game.CORRECT_ANSWER,
@@ -371,43 +337,102 @@
 
 					// remove all bodies and meshes in current room
 					game.destroyRoom();
-
 					game.currRoom--;
 					// create the new room
 					game.room = game.createRoom( game.currRoom );
-
 					// reset player BODY's position for this room
 					game.player.body.position.set( 0, game.player.height, 25 );
-					// clear dimmer black screen
-					dimmer.set( 0 );
-					game.unlockInput();
-
 				}
 			},
 		];
+
 		game.NUM_ROOMS = rD.length;
 		game.rooms = [];
 		// start all rooms with complete values === false
 		for ( let r = 0; r < game.NUM_ROOMS; ++r ) {
 			game.rooms.push( false );
 		}
+		// window.cancelAnimationFrame( game.stopGameLoop ) can be called to stopGameLoop
+		// 	the main requestAnimationFrame() loop
+		game.stopGameLoop = 0;
+		// lock input logic
+		game.inputLocked = true;
+		game.lockInput = function() { game.inputLocked = true; };
+		game.unlockInput = function() { game.inputLocked = false; };
+		// setup the player
+		game.player = createPlayer( { eyeRadius: 3, eyeMass: 10, eyeLinearDamping: 0.99, eyeOpacity: 0.1, eyeStartPos: { x: 0, y: 0, z: 25 } } );
+		// start game on it's initial room
+		game.currRoom = 0;
+		// game begins each room's reset logic and then rooms's run their own reset logic
+		game.startRoomReset = function() {
+			// dim the scene, dimmer calls room.reset() on opacity: 1 && room.state === CORRECT/WRONG_ANSWER
+			dimmer.set( 1 );
+			game.lockInput();
+		};
+		// finish the current room's reset based on the door player exited from
+		game.finishRoomReset = function() {
+			let room = game.room;
+			if ( room.state === Game.PREVIOUS_ROOM ) {
+				room.previous();
+			}
+			if ( room.state === Game.WRONG_ANSWER ) {
+				room.reset();
+			}
+			if ( room.state === Game.CORRECT_ANSWER ) {
+				room.next();
+			}
+		};
+		// open all doors of the current room and flag it as 'completed' true
+		game.openDoors = function() {
+			// open all doors for current room
+			for ( let i = 0; i < game.room.doors.length; ++i ) {
+				game.room.doors[i].body.open();
+			}
+			// flag current room for all doors open
+			game.rooms[game.currRoom] = true;
+		};
+		// on creating room, player polls until it is fully loaded
+		game.pollForRoomLoaded = function() {
+			if ( game.room.isLoaded ) {
+				clearInterval( game.intervalID );
+				// show room once all textures and objects loaded
+				dimmer.set( 0 );
+				game.unlockInput();
+				// if this room has already been solved, open its doors
+				if ( game.rooms[game.currRoom] ) {
+					game.openDoors();
+				}
+			}
+		};
 		// create a room given a room number
 		game.createRoom = function( roomNumber ) {
 
 			let room = {}, r = roomNumber;
 			room.state = Game.NO_ANSWER;
+			// textures and objects loaded starts at 0
+			room.stuffsLoaded = 0;
+			// for each texture/obj loaded, up count and check if everything loaded
+			room.loadedStuffs = function() {
+				room.stuffsLoaded++;
+			}
+			// check if all of this room's textures & objects loaded
+			room.isLoaded = function() {
+				return room.stuffsLoaded === room.NUM_STUFFS;
+			}
+		
 			// create floor
-			let fD = rD[r].floorData;
-			room.floor = createFloor( {
-				floorWidth: fD.fw, floorHeight: fD.fh, floorDepth: fD.fd, floorMass: fD.fm,
-				floorPosition: { x: fD.x, y: fD.y, z: fD.z },
-				floorRotation: { rx: fD.rx, ry: fD.ry, rz: fD.rz },
-				floorTexture: fD.floorTexture, u: fD.u, v: fD.v,
-				floorIsPiecewise: fD.piecewise
-			} );
+			let fD = rD[r].floorsData;
+			room.NUM_FLOORS = fD.length;
+			room.floors = [];
+			for ( let i = 0; i < room.NUM_FLOORS; ++i ) {
+				room.floors.push( createFloor( room, {
+					floorWidth: fD[i].fw, floorHeight: fD[i].fh, floorDepth: fD[i].fd, floorMass: fD[i].fm,
+					floorPosition: { x: fD[i].x, y: fD[i].y, z: fD[i].z },
+					floorRotation: { rx: fD[i].rx, ry: fD[i].ry, rz: fD[i].rz },
+					floorTexture: fD[i].floorTexture, u: fD[i].u, v: fD[i].v
+				} ) );
+			}
 			// create doors
-			room.modelsLoaded = 0;
-			room.allModelsLoaded = false;
 			let dD = rD[r].doorsData;
 			room.NUM_DOORS = dD.length;
 			room.doors = [];
@@ -459,26 +484,30 @@
 			room.reset = rD[r].resetFunc;
 			// go to next room logic
 			room.next = rD[r].nextFunc;
+			// count all  models and textures that should be loaded
+			room.NUM_STUFFS = rD[r].floorsData.length + rD[r].doorsData.length*4 + rD[r].notesData.length;
+			for ( let i = 0; i < rD[r].wallsData.length; ++i ) {
+				if ( rD[r].wallsData[i].getDoors(room).length ) {
+					room.NUM_STUFFS += rD[r].wallsData[i].getDoors(room).length*4 + 2;
+				} else {
+					room.NUM_STUFFS++;
+				}
+			}
+			// poll until everything is loaded and player can begin exploring room
+			game.intervalID = window.setInterval( game.pollForRoomLoaded, 500 );
 
 			return room;
-		}
+		};
 		// init the first room
 		game.room = game.createRoom( game.currRoom );
-		// open all doors of the current room and flag it as 'completed' true
-		game.openDoors = function() {
-			// open all doors for current room
-			for ( let i = 0; i < game.room.doors.length; ++i ) {
-				game.room.doors[i].body.open();
-			}
-			// flag current room for all doors open
-			game.rooms[game.currRoom] = true;
-		}
 		// destroy room's bodies and meshes before a new one can be created
 		game.destroyRoom = function() {
 			// destroy floor
-			deleteMesh( game.room.floor );
-			deleteBody( game.room.floor.body );
-			deleteFloor( game.room.floor );
+			for ( let i = 0; i < game.room.NUM_FLOORS; ++i ) {
+				deleteMesh( game.room.floors[i] );
+				deleteBody( game.room.floors[i].body );
+				deleteFloor( game.room.floors[i] );
+			}
 			// destroy doors
 			for ( let i = 0; i < game.room.NUM_DOORS; ++i ) {
 				deleteMesh( game.room.doors[i].handle );
@@ -499,7 +528,9 @@
 			}
 			// delete pick objects and set size to 0
 			deletePickObjects();
-		}
+			// set all loaded textures and objects to 0
+			game.room.loadedStuffs = 0;
+		};
 
 	}
 
@@ -523,8 +554,8 @@
 
 		while ( accumulator >= dt ) {
 
-			// only handle inputs and update physics once all models are loaded
-			if ( game.room.allModelsLoaded ) {
+			// handle inputs and update physics once all textures & models loaded
+			if ( game.room.isLoaded() ) {
 				if ( !game.inputLocked ) {
 					handleInputs( dt );
 				}
@@ -536,7 +567,6 @@
 
 		}
 
-
 		renderer.render( scene, camera ); // render the scene
 		stats.update();
 
@@ -546,7 +576,6 @@
 
 		let player = game.player;
 		let room = game.room;
-		let floor = room.floor;
 		let rotation;
 
 
@@ -568,8 +597,11 @@
 		player.position.copy( player.body.position );
 		player.quaternion.copy( player.body.quaternion );
 
-		floor.position.copy( floor.body.position );
-		floor.quaternion.copy( floor.body.quaternion );
+		for ( let i = 0; i < room.floors.length; ++i ) {
+			let floor = room.floors[i];
+			floor.position.copy( floor.body.position );
+			floor.quaternion.copy( floor.body.quaternion );
+		}
 		
 		for ( let i = 0; i < room.doors.length; ++i ) {
 			let door = room.doors[i];
@@ -946,51 +978,46 @@
 
 
 	// create floor for each room
-	function createFloor( ops ) {
+	function createFloor( room, ops ) {
 		
 		let floorBody, floor;
-		let fw = ops.floorWidth, fh = ops.floorHeight, fd = ops.floorDepth, fm = ops.floorMass, x = ops.floorPosition.x, y = ops.floorPosition.y, z = ops.floorPosition.z, rx = ops.floorRotation.rx, ry = ops.floorRotation.ry, rz = ops.floorRotation.rz, floorTexture = ops.floorTexture, u = ops.u, v = ops.v, isPiecewise = ops.floorIsPiecewise;
+		let fw = ops.floorWidth, fh = ops.floorHeight, fd = ops.floorDepth, fm = ops.floorMass, x = ops.floorPosition.x, y = ops.floorPosition.y, z = ops.floorPosition.z, rx = ops.floorRotation.rx, ry = ops.floorRotation.ry, rz = ops.floorRotation.rz, floorTexture = ops.floorTexture, u = ops.u, v = ops.v;
 		let shape, rotation, quat;
 		let geometry, texture, material;
 		
 		// setup floor physics body, very thin x,y (half extents) box will act as floor
 		// floor will be rotated onto y=0 to keep on proper axis as texture and
 		// all other world bodies will be init with that in mind
-		if ( isPiecewise ) {
-			// floor is made up of several different pieces... good for jumping levels
-		} else {
-			// floor is one contiguous piece
-			shape = new CANNON.Box( new CANNON.Vec3( fw/2, fh/2, fd/2 ) );
-			floorBody = new CANNON.Body( { mass: fm, material: physicsMaterial } );
-			floorBody.addShape( shape );
-			// init floor position
-			floorBody.position.set( x, y -fd/2, z );
-			// init floor rotation
-			rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rx*THREE.Math.DEG2RAD );
-			rotation = rotation.mult( quat );
-			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), ry*THREE.Math.DEG2RAD );
-			rotation = rotation.mult( quat );
-			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat.setFromAxisAngle( new CANNON.Vec3( 0, 0, 1 ), rz*THREE.Math.DEG2RAD );
-			rotation = rotation.mult( quat );
-			floorBody.quaternion = floorBody.quaternion.mult( rotation );
-			// add floor body to physics world
-			world.addBody( floorBody );
-			
-			// create floor mesh that acts as the room floor
-			geometry = new THREE.PlaneGeometry( fw, fh, 1, 1 );
-			texture = new THREE.TextureLoader().load( floorTexture );
-			texture.wrapS = THREE.RepeatWrapping;
-			texture.wrapT = THREE.RepeatWrapping;
-			texture.repeat.set( u, v );
-			material = new THREE.MeshBasicMaterial( { map: texture, 
-													side: THREE.DoubleSide 
-													} );
-			floor =  new THREE.Mesh( geometry, material );
-		}
+		shape = new CANNON.Box( new CANNON.Vec3( fw/2, fh/2, fd/2 ) );
+		floorBody = new CANNON.Body( { mass: fm, material: physicsMaterial } );
+		floorBody.addShape( shape );
+		// init floor position
+		floorBody.position.set( x, y -fd/2, z );
+		// init floor rotation
+		rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rx*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), ry*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 0, 0, 1 ), rz*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		floorBody.quaternion = floorBody.quaternion.mult( rotation );
+		// add floor body to physics world
+		world.addBody( floorBody );
+		
+		// create floor mesh that acts as the room floor
+		geometry = new THREE.PlaneGeometry( fw, fh, 1, 1 );
+		texture = new THREE.TextureLoader().load( floorTexture, room.loadedStuffs() );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( u, v );
+		material = new THREE.MeshBasicMaterial( { map: texture, 
+												side: THREE.DoubleSide 
+												} );
+		floor =  new THREE.Mesh( geometry, material );
 		floor.name = 'floor';
 		scene.add( floor );
 		initFloor( floor, floorBody );
@@ -1094,7 +1121,7 @@
 		// create door as a textured box mesh
 		geometry = new THREE.BoxGeometry( dw-df, dh-df, dd );
 		// texture door sides
-		texture = new THREE.TextureLoader().load( ops.doorFaceSideTexture );
+		texture = new THREE.TextureLoader().load( ops.doorFaceSideTexture, room.loadedStuffs() );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 1, 1 );
@@ -1103,7 +1130,7 @@
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
         mats.push(new THREE.MeshBasicMaterial( { map: texture } ) );
 		// texture door front & back
-		texture = new THREE.TextureLoader().load( ops.doorFaceFrontTexture );
+		texture = new THREE.TextureLoader().load( ops.doorFaceFrontTexture, room.loadedStuffs() );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 1, 1 );
@@ -1122,9 +1149,9 @@
 		XHR( ops.doorHandleModel, function( data ) {
 			// load door handle obj group (will be stuck to door)
 			doorHandle = JSON.parse( data );
-			doorHandle = (new THREE.ObjectLoader()).parse( doorHandle );
+			doorHandle = (new THREE.ObjectLoader()).parse( doorHandle, room.loadedStuffs() );
 			// setup door handle texture (from shiny metallic texture)
-			texture = new THREE.TextureLoader().load( ops.doorHandleTexture );
+			texture = new THREE.TextureLoader().load( ops.doorHandleTexture, room.loadedStuffs() );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
 			texture.repeat.set( 1, 1 );
@@ -1135,13 +1162,6 @@
 			door.add( doorHandle );
 			// add update and toggle functions to door handle
 			initDoorHandle( door, doorHandle );
-
-			// increment another loaded door handle model and signal that all
-			//	models are loaded so gameloop can start taking input/updating
-			room.modelsLoaded++;
-			if ( room.modelsLoaded === room.NUM_DOORS ) {
-				room.allModelsLoaded = true;
-			}
 		} );
 
 
@@ -1314,7 +1334,7 @@
 				// create left part of wall door mesh (left of door, full extents)
 				geometry = new THREE.BoxGeometry( lww, wh, wd );
 				mats = [];
-				texture = new THREE.TextureLoader().load( wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture, room.loadedStuffs() );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
 				texture.repeat.set( wd*u/ww, dh*v/wh );
@@ -1322,7 +1342,7 @@
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				texture = new THREE.TextureLoader().load( wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture, room.loadedStuffs() );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
 				texture.repeat.set( lww*u/ww, v );
@@ -1339,7 +1359,7 @@
 				// create top part of wall door mesh (above door, full extents)
 				geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 				mats = [];
-				texture = new THREE.TextureLoader().load( wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture, room.loadedStuffs() );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
 				texture.repeat.set( dw*u/ww, dd*v/wh );
@@ -1347,7 +1367,7 @@
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-				texture = new THREE.TextureLoader().load( wallTexture );
+				texture = new THREE.TextureLoader().load( wallTexture, room.loadedStuffs() );
 				texture.wrapS = THREE.RepeatWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
 				texture.repeat.set( dw*u/ww, (dh-wh)*v/wh );
@@ -1373,7 +1393,7 @@
 			// create right part of wall door mesh (right of door, full extents)
 			geometry = new THREE.BoxGeometry( rww, wh, wd );
 			mats = [];
-			texture = new THREE.TextureLoader().load( wallTexture );
+			texture = new THREE.TextureLoader().load( wallTexture, room.loadedStuffs() );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
 			texture.repeat.set( wd*u/ww, dh*v/wh );
@@ -1381,7 +1401,7 @@
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
-			texture = new THREE.TextureLoader().load( wallTexture );
+			texture = new THREE.TextureLoader().load( wallTexture, room.loadedStuffs() );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
 			texture.repeat.set( rww*u/ww, v );
@@ -1416,7 +1436,7 @@
 			// create wall mesh
 			geometry = new THREE.BoxGeometry( ww, wh, wd );
 			// create full wall textures
-			texture = new THREE.TextureLoader().load( wallTexture );
+			texture = new THREE.TextureLoader().load( wallTexture, room.loadedStuffs() );
 			texture.wrapS = THREE.RepeatWrapping;
 			texture.wrapT = THREE.RepeatWrapping;
 			texture.repeat.set( u, v );
@@ -1473,7 +1493,7 @@
 		// create notes that will be spread all over room
 		geometry = new THREE.BoxGeometry( nw, nh, nd );
 		// create texture for each note
-		texture = new THREE.TextureLoader().load( base + fileName );
+		texture = new THREE.TextureLoader().load( base + fileName, room.loadedStuffs() );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 1, 1 );
@@ -1526,6 +1546,8 @@
 			// if all notes read, open all doors
 			if ( room.readCount === room.NUM_NOTES ) {
 				game.openDoors();
+				// flag this room as completed
+				game.rooms[game.currRoom] = true;
 			}
 		};
 
