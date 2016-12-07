@@ -297,7 +297,7 @@
 					{ w: 50, h: 20, d: 1, m: 0, x: 25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
 						getDoors: function( room ) { return []; },
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
-					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 180, rZ: 0,
+					{ w: 50, h: 20, d: 1, m: 0, x: 0, y: 0, z: 50, rX: 0, rY: 0, rZ: 0,
 						getDoors: function( room ) { return [room.doors[1]]; },
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 					{ w: 50, h: 20, d: 1, m: 0, x: -25, y: 0, z: 25, rX: 0, rY: 90, rZ: 0,
@@ -1324,7 +1324,7 @@
 				// 	complete wall
 				// wallDoor left box mesh (half extents)
 				shape = new CANNON.Box( new CANNON.Vec3( lww/2, wh/2, wd/2 ) );
-				wallBody.addShape( shape, new CANNON.Vec3( px +lww/2 +pdw/2, wh/2, 0 ) );
+				wallBody.addShape( shape, new CANNON.Vec3( px +lww/2 +pdw/2, 0, 0 ) );
 				// create left part of wall door mesh (left of door, full extents)
 				geometry = new THREE.BoxGeometry( lww, wh, wd );
 				mats = [];
@@ -1344,12 +1344,12 @@
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				material = new THREE.MeshFaceMaterial( mats );
 				wallL = new THREE.Mesh( geometry, material );
-				wallL.position.set( px +lww/2 +pdw/2, wh/2, 0 );
+				wallL.position.set( px +lww/2 +pdw/2, 0, 0 );
 				wall.add( wallL );
 
 				// wallDoor top box mesh (half extents)
 				shape = new CANNON.Box( new CANNON.Vec3( dw/2, (wh-dh)/2, wd/2 ) );
-				wallBody.addShape( shape, new CANNON.Vec3( x, ((wh-dh)/2)+dh, 0 ) );
+				wallBody.addShape( shape, new CANNON.Vec3( x, dh/2, 0 ) );
 				// create top part of wall door mesh (above door, full extents)
 				geometry = new THREE.BoxGeometry( dw, wh-dh, wd );
 				mats = [];
@@ -1369,7 +1369,7 @@
 				mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 				material = new THREE.MeshFaceMaterial( mats );
 				wallT = new THREE.Mesh( geometry, material );
-				wallT.position.set( x, ((wh-dh)/2)+dh, 0 );
+				wallT.position.set( x, dh/2, 0 );
 				wall.add( wallT );
 
 			}
@@ -1383,7 +1383,7 @@
 
 			// wallDoor right box mesh (half extents)
 			shape = new CANNON.Box( new CANNON.Vec3( rww/2, wh/2, wd/2 ) );
-			wallBody.addShape( shape, new CANNON.Vec3( px +rww/2 +pdw/2, wh/2, 0 ) );
+			wallBody.addShape( shape, new CANNON.Vec3( px +rww/2 +pdw/2, 0, 0 ) );
 			// create right part of wall door mesh (right of door, full extents)
 			geometry = new THREE.BoxGeometry( rww, wh, wd );
 			mats = [];
@@ -1403,7 +1403,7 @@
 			mats.push( new THREE.MeshBasicMaterial( { map: texture } ) );
 			material = new THREE.MeshFaceMaterial( mats );
 			wallR = new THREE.Mesh( geometry, material );
-			wallR.position.set( px +rww/2 +pdw/2, wh/2, 0 );
+			wallR.position.set( px +rww/2 +pdw/2, 0, 0 );
 			wall.add( wallR );
 
 		} else {
@@ -1412,21 +1412,6 @@
 			shape = new CANNON.Box( new CANNON.Vec3( ww/2, wh/2, wd/2 ) );
 			wallBody = new CANNON.Body( { mass: wm } );
 			wallBody.addShape( shape );
-			// set initial position of wall
-			wallBody.position.set( x, y + wh/2, z );
-			// set initial rotation of wall
-			rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotx*THREE.Math.DEG2RAD );
-			rotation = rotation.mult( quat );
-			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), roty*THREE.Math.DEG2RAD );
-			rotation = rotation.mult( quat );
-			quat = new CANNON.Quaternion( 0, 0, 0, 1 );
-			quat.setFromAxisAngle( new CANNON.Vec3( 0, 0, 1 ), rotz*THREE.Math.DEG2RAD );
-			rotation = rotation.mult( quat );
-			wallBody.quaternion = wallBody.quaternion.mult( rotation );
-
 			// create wall mesh
 			geometry = new THREE.BoxGeometry( ww, wh, wd );
 			// create full wall textures
@@ -1438,6 +1423,21 @@
 			wall = new THREE.Mesh( geometry, material );
 			
 		}
+		// set initial position of wall
+		wallBody.position.set( x, y + wh/2, z );
+		// set initial rotation of wall
+		rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotx*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), roty*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		quat = new CANNON.Quaternion( 0, 0, 0, 1 );
+		quat.setFromAxisAngle( new CANNON.Vec3( 0, 0, 1 ), rotz*THREE.Math.DEG2RAD );
+		rotation = rotation.mult( quat );
+		wallBody.quaternion = wallBody.quaternion.mult( rotation );
+		// give a name to wall mesh
 		wall.name = 'wall_' + x + ',' + y + ',' + z;
 
 		// add the completed wall to the scene and attach body to mesh
