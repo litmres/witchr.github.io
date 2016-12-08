@@ -513,8 +513,8 @@
 			// reset player BODY's position for this room
 			game.player.body.position.set( x, y + game.player.height, z );
 			// reset player's rotation (players may start at wierd positons)
-			rotY -= ry;
-			targetRotationY -= ry;
+			rotX -= rx; targetRotationX -= rx;
+			rotY -= ry; targetRotationY -= ry;
 		}
 		// win the game, great job!
 		game.win = function() {
