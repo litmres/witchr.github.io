@@ -301,10 +301,6 @@
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 				],
 				notesData: [ 
-					{ w: 3, h: 5, d: 0.001, x: -24, y: 8, z: 25, rX: 0, rY: 90, rZ: 0,
-						fileName: 'note2.png' },
-					{ w: 11, h: 11, d: 0.001, x: +15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-						fileName: 'news-min.jpg' },
 				],
 				checkExitConditionFunc: function() {
 					// generally, best way to do this is to check for the closest door
@@ -398,8 +394,8 @@
 				// show room once all textures and objects loaded
 				dimmer.set( 0 );
 				game.unlockInput();
-				// if this room has already been solved, open its doors
-				if ( game.rooms[game.currRoom] ) {
+				// if room already solved or has no notes, open doors
+				if ( game.rooms[game.currRoom] || game.room.readCount === game.room.NUM_NOTES ) {
 					game.openDoors();
 				}
 			}
