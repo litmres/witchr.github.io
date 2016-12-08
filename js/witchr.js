@@ -225,10 +225,10 @@
 				previousFunc: function() {
 				},
 				resetFunc: function() {
-					game.exitRoom( { answer: Game.WRONG_ANSWER, position: { x: 0, y: 0, z: 25 } } );
+					game.exitRoom( { answer: Game.WRONG_ANSWER, position: { x: 20, y: 0, z: 10 }, rotation: { rx: 0, ry: 180 } } );
 				},
 				nextFunc: function() {
-					game.exitRoom( { answer: Game.CORRECT_ANSWER, position: { x: 0, y: 0, z: 40 } } );
+					game.exitRoom( { answer: Game.CORRECT_ANSWER, position: { x: 0, y: 0, z: 40 }, rotation: {rx: 0, ry: 0 } } );
 				}
 			},
 			/**
@@ -284,7 +284,7 @@
 					game.exitConditions( { boundary: { x: [-25, 25], y: [0, 20], z: [0, 50] } } );
 				},
 				previousFunc: function() {
-					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 } } );
+					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 }, rotation: { rx: 0, ry: 0 } } );
 				},
 				resetFunc: function() {
 				},
@@ -500,7 +500,7 @@
 		}
 		// handler for exiting room
 		game.exitRoom = function( ops ) {
-			let answer = ops.answer, x = ops.position.x, y = ops.position.y, z = ops.position.z;
+			let answer = ops.answer, x = ops.position.x, y = ops.position.y, z = ops.position.z, rx = ops.rotation.rx*THREE.Math.DEG2RAD, ry = ops.rotation.ry*THREE.Math.DEG2RAD;
 
 			// remove all bodies and meshes in current room
 			game.destroyRoom();
@@ -512,6 +512,9 @@
 			game.room = game.createRoom( game.currRoom );
 			// reset player BODY's position for this room
 			game.player.body.position.set( x, y + game.player.height, z );
+			// reset player's rotation (players may start at wierd positons)
+			rotY -= ry;
+			targetRotationY -= ry;
 		}
 		// win the game, great job!
 		game.win = function() {
@@ -568,15 +571,8 @@
 		world.step( dt );
 
 
-		// reset player quaternion so we always rotate offset from origin
-		player.body.quaternion.set( 0, 0, 0, 1 );
-		// local rotation about the y-axis
-		rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
-		rotation.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), rotY );
-		player.body.quaternion = player.body.quaternion.mult( rotation );
-		rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
-		rotation.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rotX );
-		player.body.quaternion = player.body.quaternion.mult( rotation );
+		// rotate the player locally based on mousedrag movement
+		game.player.body.rotation.set( rotX, rotY );
 
 
 		// update all of meshes to their physics bodies
@@ -938,7 +934,7 @@
 		}
 
 		// check if overwriting an existing property
-		if ( e.body || e.height ) {
+		if ( e.body || e.height || ( eb.rotation && eb.rotation.set ) ) {
 			de&&bug.log( 'initEye() error: an existing prop was overwritten.' );
 		}
 
@@ -947,6 +943,21 @@
 
 		// set the player height for room inits
 		e.height = er;
+
+		eb.rotation = {};
+
+		eb.rotation.set = function( rx, ry ) {
+			let player = game.player, rotation;
+			// reset player quaternion so we always rotate offset from origin
+			player.body.quaternion.set( 0, 0, 0, 1 );
+			// local rotation about the y-axis
+			rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+			rotation.setFromAxisAngle( new CANNON.Vec3( 0, 1, 0 ), ry );
+			player.body.quaternion = player.body.quaternion.mult( rotation );
+			rotation = new CANNON.Quaternion( 0, 0, 0, 1 );
+			rotation.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), rx );
+			player.body.quaternion = player.body.quaternion.mult( rotation );
+		}
 		
 	}
 
