@@ -1137,7 +1137,7 @@
 		scene.add( door );
 		pickObjects.push( door );
 		// add open function to door (via door body)
-		initDoor( door, da, doorBody, dm, dw, dh, dd, x, y, z, answer, hingeConstraintBot, hingeConstraintTop );
+		initDoor( door, da, doorBody, dm, dw, dh, dd, x, y, z, answer, hingeConstraintBot, hingeConstraintTop, rotation );
 
 		// create door handle via asynchronous load json file
 		XHR( ops.doorHandleModel, function( data ) {
@@ -1165,11 +1165,11 @@
 
 
 	// toggle door body impulse (and change door mass so it can be opened)
-	function initDoor( dr, da, drb, dm, dw, dh, dd, dx, dy, dz, answer, hingeCBot, hingeCTop ) {
+	function initDoor( dr, da, drb, dm, dw, dh, dd, dx, dy, dz, answer, hingeCBot, hingeCTop, rot ) {
 		let impulseForce, worldPoint;
 
 		// check if door and door body defined
-		if ( !dr && !da && !drb && !dm && !dw && !dh && !dd && !dx && !dy && !dz && !answer && !hingeCBot && !hingeCTop ) {
+		if ( !dr && !da && !drb && !dm && !dw && !dh && !dd && !dx && !dy && !dz && !answer && !hingeCBot && !hingeCTop && !rot ) {
 			de&&bug.log( 'initDoor() error: some arg is undefined.' );
 		}
 
@@ -1199,12 +1199,16 @@
 			// toggle mass so door is movable
 			drb.mass = dm;
 			drb.updateMassProperties();
-			// apply impulse force on door
+			// create impulse force on door
 			impulseForce = new CANNON.Vec3( 0, 0, openForce );
+			// rotate impulse force direction with door's so opens inwards
+			impulseForce = rot.vmult( impulseForce );
+			// impulse force targets door's local body
 			worldPoint = new CANNON.Vec3( drb.position.x,
 										  drb.position.y,
 										  drb.position.z
 										);
+			// apply impulse force
 			drb.applyImpulse( impulseForce, worldPoint );
 			// toggle door handle whenever door opens
 			dr.handle.toggle();
