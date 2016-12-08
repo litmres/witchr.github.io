@@ -237,24 +237,10 @@
 				previousFunc: function() {
 				},
 				resetFunc: function() {
-					let room = game.room, player = game.player;
-					// reset player BODY's position for this room
-					player.body.position.set( 0, game.player.height, 25 );
-					// reset room state
-					room.state = Game.NO_ANSWER;
-					// clear dimmer black screen
-					dimmer.set( 0 );
-					game.unlockInput();
+					game.exitRoom( { answer: Game.WRONG_ANSWER, position: { x: 0, y: 0, z: 25 } } );
 				},
 				nextFunc: function() {
-					// remove all bodies and meshes in current room
-					game.destroyRoom();
-					// player moving to next room, increment currRoom
-					game.currRoom++;
-					// create the new room
-					game.room = game.createRoom( game.currRoom );
-					// reset player BODY's position for this room
-					game.player.body.position.set( 0, game.player.height, 40 );
+					game.exitRoom( { answer: Game.CORRECT_ANSWER, position: { x: 0, y: 0, z: 40 } } );
 				}
 			},
 			/**
@@ -322,29 +308,31 @@
 					}
 				},
 				previousFunc: function() {
-					// remove all bodies and meshes in current room
-					game.destroyRoom();
-					// player moving to next room, increment currRoom
-					game.currRoom--;
-					// create the new room
-					game.room = game.createRoom( game.currRoom );
-					// reset player BODY's position for this room
-					game.player.body.position.set( 0, game.player.height, 10 );
+					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 } } );
 				},
 				resetFunc: function() {
 				},
 				nextFunc: function() {
-					// remove all bodies and meshes in current room
-					game.destroyRoom();
-					// player moving to next room, increment currRoom
-					game.currRoom++;
-					// create the new room
-					game.room = game.createRoom( game.currRoom );
-					// reset player BODY's position for this room
-					game.player.body.position.set( 0, game.player.height, 25 );
+					game.exitRoom( { answer: Game.CORRECT_ANSWER, position: { x: 0, y: 0, z: 25 } } );
 				}
 			},
 		];
+
+		// handler for exiting room
+		game.exitRoom = function( ops ) {
+			let answer = ops.answer, x = ops.position.x, y = ops.position.y, z = ops.position.z;
+
+			// remove all bodies and meshes in current room
+			game.destroyRoom();
+			// player moving to next room based on door answer
+			if ( answer === Game.CORRECT_ANSWER ) { game.currRoom++; }
+			if ( answer === Game.WRONG_ANSWER ) {}
+			if ( answer === Game.PREVIOUS_ROOM ) { game.currRoom--; }
+			// create the new room
+			game.room = game.createRoom( game.currRoom );
+			// reset player BODY's position for this room
+			game.player.body.position.set( x, y + game.player.height, z );
+		}
 
 		game.NUM_ROOMS = rD.length;
 		game.rooms = [];
