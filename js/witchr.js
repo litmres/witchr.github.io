@@ -220,19 +220,7 @@
 						fileName: 'note1.png' }
 				],
 				checkExitConditionFunc: function() {
-					// generally, best way to do this is to check for the closest door
-					//	to the player on exit and grab the ca/wa from that door.
-					let room = game.room;
-					if ( game.player.position.z < 0 ) {
-						// get the closest door to player
-						let closest = { door: room.doors[0], d: game.player.position.distanceTo( room.doors[0].position ) };
-						for ( let i = 1; i < room.doors.length; ++i ) {
-							let dist = game.player.position.distanceTo( room.doors[i].position );
-							closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
-						}
-						// set the room state to the closest door's answer
-						room.state = closest.door.answer;
-					}
+					game.exitConditions( { boundary: { x: [-25, 25], y: [0, 20], z: [0, 50] } } );
 				},
 				previousFunc: function() {
 				},
@@ -293,19 +281,7 @@
 						fileName: 'news-min.jpg' },
 				],
 				checkExitConditionFunc: function() {
-					// generally, best way to do this is to check for the closest door
-					//	to the player on exit and grab the ca/wa from that door.
-					let room = game.room;
-					if ( game.player.position.z < 0 || game.player.position.z > 50 ) {
-						// get the closest door to player
-						let closest = { door: room.doors[0], d: game.player.position.distanceTo( room.doors[0].position ) };
-						for ( let i = 1; i < room.doors.length; ++i ) {
-							let dist = game.player.position.distanceTo( room.doors[i].position );
-							closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
-						}
-						// set the room state to the closest door's answer
-						room.state = closest.door.answer;
-					}
+					game.exitConditions( { boundary: { x: [-25, 25], y: [0, 20], z: [0, 50] } } );
 				},
 				previousFunc: function() {
 					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 } } );
@@ -317,23 +293,6 @@
 				}
 			},
 		];
-
-		// handler for exiting room
-		game.exitRoom = function( ops ) {
-			let answer = ops.answer, x = ops.position.x, y = ops.position.y, z = ops.position.z;
-
-			// remove all bodies and meshes in current room
-			game.destroyRoom();
-			// player moving to next room based on door answer
-			if ( answer === Game.CORRECT_ANSWER ) { game.currRoom++; }
-			if ( answer === Game.WRONG_ANSWER ) {}
-			if ( answer === Game.PREVIOUS_ROOM ) { game.currRoom--; }
-			// create the new room
-			game.room = game.createRoom( game.currRoom );
-			// reset player BODY's position for this room
-			game.player.body.position.set( x, y + game.player.height, z );
-		}
-
 		game.NUM_ROOMS = rD.length;
 		game.rooms = [];
 		// start all rooms with complete values === false
@@ -519,6 +478,41 @@
 			// set all loaded textures and objects to 0
 			game.room.loadedStuffs = 0;
 		};
+		// handler for exit room conditions
+		game.exitConditions = function( ops ) {
+			let xmin = ops.boundary.x[0], xmax = ops.boundary.x[1], ymin = ops.boundary.y[0], ymax = ops.boundary.y[1], zmin = ops.boundary.z[0], zmax = ops.boundary.z[1];
+			let player = game.player, room = game.room;
+			// generally, best way to do this is to check for the closest door
+			//	to the player on exit and grab the ca/wa from that door.
+			if ( player.position.x < xmin || player.position.x > xmax ||
+				player.position.y < ymin || player.position.y > ymax ||
+				player.position.z < zmin || player.position.z > zmax
+			) {
+				// get the closest door to player
+				let closest = { door: room.doors[0], d: player.position.distanceTo( room.doors[0].position ) };
+				for ( let i = 1; i < room.doors.length; ++i ) {
+					let dist = player.position.distanceTo( room.doors[i].position );
+					closest = ( closest.d < dist )? closest : { door: room.doors[i], d: dist };
+				}
+				// set the room state to the closest door's answer
+				room.state = closest.door.answer;
+			}
+		}
+		// handler for exiting room
+		game.exitRoom = function( ops ) {
+			let answer = ops.answer, x = ops.position.x, y = ops.position.y, z = ops.position.z;
+
+			// remove all bodies and meshes in current room
+			game.destroyRoom();
+			// player moving to next room based on door answer
+			if ( answer === Game.CORRECT_ANSWER ) { game.currRoom++; }
+			if ( answer === Game.WRONG_ANSWER ) {}
+			if ( answer === Game.PREVIOUS_ROOM ) { game.currRoom--; }
+			// create the new room
+			game.room = game.createRoom( game.currRoom );
+			// reset player BODY's position for this room
+			game.player.body.position.set( x, y + game.player.height, z );
+		}
 
 	}
 
