@@ -289,7 +289,7 @@
 				resetFunc: function() {
 				},
 				nextFunc: function() {
-					game.exitRoom( { answer: Game.CORRECT_ANSWER, position: { x: 0, y: 0, z: 25 } } );
+					game.win();
 				}
 			},
 		];
@@ -512,6 +512,10 @@
 			game.room = game.createRoom( game.currRoom );
 			// reset player BODY's position for this room
 			game.player.body.position.set( x, y + game.player.height, z );
+		}
+		// win the game, great job!
+		game.win = function() {
+			hud.show( 'end-min.jpg', { width: '100vw', height: '100vh', time: '3s' } );
 		}
 
 	}
@@ -1676,14 +1680,17 @@
 		// show a new hud img if not already transitioning
 		hud.show = function( src, options ) {
 			if ( hud.transitioning ) { return; }
+			let w = options && options.width? options.width : 'auto';
+			let h = options && options.height? options.height : 'auto';
+			let t = options && options.time? options.time : transitionLength;
+			hud.style.width = w;
+			hud.style.height = h;
+			hud.style.transition = 'opacity ' + t;
+			// begin hud transition
 			hud.transitioning = true;
 			// display hud dom element (display: none when opacity 0)
 			hud.style.display = 'block';
 			hud.src = base + src;
-			let w = options && options.width? options.width : 'auto';
-			let h = options && options.height? options.height : 'auto';
-			hud.style.width = w;
-			hud.style.height = h;
 			// dim background when showing something on hud
 			dimmer.set( 0.8 );
 		};
