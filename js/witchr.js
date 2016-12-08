@@ -616,7 +616,7 @@
 			door.handle.update();
 			
 			// if a door is open, check if player exited
-			if ( door.open ) {
+			if ( door.isOpen ) {
 				room.checkExitCondition();
 				if ( room.state ) {
 					game.startRoomReset();
@@ -739,7 +739,7 @@
 					let door = game.room.doors[i];
 					if ( id === door.uuid ) {
 						// open door only if it is already open (UX, easier to enter)
-						if ( door.open ) {
+						if ( door.isOpen ) {
 							door.body.open();
 						} else {
 							door.handle.toggle();
@@ -1174,14 +1174,14 @@
 		}
 
 		// check for existing props
-		if ( dr.body || drb.open || drb.constraints || dr.answer || dr.open || dr.dim || dr.pos ) {
+		if ( dr.body || drb.open || drb.constraints || dr.answer || dr.isOpen || dr.dim || dr.pos ) {
 			de&&bug.log( 'initDoor() error: an existing prop was overwritten' );
 		}
 
 		// attach door body to door
 		dr.body = drb;
 		// has this door been opened yet?
-		dr.open = false;
+		dr.isOpen = false;
 		// is this the correct door to exit?
 		dr.answer = da;
 		// set initial door dimension and position (used in wall door calculation)
@@ -1213,7 +1213,7 @@
 			// toggle door handle whenever door opens
 			dr.handle.toggle();
 			// set this door to open when clicked
-			dr.open = true;
+			dr.isOpen = true;
 		};
 
 		// add constraints to the door body for future destruction
@@ -1278,7 +1278,7 @@
 		}
 		if ( dr.body ) { dr.body = null; }
 		if ( dr.answer ) { dr.answer = null; }
-		if ( dr.open ) { dr.open = null; }
+		if ( dr.isOpen ) { dr.isOpen = null; }
 		if ( dr.dim ) { dr.dim = null; }
 		if ( dr.pos ) { dr.pos = null; }
 		if ( dr.handle && dr.handle.animating ) { dr.handle.animating = null; }
