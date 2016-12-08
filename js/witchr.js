@@ -216,12 +216,8 @@
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 				],
 				notesData: [ 
-					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-						fileName: 'note1.png' },
-					{ w: 3, h: 5, d: 0.001, x: 0, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-						fileName: 'note2.png' },
-					{ w: 11, h: 11, d: 0.001, x: +15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-						fileName: 'news-min.jpg' },
+					{ w: 5, h: 3, d: 0.001, x: 0, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+						fileName: 'note1.png' }
 				],
 				checkExitConditionFunc: function() {
 					// generally, best way to do this is to check for the closest door
@@ -305,9 +301,7 @@
 						wallTexture: './img/wallpaper-min.jpg', u: 2, v: 1 },
 				],
 				notesData: [ 
-					{ w: 5, h: 3, d: 0.001, x: -15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
-						fileName: 'note1.png' },
-					{ w: 3, h: 5, d: 0.001, x: 0, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
+					{ w: 3, h: 5, d: 0.001, x: -24, y: 8, z: 25, rX: 0, rY: 90, rZ: 0,
 						fileName: 'note2.png' },
 					{ w: 11, h: 11, d: 0.001, x: +15, y: 8, z: 49, rX: 0, rY: 0, rZ: 0,
 						fileName: 'news-min.jpg' },
@@ -1501,9 +1495,9 @@
 		// set note position
 		note.position.set( x, y, z );
 		// set note rotation
-		note.rotateX( rotx );
-		note.rotateY( roty );
-		note.rotateZ( rotz );
+		note.rotateX( rotx*THREE.Math.DEG2RAD );
+		note.rotateY( roty*THREE.Math.DEG2RAD );
+		note.rotateZ( rotz*THREE.Math.DEG2RAD );
 		// init note and add it to scene
 		initNote( note, fileName, room );
 		scene.add( note );
