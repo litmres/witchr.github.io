@@ -512,7 +512,7 @@
 			game.room = game.createRoom( game.currRoom );
 			// reset player BODY's position for this room
 			game.player.body.position.set( x, y + game.player.height, z );
-			// reset player's rotation (players may start at wierd positons)
+			// reset player's rotation (players may start at weird positions)
 			rotX -= rx; targetRotationX -= rx;
 			rotY -= ry; targetRotationY -= ry;
 		}
