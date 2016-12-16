@@ -228,7 +228,7 @@
 					game.exitRoom( { answer: Game.WRONG_ANSWER, position: { x: 20, y: 0, z: 10 }, rotation: { rx: 0, ry: 180 } } );
 				},
 				nextFunc: function() {
-					game.exitRoom( { answer: Game.CORRECT_ANSWER, position: { x: 0, y: 0, z: 40 }, rotation: {rx: 0, ry: 0 } } );
+					game.exitRoom( { answer: Game.CORRECT_ANSWER, position: { x: 0, y: 0, z: 40 } } );
 				}
 			},
 			/**
@@ -284,7 +284,7 @@
 					game.exitConditions( { boundary: { x: [-25, 25], y: [0, 20], z: [0, 50] } } );
 				},
 				previousFunc: function() {
-					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 }, rotation: { rx: 0, ry: 0 } } );
+					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 } } ;
 				},
 				resetFunc: function() {
 				},
@@ -500,7 +500,9 @@
 		}
 		// handler for exiting room
 		game.exitRoom = function( ops ) {
-			let answer = ops.answer, x = ops.position.x, y = ops.position.y, z = ops.position.z, rx = ops.rotation.rx*THREE.Math.DEG2RAD, ry = ops.rotation.ry*THREE.Math.DEG2RAD;
+			let answer = ops.answer, x = ops.position.x, y = ops.position.y, z = ops.position.z;
+			let rx = ops.rotation? ops.rotation.rx*THREE.Math.DEG2RAD : 0;
+			let ry = ops.rotation? ops.rotation.ry*THREE.Math.DEG2RAD : 0;
 
 			// remove all bodies and meshes in current room
 			game.destroyRoom();
