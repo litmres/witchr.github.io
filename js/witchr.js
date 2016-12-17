@@ -284,7 +284,8 @@
 					game.exitConditions( { boundary: { x: [-25, 25], y: [0, 20], z: [0, 50] } } );
 				},
 				previousFunc: function() {
-					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 } } ;
+					game.exitRoom( { answer: Game.PREVIOUS_ROOM, position: { x: 0, y: 0, z: 10 } } 				
+) ;
 				},
 				resetFunc: function() {
 				},
