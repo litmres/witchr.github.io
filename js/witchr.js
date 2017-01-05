@@ -1721,7 +1721,7 @@
 		hud.addEventListener( 'transitionend', function( e ) {
 			hud.transitioning = false;
 			// do not display hud dom element if opacity is 0
-			if ( e.propertyName === 'opacity' && e.srcElement.style.opacity === '0' ) {
+			if ( e.propertyName === 'opacity' && e.srcElement.style && e.srcElement.style.opacity === '0' ) {
 				e.srcElement.style.display = 'none';
 			}
 		});
