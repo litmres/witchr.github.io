@@ -786,10 +786,6 @@
 
 	function onDocumentMouseUp( e ) {
 
-		if ( game.inputLocked ) {
-			return;
-		}
-
 		if ( e.button === Mouse.LEFT ) { isMouseLeftDown = false; }
 		if ( e.button === Mouse.RIGHT ) { isMouseRightDown = false; }
 		
@@ -824,10 +820,6 @@
 
 
 	function onDocumentTouchEnd( e ) {
-
-		if ( game.inputLocked ) {
-			return;
-		}
 
 		// don't handle 3+ touches
 		if ( e.touches.length > 1 ) { e.preventDefault(); e.stopPropagation(); return; }
